@@ -1,0 +1,7 @@
+selenium==4.7.2
+packaging==22.0
+coloredlogs==15.0.1
+verboselogs==1.7
+pynvim==0.4.3
+sysv-ipc==1.1.0
+psutil==5.9.4

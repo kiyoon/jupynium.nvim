@@ -1,0 +1,28 @@
+name: Style checking
+
+on: [push, pull_request]
+
+jobs:
+  stylua:
+    name: StyLua
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Lint with stylua
+        uses: JohnnyMorganz/stylua-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
+          args: --check .
+
+  black:
+    name: Black
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check black
+        uses: psf/black@stable
+        with:
+          options: '--check --verbose'
+          src: '.'
+          version: '~= 22.12.0'
