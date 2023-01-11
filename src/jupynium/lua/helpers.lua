@@ -3,11 +3,17 @@ vim.g.jupynium_message_bloated = false
 -- This number is not strictly accurate. We only use this to detect blockage (bloated)
 vim.g.jupynium_num_pending_msgs = 0
 
-if Jupynium_syncing_bufs ~= nil then
-  for buf_id, _ in pairs(Jupynium_syncing_bufs) do
+-- Remove syncing without sending stop message.
+-- Use when initialising or no Jupynium server is running.
+function Jupynium_reset_sync()
+  for bufnr, _ in pairs(Jupynium_syncing_bufs) do
     -- This will clear autocmds if there are any
-    vim.api.nvim_create_augroup(string.format("jupynium_buf_%d", buf_id), { clear = true })
+    vim.api.nvim_create_augroup(string.format("jupynium_buf_%d", bufnr), { clear = true })
   end
+end
+
+if Jupynium_syncing_bufs ~= nil then
+  Jupynium_reset_sync()
 end
 
 Jupynium_syncing_bufs = {} -- key = bufnr, value = 1
@@ -16,9 +22,7 @@ function Jupynium_reset_channel()
   vim.g.jupynium_channel_id = -1
   vim.g.jupynium_message_bloated = false
   vim.g.jupynium_num_pending_msgs = 0
-  for buf_id, _ in pairs(Jupynium_syncing_bufs) do
-    Jupynium_stop_sync(buf_id)
-  end
+  Jupynium_reset_sync()
 end
 
 local function get_line_count_all_buffers()
