@@ -233,9 +233,11 @@ If you want custom keymaps, add `textobjects = { use_default_keybindings = false
 ## 📡 Available Vim Commands
 
 ```vim
-" Server and sync
+" Server (only used when neovim is local. See Command-Line Usage for remote neovim)
 :JupyniumStartAndAttachToServer [notebook_URL]
 :JupyniumAttachToServer [notebook_URL]
+
+" Sync
 :JupyniumStartSync [filename / tab_index]
 :JupyniumStopSync
 
@@ -257,7 +259,7 @@ If you want custom keymaps, add `textobjects = { use_default_keybindings = false
 :JupyniumShortsightedToggle
 ```
 
-## 👨‍💻️ Command-Line Usage
+## 👨‍💻️ Command-Line Usage (Attach to Remote NeoVim)
 
 **You don't need to install the vim plugin to use Jupynium.**  
 **The plugin is responsible of adding `:JupyniumStartAndAttachToServer` etc. that just calls the command line program,**  
