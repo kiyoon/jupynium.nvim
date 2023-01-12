@@ -162,6 +162,8 @@ For example:
 
 ### Open and attach to a Jupynium server
 
+**This is for local neovim only. For remote neovim, see [Command-Line Usage](#%EF%B8%8F-command-line-usage-attach-to-remote-neovim).**  
+
 Running `:JupyniumStartAndAttachToServer` will open the notebook.  
 Type password and once **you need to be on the main page (file browser) for the next steps**.
 
