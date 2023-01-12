@@ -40,10 +40,10 @@ conda activate jupynium && conda install -c conda-forge python=3.11
 ```
 
 Install with vim-plug:
-
 ```vim
 Plug 'kiyoon/jupynium.nvim', { 'do': 'pip3 install --user .' }
 " Plug 'kiyoon/jupynium.nvim', { 'do': '~/miniconda3/bin/envs/jupynium/bin/pip install .' }
+Plug 'rcarriga/nvim-notify'  " optional
 ```
 
 Install with packer.nvim:
@@ -51,6 +51,18 @@ Install with packer.nvim:
 ```lua
 use { "kiyoon/jupynium.nvim", run = "pip3 install --user ." }
 -- use { "kiyoon/jupynium.nvim", run = "~/miniconda3/bin/envs/jupynium/bin/pip install ." }
+use { "rcarriga/nvim-notify" }  -- optional
+```
+
+Install with 💤lazy.nvim
+```lua
+  {
+    "kiyoon/jupynium.nvim",
+    build = "pip3 install --user .",
+    -- build = "~/bin/miniconda3/envs/jupynium/bin/pip install .",
+    -- enabled = vim.fn.isdirectory(vim.fn.expand "~/bin/miniconda3/envs/jupynium"),
+  },
+  "rcarriga/nvim-notify",  -- optional
 ```
 
 Setup is optional for system python users and here are the defaults. Conda users need to change the `python_host`.
