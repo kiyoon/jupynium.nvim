@@ -4,25 +4,26 @@ import argparse
 import json
 import logging
 import os
-from pathlib import Path
 import sys
 import traceback
+from pathlib import Path
 
 import coloredlogs
+import persistqueue
+import verboselogs
+from persistqueue.exceptions import Empty
 from selenium import webdriver
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.common.exceptions import WebDriverException
-import sysv_ipc
-import verboselogs
 
+from .. import __version__
 from .. import selenium_helpers as sele
-from ..definitions import IPC_KEY, IPC_TYPE_ATTACH_NEOVIM
+from ..definitions import persist_queue_path
 from ..events_control import process_events
+from ..nvim import NvimInfo
 from ..process import already_running_pid
 from ..pynvim_helpers import attach_and_init
-from ..nvim import NvimInfo
-from .. import __version__
 
 logger = verboselogs.VerboseLogger(__name__)
 
@@ -92,10 +93,10 @@ def get_parser():
     return parser
 
 
-def start_if_running_else_clear(args, ipc_queue):
+def start_if_running_else_clear(args, q: persistqueue.UniqueQ):
     # If Jupynium is already running, send args and quit.
     if already_running_pid():
-        ipc_queue.send(json.dumps(args.__dict__), True, type=IPC_TYPE_ATTACH_NEOVIM)
+        q.put(args)
         logger.info("Jupynium is already running. Attaching to the running process.")
         return 0
     else:
@@ -108,8 +109,8 @@ def start_if_running_else_clear(args, ipc_queue):
     # If Jupynium is not running, clear the message queue before starting.
     while True:
         try:
-            _, _ = ipc_queue.receive(block=False, type=IPC_TYPE_ATTACH_NEOVIM)
-        except sysv_ipc.BusyError:
+            _ = q.get(block=False)
+        except Empty:
             break
 
     return None
@@ -122,17 +123,17 @@ def attach_new_neovim(
     URL_to_home_windows: dict[str, str],
 ):
     logger.info(f"New nvim wants to attach: {new_args}")
-    if new_args["nvim_listen_addr"] in nvims:
+    if new_args.nvim_listen_addr in nvims:
         logger.info("Already attached.")
     else:
         try:
-            nvim = attach_and_init(new_args["nvim_listen_addr"])
-            if new_args["notebook_URL"] in URL_to_home_windows.keys():
-                home_window = URL_to_home_windows[new_args["notebook_URL"]]
+            nvim = attach_and_init(new_args.nvim_listen_addr)
+            if new_args.notebook_URL in URL_to_home_windows.keys():
+                home_window = URL_to_home_windows[new_args.notebook_URL]
             else:
                 prev_num_windows = len(driver.window_handles)
                 driver.switch_to.new_window("tab")
-                driver.get(new_args["notebook_URL"])
+                driver.get(new_args.notebook_URL)
 
                 # Wait for the notebook to load
                 driver_wait = WebDriverWait(driver, 10)
@@ -140,10 +141,10 @@ def attach_new_neovim(
                 sele.wait_until_loaded(driver)
 
                 home_window = driver.current_window_handle
-                URL_to_home_windows[new_args["notebook_URL"]] = home_window
+                URL_to_home_windows[new_args.notebook_URL] = home_window
 
             nvim_info = NvimInfo(nvim, home_window)
-            nvims[new_args["nvim_listen_addr"]] = nvim_info
+            nvims[new_args.nvim_listen_addr] = nvim_info
         except Exception:
             logger.exception("Exception occurred while attaching a new nvim. Ignoring.")
 
@@ -178,8 +179,8 @@ def main():
             print(pid)
         sys.exit(0)
 
-    ipc_queue = sysv_ipc.MessageQueue(IPC_KEY, sysv_ipc.IPC_CREAT)
-    return_code = start_if_running_else_clear(args, ipc_queue)
+    q = persistqueue.UniqueQ(persist_queue_path)
+    return_code = start_if_running_else_clear(args, q)
     if return_code is not None:
         sys.exit(return_code)
 
@@ -239,13 +240,10 @@ def main():
 
                     # Check if a new newvim instance wants to attach to this server.
                     try:
-                        message, _ = ipc_queue.receive(
-                            block=False, type=IPC_TYPE_ATTACH_NEOVIM
-                        )
-                    except sysv_ipc.BusyError:
+                        new_args = q.get(block=False)
+                    except Empty:
                         pass
                     else:
-                        new_args = json.loads(message.decode())
                         attach_new_neovim(driver, new_args, nvims, URL_to_home_windows)
                 except WebDriverException:
                     break

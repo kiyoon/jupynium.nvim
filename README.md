@@ -2,7 +2,7 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 <a href="https://github.com/kiyoon/jupynium.nvim/actions/workflows/tests.yml">
-    <img src="https://github.com/kiyoon/jupynium.nvim/workflows/Tests/badge.svg?style=flat" />
+<img src="https://github.com/kiyoon/jupynium.nvim/workflows/Tests/badge.svg?style=flat" />
 </a>
 
 Jupynium uses Selenium to automate Jupyter Notebook, synchronising everything you type on Neovim.  
@@ -10,7 +10,7 @@ Never leave Neovim. Switch tabs on the browser as you switch files on Neovim.
 
 <img src=https://user-images.githubusercontent.com/12980409/211894627-73037e83-4730-4387-827c-98ed2522740d.gif width=100% />
 
-Note that it doesn't sync from Notebook to Neovim so be careful.
+Note that it doesn't sync from Notebook to Neovim so only modify from Neovim.
 
 ### How does it work?
 
@@ -27,7 +27,7 @@ Only supports Jupyter Notebook (Jupyter Lab disables front-end interaction)
 
 ### Requirements
 
-- 💻 Linux, macOS and Windows WSL2
+- 💻 Linux, macOS and Windows (CMD, PowerShell, WSL2)
 - 🦊 Firefox (Other browsers are not supported due to their limitation with Selenium)
 - ✌️ Neovim >= v0.8
 - 🐍 Python >= 3.10
@@ -40,6 +40,7 @@ conda activate jupynium && conda install -c conda-forge python=3.11
 ```
 
 Install with vim-plug:
+
 ```vim
 Plug 'kiyoon/jupynium.nvim', { 'do': 'pip3 install --user .' }
 " Plug 'kiyoon/jupynium.nvim', { 'do': '~/miniconda3/bin/envs/jupynium/bin/pip install .' }
@@ -55,6 +56,7 @@ use { "rcarriga/nvim-notify" }  -- optional
 ```
 
 Install with 💤lazy.nvim
+
 ```lua
   {
     "kiyoon/jupynium.nvim",
@@ -66,6 +68,7 @@ Install with 💤lazy.nvim
 ```
 
 Setup is optional for system python users and here are the defaults. Conda users need to change the `python_host`.
+
 <details>
 <summary>
 See setup defaults
@@ -162,7 +165,7 @@ For example:
 
 ### Open and attach to a Jupynium server
 
-**This is for local neovim only. For remote neovim, see [Command-Line Usage](#%EF%B8%8F-command-line-usage-attach-to-remote-neovim).**  
+**This is for local neovim only. For remote neovim, see [Command-Line Usage](#%EF%B8%8F-command-line-usage-attach-to-remote-neovim).**
 
 Running `:JupyniumStartAndAttachToServer` will open the notebook.  
 Type password and once **you need to be on the main page (file browser) for the next steps**.
