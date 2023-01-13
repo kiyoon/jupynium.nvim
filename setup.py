@@ -1,5 +1,10 @@
+import sys
+
 from setuptools import setup
+
 import versioneer
+
+sys.path.insert(0, ".")
 
 if __name__ == "__main__":
     setup(

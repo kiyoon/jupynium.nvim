@@ -1,17 +1,9 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "versioneer[toml]==0.28"]
-build-backend = "setuptools.build_meta"
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta:__legacy__"
 
 [tool.pytest.ini_options]
 addopts = "--cov=jupynium"
 testpaths = [
     "tests",
 ]
-
-[tool.versioneer]
-VCS = "git"
-style = "pep440"
-versionfile_source = "src/jupynium/_version.py"
-versionfile_build = "jupynium/_version.py"
-tag_prefix = "v"
-parentdir_prefix = "jupynium-"
