@@ -245,8 +245,10 @@ If you want custom keymaps, add `textobjects = { use_default_keybindings = false
 " Sync
 :JupyniumStartSync [filename / tab_index]
 :JupyniumStopSync
+:JupyniumLoadFromIpynbTab tab_index
+:JupyniumLoadFromIpynbTabAndStartSync tab_index
 
-" Notebook
+" Notebook (while syncing)
 :JupyniumSaveIpynb
 :JupyniumDownloadIpynb [filename]
 :JupyniumAutoDownloadIpynbToggle

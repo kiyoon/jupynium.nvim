@@ -65,19 +65,23 @@ local function rpc(method, event, buf, ...)
   end
 end
 
-function Jupynium_rpcnotify(event, buf, ...)
+function Jupynium_rpcnotify(event, buf, ensure_syncing, ...)
   -- check if it's already syncing
-  if Jupynium_syncing_bufs[buf] == nil then
-    return
+  if ensure_syncing then
+    if Jupynium_syncing_bufs[buf] == nil then
+      return
+    end
   end
   rpc(vim.rpcnotify, event, buf, ...)
 end
 
 -- block until jupynium responds to the message
-function Jupynium_rpcrequest(event, buf, ...)
-  if Jupynium_syncing_bufs[buf] == nil then
-    if event ~= "start_sync" then
-      return
+function Jupynium_rpcrequest(event, buf, ensure_syncing, ...)
+  if ensure_syncing then
+    if Jupynium_syncing_bufs[buf] == nil then
+      if event ~= "start_sync" then
+        return
+      end
     end
   end
 
@@ -93,7 +97,39 @@ function Jupynium_grab_entire_buffer(buf)
   end
 
   local entire_buf = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-  Jupynium_rpcnotify("grab_entire_buf", buf, entire_buf)
+  Jupynium_rpcnotify("grab_entire_buf", buf, true, entire_buf)
+end
+
+function Jupynium_load_from_ipynb_tab_cmd(args)
+  local is_number = args.args:match "^%d+$"
+  if is_number == nil then
+    Jupynium_notify.error { "Tab index should be a number but got: " .. args.args }
+    return
+  end
+  local tab_idx = tonumber(args.args)
+  local buf = vim.api.nvim_get_current_buf()
+  local response = Jupynium_rpcrequest("load_from_ipynb_tab", buf, false, tab_idx)
+  if response ~= "OK" then
+    Jupynium_notify.error { "Failed to load from ipynb tab" }
+  end
+end
+
+function Jupynium_load_from_ipynb_tab_and_start_sync_cmd(args)
+  local is_number = args.args:match "^%d+$"
+  if is_number == nil then
+    Jupynium_notify.error { "Tab index should be a number but got: " .. args.args }
+    return
+  end
+  local tab_idx = tonumber(args.args)
+  local buf = vim.api.nvim_get_current_buf()
+  local response = Jupynium_rpcrequest("load_from_ipynb_tab", buf, false, tab_idx)
+
+  if response == "OK" then
+    -- start sync with no content copying from nvim and no asking.
+    Jupynium_start_sync(buf, args.args, false)
+  else
+    Jupynium_notify.error { "Failed to load from ipynb tab" }
+  end
 end
 
 function Jupynium_start_sync_cmd(args)
@@ -102,8 +138,11 @@ function Jupynium_start_sync_cmd(args)
   Jupynium_start_sync(buf, filename)
 end
 
-function Jupynium_start_sync(buf, filename)
+function Jupynium_start_sync(buf, filename, ask)
   buf = buf or vim.api.nvim_get_current_buf()
+  if ask == nil then
+    ask = true
+  end
 
   -- This will clear autocmds if there are any
   local augroup = vim.api.nvim_create_augroup(string.format("jupynium_buf_%d", buf), { clear = true })
@@ -114,7 +153,8 @@ function Jupynium_start_sync(buf, filename)
   end
 
   local content = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-  local response = Jupynium_rpcrequest("start_sync", buf, filename, content)
+
+  local response = Jupynium_rpcrequest("start_sync", buf, false, filename, ask, content)
   if response ~= "OK" then
     Jupynium_notify.info { "Cancelling sync.." }
     return
@@ -129,7 +169,7 @@ function Jupynium_start_sync(buf, filename)
       local cursor_pos = vim.api.nvim_win_get_cursor(winid)
       local cursor_pos_row = cursor_pos[1] - 1
       local visual_start_row = vim.fn.getpos("v")[2] - 1
-      Jupynium_rpcnotify("CursorMoved", buf, cursor_pos_row, visual_start_row)
+      Jupynium_rpcnotify("CursorMoved", buf, true, cursor_pos_row, visual_start_row)
     end,
     group = augroup,
   })
@@ -140,7 +180,7 @@ function Jupynium_start_sync(buf, filename)
       local winid = vim.call("bufwinid", buf)
       local cursor_pos = vim.api.nvim_win_get_cursor(winid)
       local cursor_pos_row = cursor_pos[1] - 1
-      Jupynium_rpcnotify("CursorMovedI", buf, cursor_pos_row, cursor_pos_row)
+      Jupynium_rpcnotify("CursorMovedI", buf, true, cursor_pos_row, cursor_pos_row)
     end,
     group = augroup,
   })
@@ -155,7 +195,7 @@ function Jupynium_start_sync(buf, filename)
         local cursor_pos = vim.api.nvim_win_get_cursor(winid)
         local cursor_pos_row = cursor_pos[1] - 1
         local visual_start_row = vim.fn.getpos("v")[2] - 1
-        Jupynium_rpcnotify("visual_enter", buf, cursor_pos_row, visual_start_row)
+        Jupynium_rpcnotify("visual_enter", buf, true, cursor_pos_row, visual_start_row)
       elseif
         (old_mode == "v" or old_mode == "V" or old_mode == "\x16")
         and (new_mode ~= "v" and new_mode ~= "V" and new_mode ~= "\x16")
@@ -163,7 +203,7 @@ function Jupynium_start_sync(buf, filename)
         local winid = vim.call("bufwinid", buf)
         local cursor_pos = vim.api.nvim_win_get_cursor(winid)
         local cursor_pos_row = cursor_pos[1] - 1
-        Jupynium_rpcnotify("visual_leave", buf, cursor_pos_row, cursor_pos_row)
+        Jupynium_rpcnotify("visual_leave", buf, true, cursor_pos_row, cursor_pos_row)
       end
     end,
     group = augroup,
@@ -173,7 +213,7 @@ function Jupynium_start_sync(buf, filename)
     buffer = buf,
     callback = function()
       buf_filepath = vim.api.nvim_buf_get_name(buf)
-      Jupynium_rpcnotify("BufWritePre", buf, buf_filepath)
+      Jupynium_rpcnotify("BufWritePre", buf, true, buf_filepath)
     end,
     group = augroup,
   })
@@ -182,7 +222,7 @@ function Jupynium_start_sync(buf, filename)
     buffer = buf,
     callback = function()
       -- notify before detaching
-      Jupynium_rpcnotify("BufWinLeave", buf)
+      Jupynium_rpcnotify("BufWinLeave", buf, true)
       Jupynium_stop_sync(buf)
     end,
     group = augroup,
@@ -195,14 +235,14 @@ function Jupynium_start_sync(buf, filename)
       end
 
       local lines = vim.api.nvim_buf_get_lines(buf, start_row, new_end_row, false)
-      Jupynium_rpcnotify("on_lines", buf, lines, start_row, old_end_row, new_end_row)
+      Jupynium_rpcnotify("on_lines", buf, true, lines, start_row, old_end_row, new_end_row)
     end,
   })
 end
 
 function Jupynium_stop_sync(buf)
   buf = buf or vim.api.nvim_get_current_buf()
-  Jupynium_rpcnotify("stop_sync", buf)
+  Jupynium_rpcnotify("stop_sync", buf, true)
   -- This will clear autocmds if there are any
   vim.api.nvim_create_augroup(string.format("jupynium_buf_%d", buf), { clear = true })
   Jupynium_syncing_bufs[buf] = nil
@@ -218,7 +258,7 @@ function Jupynium_execute_selected_cells(buf)
     return
   end
 
-  Jupynium_rpcnotify("execute_selected_cells", buf)
+  Jupynium_rpcnotify("execute_selected_cells", buf, true)
 end
 
 function Jupynium_toggle_selected_cells_outputs_scroll(buf)
@@ -228,7 +268,7 @@ function Jupynium_toggle_selected_cells_outputs_scroll(buf)
     return
   end
 
-  Jupynium_rpcnotify("toggle_selected_cells_outputs_scroll", buf)
+  Jupynium_rpcnotify("toggle_selected_cells_outputs_scroll", buf, true)
 end
 
 function Jupynium_scroll_to_cell(buf)
@@ -240,7 +280,7 @@ function Jupynium_scroll_to_cell(buf)
 
   local winid = vim.call("bufwinid", buf)
   local cursor_pos = vim.api.nvim_win_get_cursor(winid)
-  Jupynium_rpcnotify("scroll_to_cell", buf, cursor_pos[1] - 1)
+  Jupynium_rpcnotify("scroll_to_cell", buf, true, cursor_pos[1] - 1)
 end
 
 function Jupynium_save_ipynb(buf)
@@ -250,7 +290,7 @@ function Jupynium_save_ipynb(buf)
     return
   end
 
-  Jupynium_rpcnotify("save_ipynb", buf)
+  Jupynium_rpcnotify("save_ipynb", buf, true)
 end
 
 function Jupynium_download_ipynb(buf, output_name)
@@ -267,7 +307,7 @@ function Jupynium_download_ipynb(buf, output_name)
     return
   end
 
-  Jupynium_rpcnotify("download_ipynb", buf, buf_filepath, output_name)
+  Jupynium_rpcnotify("download_ipynb", buf, true, buf_filepath, output_name)
 end
 
 function Jupynium_download_ipynb_cmd(args)
@@ -288,7 +328,7 @@ function Jupynium_scroll_up(buf)
   end
 
   local scroll_page = vim.g.jupynium_scroll_page or 0.5
-  Jupynium_rpcnotify("scroll_ipynb", buf, -scroll_page)
+  Jupynium_rpcnotify("scroll_ipynb", buf, true, -scroll_page)
 end
 
 function Jupynium_scroll_down(buf)
@@ -299,7 +339,7 @@ function Jupynium_scroll_down(buf)
   end
 
   local scroll_page = vim.g.jupynium_scroll_page or 0.5
-  Jupynium_rpcnotify("scroll_ipynb", buf, scroll_page)
+  Jupynium_rpcnotify("scroll_ipynb", buf, true, scroll_page)
 end
 
 function Jupynium_autoscroll_toggle()
@@ -314,5 +354,5 @@ function Jupynium_clear_selected_cells_outputs(buf)
     return
   end
 
-  Jupynium_rpcnotify("clear_selected_cells_outputs", buf)
+  Jupynium_rpcnotify("clear_selected_cells_outputs", buf, true)
 end

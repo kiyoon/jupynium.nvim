@@ -1,7 +1,7 @@
 selenium==4.7.2
-packaging==22.0
 coloredlogs==15.0.1
 verboselogs==1.7
 pynvim==0.4.3
 psutil==5.9.4
 persist-queue==0.8.0
+packaging==21.3
