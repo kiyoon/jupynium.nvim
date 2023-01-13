@@ -43,7 +43,7 @@ def get_config():
     cfg = VersioneerConfig()
     cfg.VCS = "git"
     cfg.style = "pep440"
-    cfg.tag_prefix = ""
+    cfg.tag_prefix = "v"
     cfg.parentdir_prefix = "jupynium-"
     cfg.versionfile_source = "src/jupynium/_version.py"
     cfg.verbose = False
