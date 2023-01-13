@@ -44,6 +44,7 @@ function M.register_autostart_autocmds(augroup, opts)
     pattern = all_patterns,
     callback = function()
       local bufname = vim.api.nvim_buf_get_name(0)
+      print "Aaa"
       if not M.server_state.is_autostarted then
         if
           opts.auto_start_server.enable
@@ -52,7 +53,9 @@ function M.register_autostart_autocmds(augroup, opts)
           vim.cmd [[JupyniumStartAndAttachToServer]]
           M.server_state.is_autostarted = true
         end
-      elseif not M.server_state.is_autoattached then
+      end
+
+      if not M.server_state.is_autostarted and not M.server_state.is_autoattached then
         if
           opts.auto_attach_to_server.enable
           and utils.list_wildcard_match(bufname, opts.auto_attach_to_server.file_pattern) ~= nil
