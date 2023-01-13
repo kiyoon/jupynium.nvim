@@ -1,4 +1,10 @@
 vim.api.nvim_create_user_command("JupyniumStartSync", Jupynium_start_sync_cmd, { nargs = "?" })
+vim.api.nvim_create_user_command("JupyniumLoadFromIpynbTab", Jupynium_load_from_ipynb_tab_cmd, { nargs = 1 })
+vim.api.nvim_create_user_command(
+  "JupyniumLoadFromIpynbTabAndStartSync",
+  Jupynium_load_from_ipynb_tab_and_start_sync_cmd,
+  { nargs = 1 }
+)
 vim.api.nvim_create_user_command("JupyniumStopSync", "lua Jupynium_stop_sync()", {})
 vim.api.nvim_create_user_command("JupyniumExecuteSelectedCells", "lua Jupynium_execute_selected_cells()", {})
 vim.api.nvim_create_user_command("JupyniumClearSelectedCellsOutputs", "lua Jupynium_clear_selected_cells_outputs()", {})

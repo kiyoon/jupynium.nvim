@@ -1,8 +1,9 @@
 #!/use/bin/env python3
 
 import argparse
-import json
 import os
+
+from ..ipynb import ipynb2jupy, load_ipynb
 
 
 def get_parser():
@@ -31,41 +32,17 @@ def check_args(args, parser):
         parser.error("Either one of --stdout or output_jupy_path can be specified")
 
 
-def read_ipynb_texts(ipynb_path):
-    with open(ipynb_path, "r") as f:
-        ipynb = json.load(f)
-    texts = []
-    cell_types = []
-    for cell in ipynb["cells"]:
-        cell_types.append(cell["cell_type"])
-        texts.append("".join(cell["source"]))
-    return cell_types, texts
-
-
 def main():
     parser = get_parser()
     args = parser.parse_args()
     check_args(args, parser)
 
-    cell_types, texts = read_ipynb_texts(args.ipynb_path)
-
-    cell_types_previous = ["code"] + cell_types[:-1]
+    ipynb = load_ipynb(args.ipynb_path)
+    jupy = ipynb2jupy(ipynb)
 
     if args.stdout:
-        for cell_type_previous, cell_type, text in zip(
-            cell_types_previous, cell_types, texts
-        ):
-            if cell_type == "markdown":
-                if cell_type_previous == "code":
-                    print('"""%%')
-                else:
-                    print("# %%%")
-            else:
-                if cell_type_previous == "code":
-                    print("# %%")
-                else:
-                    print('%%"""')
-            print(text)
+        for line in jupy:
+            print(line)
     else:
         output_jupy_path = args.output_jupy_path
         if output_jupy_path is None:
@@ -81,20 +58,8 @@ def main():
                 return
 
         with open(output_jupy_path, "w") as f:
-            for cell_type_previous, cell_type, text in zip(
-                cell_types_previous, cell_types, texts
-            ):
-                if cell_type == "markdown":
-                    if cell_type_previous == "code":
-                        f.write('"""%%\n')
-                    else:
-                        f.write("# %%%\n")
-                else:
-                    if cell_type_previous == "code":
-                        f.write("# %%\n")
-                    else:
-                        f.write('%%"""\n')
-                f.write(text)
+            for line in jupy:
+                f.write(line)
                 f.write("\n")
 
         print('Converted "{}" to "{}"'.format(args.ipynb_path, output_jupy_path))

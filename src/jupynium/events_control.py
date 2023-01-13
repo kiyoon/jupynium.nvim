@@ -1,8 +1,8 @@
 import dataclasses
-from dataclasses import dataclass
 import json
 import logging
 import os
+from dataclasses import dataclass
 
 from pkg_resources import resource_stream
 from selenium.common.exceptions import ElementNotInteractableException
@@ -10,6 +10,7 @@ from selenium.webdriver.common.by import By
 
 from . import selenium_helpers as sele
 from .buffer import JupyniumBuffer
+from .ipynb import ipynb2jupy
 from .nvim import NvimInfo
 from .rpc_messages import len_pending_messages, receive_message
 
@@ -164,11 +165,20 @@ def process_events(nvim_info: NvimInfo, driver):
 
 
 def process_request_event(nvim_info: NvimInfo, driver, event):
+    """
+    Returns:
+        status (bool)
+        request_event (rpcrequest event) to notify nvim after cleared up. None if no need to notify
+    """
     assert event[0] == "request"
     # Request from nvim
     # send back response
+
+    bufnr = event[2][0]
+    event_args = event[2][1:]
+
     if event[1] == "start_sync":
-        buf, filename, content = event[2]
+        filename, ask, content = event_args
 
         filename: str
         if not filename.isnumeric():
@@ -195,24 +205,43 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
                     "Jupyter.notebook.rename(arguments[0]);",
                     filename,
                 )
-            nvim_info.attach_buffer(buf, content, driver.current_window_handle)
+            nvim_info.attach_buffer(bufnr, content, driver.current_window_handle)
 
-            nvim_info.jupbufs[buf].full_sync_to_notebook(driver)
+            nvim_info.jupbufs[bufnr].full_sync_to_notebook(driver)
         else:
             tab_idx = int(filename)
             driver.switch_to.window(driver.window_handles[tab_idx - 1])
 
-            continue_input = nvim_info.nvim.eval(
-                "input('This will remove all content from the Notebook. Continue? (y/n): ')"
-            )
-            print(continue_input)
+            continue_input = "y"
+            if ask:
+                continue_input = nvim_info.nvim.eval(
+                    "input('This will remove all content from the Notebook. Continue? (y/n): ')"
+                )
             if continue_input in ["y", "Y"]:
-                nvim_info.attach_buffer(buf, content, driver.current_window_handle)
+                nvim_info.attach_buffer(bufnr, content, driver.current_window_handle)
 
-                nvim_info.jupbufs[buf].full_sync_to_notebook(driver)
+                nvim_info.jupbufs[bufnr].full_sync_to_notebook(driver)
             else:
                 event[3].send("N")
                 event[3] = None
+    elif event[1] == "load_from_ipynb_tab":
+        (tab_idx,) = event_args
+        if tab_idx > len(driver.window_handles) or tab_idx < 1:
+            nvim_info.nvim.lua.Jupynium_notify.error(
+                [f"Tab {tab_idx} doesn't exist."],
+                async_=True,
+            )
+            event[3].send("N")
+            return False, None
+        driver.switch_to.window(driver.window_handles[tab_idx - 1])
+
+        ipynb = driver.execute_script(
+            "return Jupyter.notebook.toJSON();",
+        )
+        jupy = ipynb2jupy(ipynb)
+        print(jupy)
+        nvim_info.nvim.buffers[bufnr][:] = jupy
+        logger.info(f"Loaded ipynb to the nvim buffer.")
 
     elif event[1] == "VimLeavePre":
         logger.info("Nvim closed. Clearing nvim")
@@ -507,6 +536,7 @@ def download_ipynb(driver, nvim_info, bufnr, output_ipynb_path):
             ["Downloaded ipynb file to", output_ipynb_path],
             async_=True,
         )
+        logger.info(f"Downloaded ipynb to {output_ipynb_path}")
 
 
 def scroll_to_cell(driver, nvim_info, bufnr, cursor_pos_row):
