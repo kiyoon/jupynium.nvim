@@ -104,24 +104,41 @@ function M.add_commands()
   vim.api.nvim_create_user_command("JupyniumAttachToServer", M.attach_to_server_cmd, { nargs = "?" })
 end
 
+local function call_jupynium_cli_bg(args)
+  local call_str
+  if vim.fn.has "win32" == 1 then
+    call_str = [[call system('PowerShell "Start-Process -FilePath \"]]
+      .. vim.fn.expand(options.opts.python_host):gsub("\\", "\\\\")
+      .. [[\" -ArgumentList \"-m jupynium --nvim_listen_addr ]]
+      .. vim.v.servername
+
+    for _, v in ipairs(args) do
+      call_str = call_str .. [[ `\"]] .. v:gsub("\\", "\\\\") .. [[`\"]]
+    end
+
+    call_str = call_str .. [[\""')]]
+  else
+    call_str = [[call system('"]]
+      .. vim.fn.expand(options.opts.python_host)
+      .. [[" -m jupynium --nvim_listen_addr ]]
+      .. vim.v.servername
+
+    for _, v in ipairs(args) do
+      call_str = call_str .. [[ "]] .. v:gsub("\\", "\\\\") .. [["]]
+    end
+
+    call_str = call_str .. [[ &')]]
+  end
+  vim.cmd(call_str)
+end
+
 function M.start_and_attach_to_server_cmd(args)
   local notebook_URL = vim.fn.trim(args.args)
+
   if notebook_URL == "" then
-    vim.cmd(
-      [[call system(']]
-        .. options.opts.python_host
-        .. [[ -m jupynium --notebook_URL ]]
-        .. options.opts.default_notebook_URL
-        .. [[ --nvim_listen_addr ' . v:servername . ' &')]]
-    )
+    call_jupynium_cli_bg { "--notebook_URL", options.opts.default_notebook_URL }
   else
-    vim.cmd(
-      [[call system(']]
-        .. options.opts.python_host
-        .. [[ -m jupynium --notebook_URL ]]
-        .. notebook_URL
-        .. [[ --nvim_listen_addr ' . v:servername . ' &')]]
-    )
+    call_jupynium_cli_bg { "--notebook_URL", notebook_URL }
   end
 end
 
@@ -129,21 +146,9 @@ function M.attach_to_server_cmd(args)
   local notebook_URL = vim.fn.trim(args.args)
 
   if notebook_URL == "" then
-    vim.cmd(
-      [[call system(']]
-        .. options.opts.python_host
-        .. [[ -m jupynium --attach_only --notebook_URL ]]
-        .. options.opts.default_notebook_URL
-        .. [[ --nvim_listen_addr ' . v:servername . ' &')]]
-    )
+    call_jupynium_cli_bg { "--attach_only", "--notebook_URL", options.opts.default_notebook_URL }
   else
-    vim.cmd(
-      [[call system(']]
-        .. options.opts.python_host
-        .. [[ -m jupynium --attach_only --notebook_URL ]]
-        .. notebook_URL
-        .. [[ --nvim_listen_addr ' . v:servername . ' &')]]
-    )
+    call_jupynium_cli_bg { "--attach_only", "--notebook_URL", notebook_URL }
   end
 end
 

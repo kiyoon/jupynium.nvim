@@ -1,4 +1,5 @@
 /src/jupynium/jupynium_pid.txt
+/src/jupynium/jupynium_persist_queue
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 
