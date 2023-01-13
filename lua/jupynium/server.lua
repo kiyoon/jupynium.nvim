@@ -44,7 +44,6 @@ function M.register_autostart_autocmds(augroup, opts)
     pattern = all_patterns,
     callback = function()
       local bufname = vim.api.nvim_buf_get_name(0)
-      print "Aaa"
       if not M.server_state.is_autostarted then
         if
           opts.auto_start_server.enable
