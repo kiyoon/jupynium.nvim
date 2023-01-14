@@ -64,7 +64,7 @@ def get_parser():
     )
     parser.add_argument(
         "--nvim_listen_addr",
-        default="localhost:18898",
+        # default="localhost:18898",
         help="TCP or socket path (file path)",
     )
     parser.add_argument(
@@ -96,9 +96,17 @@ def get_parser():
 def start_if_running_else_clear(args, q: persistqueue.UniqueQ):
     # If Jupynium is already running, send args and quit.
     if already_running_pid():
-        q.put(args)
-        logger.info("Jupynium is already running. Attaching to the running process.")
-        return 0
+        if args.nvim_listen_addr is not None:
+            q.put(args)
+            logger.info(
+                "Jupynium is already running. Attaching to the running process."
+            )
+            return 0
+        else:
+            logger.info(
+                "Jupynium is already running. Attach nvim using --nvim_listen_addr"
+            )
+            return 1
     else:
         if args.attach_only:
             logger.error(
@@ -184,11 +192,13 @@ def main():
     if return_code is not None:
         sys.exit(return_code)
 
-    try:
-        nvim = attach_and_init(args.nvim_listen_addr)
-    except Exception:
-        logger.exception("Exception occurred")
-        sys.exit(1)
+    nvim = None
+    if args.nvim_listen_addr is not None:
+        try:
+            nvim = attach_and_init(args.nvim_listen_addr)
+        except Exception:
+            logger.exception("Exception occurred")
+            sys.exit(1)
 
     nvims = {}
     try:
@@ -199,7 +209,22 @@ def main():
         # If you load with Safari, it won't let you interact with the browser.
 
         with webdriver_firefox() as driver:
-            driver.get(args.notebook_URL)
+            try:
+                driver.get(args.notebook_URL)
+            except WebDriverException:
+                logger.exception(
+                    f"Exception occurred. Are you sure you're running Jupyter Notebook at {args.notebook_URL}?"
+                )
+                if nvim is not None:
+                    nvim.lua.Jupynium_notify.error(
+                        [
+                            "Can't connect to Jupyter Notebook.",
+                            f"Are you sure you're running Jupyter Notebook at {args.notebook_URL}?",
+                        ],
+                    )
+                    nvim.lua.Jupynium_reset_channel()
+
+                sys.exit(1)
 
             # Wait for the notebook to load
             driver_wait = WebDriverWait(driver, 10)
@@ -209,7 +234,12 @@ def main():
             home_window = driver.current_window_handle
 
             URL_to_home_windows = {args.notebook_URL: home_window}
-            nvims = {args.nvim_listen_addr: NvimInfo(nvim, home_window)}
+            if args.nvim_listen_addr is not None and nvim is not None:
+                nvims = {args.nvim_listen_addr: NvimInfo(nvim, home_window)}
+            else:
+                logger.info(
+                    "No nvim attached. Waiting for nvim to attach. Run jupynium --nvim_listen_addr /tmp/example (use `:echo v:servername` of nvim)"
+                )
 
             while not sele.is_browser_disconnected(driver):
                 try:

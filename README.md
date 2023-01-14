@@ -305,6 +305,7 @@ Additionally,
 
 - You can run `jupynium` command multiple times to attach more than one Neovim instance.
 - `jupynium --notebook_URL localhost:18888` to view different notebook.
+- You can just run `jupynium` without arguments to just let the server / browser running and wait for nvim to attach.
 
 ### Converting ipynb to Jupynium file
 

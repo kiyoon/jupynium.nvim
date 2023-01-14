@@ -33,6 +33,7 @@ def receive_all_pending_messages(nvim: Nvim):
     return events
 
 
+"""
 def event_to_dict(event):
     event_dict = {}
     if event is None:
@@ -109,3 +110,4 @@ def event_to_dict(event):
 
 def events_to_listdict(events):
     return [event_to_dict(event) for event in events]
+"""
