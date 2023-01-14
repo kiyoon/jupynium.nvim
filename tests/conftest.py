@@ -3,8 +3,8 @@ import tempfile
 
 import pytest
 
-from jupynium.buffer import JupyniumBuffer
 from jupynium import pynvim_helpers
+from jupynium.buffer import JupyniumBuffer
 
 
 @pytest.fixture(scope="session")
