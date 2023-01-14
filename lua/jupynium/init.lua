@@ -7,7 +7,7 @@ local options = require "jupynium.options"
 
 function M.default_keybindings(augroup)
   vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
-    pattern = { "*.ju.py" },
+    pattern = "*.ju.*",
     callback = function()
       local buf_id = vim.api.nvim_get_current_buf()
       vim.keymap.set({ "n", "x" }, "<space>x", "<cmd>JupyniumExecuteSelectedCells<CR>", { buffer = buf_id })

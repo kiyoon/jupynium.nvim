@@ -16,7 +16,7 @@ end
 
 function utils.set_autocmd()
   vim.api.nvim_create_autocmd({ "BufWinEnter", "BufWritePost", "CursorMoved", "CursorMovedI", "WinScrolled" }, {
-    pattern = "*.ju.py",
+    pattern = "*.ju.*",
     callback = require("jupynium.shortsighted").run,
   })
 end
@@ -58,7 +58,7 @@ end
 function M.enable()
   M.options.enable = true
 
-  if string_ends_with(vim.fn.expand "%", ".ju.py") then
+  if string.find(vim.fn.expand "%", ".ju.") then
     M.focus(ns)
   end
   utils.set_autocmd()

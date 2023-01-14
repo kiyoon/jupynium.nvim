@@ -107,7 +107,7 @@ end
 M.default_keybindings = function(augroup)
   -- Text objects
   vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
-    pattern = { "*.ju.py" },
+    pattern = "*.ju.*",
     callback = function()
       local buf_id = vim.api.nvim_get_current_buf()
       vim.keymap.set(

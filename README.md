@@ -20,8 +20,7 @@ The Jupynium server will receive events from Neovim, keep the copy of the buffer
 
 - Develop locally, run remotely (or vice versa)
 - Use university-hosted Jupyter Notebook
-
-Only supports Jupyter Notebook (Jupyter Lab disables front-end interaction)
+- Use any other languages / kernels such as R
 
 ## 🛠️ Installation
 
@@ -31,6 +30,7 @@ Only supports Jupyter Notebook (Jupyter Lab disables front-end interaction)
 - 🦊 Firefox (Other browsers are not supported due to their limitation with Selenium)
 - ✌️ Neovim >= v0.8
 - 🐍 Python >= 3.10
+- 📔 Jupyter Notebook 6 (Doesn't support Jupyter Lab)
 
 Don't have system python 3.10? You can use [Conda](https://docs.conda.io/en/latest/miniconda.html).
 
@@ -71,10 +71,8 @@ Setup is optional for system python users and here are the defaults. Conda users
 
 <details>
 <summary>
-See setup defaults
+Click to see setup defaults
 </summary>
-
-This comes after `call plug#end()` for vim-plug users.
 
 ```lua
 require("jupynium").setup({
@@ -89,7 +87,7 @@ require("jupynium").setup({
   -- Related command :JupyniumStartAndAttachToServer
   auto_start_server = {
     enable = false,
-    file_pattern = { "*.ju.py" },
+    file_pattern = { "*.ju.*" },
   },
 
   -- Attach current nvim to the Jupynium server
@@ -97,7 +95,7 @@ require("jupynium").setup({
   -- Related command :JupyniumAttachToServer
   auto_attach_to_server = {
     enable = true,
-    file_pattern = { "*.ju.py", "*.md" },
+    file_pattern = { "*.ju.*", "*.md" },
   },
 
   -- Automatically open an Untitled.ipynb file on Notebook
@@ -105,7 +103,7 @@ require("jupynium").setup({
   -- Related command :JupyniumStartSync
   auto_start_sync = {
     enable = false,
-    file_pattern = { "*.ju.py", "*.md" },
+    file_pattern = { "*.ju.*", "*.md" },
   },
 
   -- Automatically keep filename.ipynb copy of filename.ju.py
@@ -192,7 +190,7 @@ Run `:JupyniumStartSync` again with a new buffer you want to sync.
 You can run `:JupyniumStartSync` on a new neovim instance.  
 If you have `auto_attach_to_server = false` during setup, you need to run `:JupyniumAttachToServer` and `:JupyniumStartSync`.
 
-## 📝 .ju.py file format
+## 📝 .ju.py (or .ju.\*) file format
 
 The file format is designed to be LSP friendly even with markdown code injected in it. The markdown cells will be part of python string `"""%%` ... `%%"""`.
 
@@ -325,6 +323,11 @@ Rules:
 
 2. It's OK to close the notebook pages. If you do so, it will stop syncing that buffer.
 3. Changing tab ordering or making it to a separate window is OK.
+
+## Using different languages / kernels
+
+Instead of `*.ju.py` if you make files named `*.ju.*` (e.g. `*.ju.r`) you will see all the keybindings and commands.  
+All the procedure should be the same, except that you would need to manually change the kernel from the browser.
 
 ## 📰 Fun Facts
 

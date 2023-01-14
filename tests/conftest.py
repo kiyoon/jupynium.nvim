@@ -1,4 +1,5 @@
 import os
+import subprocess
 import tempfile
 
 import pytest
@@ -16,10 +17,15 @@ def jupbuf1():
 def nvim_1():
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "nvim")
-        os.system(f"nvim --clean --headless --listen {path} &")
+        nvim_proc = subprocess.Popen(
+            ["nvim", "--clean", "--headless", "--listen", path]
+        )
+        # os.system(f"nvim --clean --headless --listen {path} &")
         nvim = pynvim_helpers.attach_and_init(path)
 
         yield nvim
 
         # Teardown
-        nvim.quit()
+
+        # nvim.quit() sometimes hangs
+        nvim_proc.kill()

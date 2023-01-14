@@ -13,7 +13,7 @@ M.default_opts = {
   -- Related command :JupyniumStartAndAttachToServer
   auto_start_server = {
     enable = false,
-    file_pattern = { "*.ju.py" },
+    file_pattern = { "*.ju.*" },
   },
 
   -- Attach current nvim to the Jupynium server
@@ -21,7 +21,7 @@ M.default_opts = {
   -- Related command :JupyniumAttachToServer
   auto_attach_to_server = {
     enable = true,
-    file_pattern = { "*.ju.py", "*.md" },
+    file_pattern = { "*.ju.*", "*.md" },
   },
 
   -- Automatically open an Untitled.ipynb file on Notebook
@@ -29,7 +29,7 @@ M.default_opts = {
   -- Related command :JupyniumStartSync
   auto_start_sync = {
     enable = false,
-    file_pattern = { "*.ju.py", "*.md" },
+    file_pattern = { "*.ju.*", "*.md" },
   },
 
   -- Automatically keep filename.ipynb copy of filename.ju.py
