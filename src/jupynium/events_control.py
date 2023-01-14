@@ -371,7 +371,7 @@ def process_notification_event(
             driver.execute_script("Jupyter.notebook.save_checkpoint();")
 
             if (
-                buf_filepath.endswith(".ju.py")
+                ".ju." in buf_filepath
                 and nvim_info.nvim.vars["jupynium_auto_download_ipynb"]
             ):
                 output_ipynb_path = os.path.splitext(buf_filepath)[0]
