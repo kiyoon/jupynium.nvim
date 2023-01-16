@@ -1,8 +1,8 @@
 import logging
 import time
 
-from pkg_resources import resource_stream
 import pynvim
+from pkg_resources import resource_stream
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ def attach_and_init(nvim_listen_addr):
     # existing_channel_id = nvim.vars.get("jupynium_channel_id", None)
     # if existing_channel_id is None:
     logger.info("Initialising..")
-    logger.info(f"Communicating with {nvim.channel_id = }")
+    logger.info(f"Communicating with channel_id {nvim.channel_id}")
     nvim.vars["jupynium_channel_id"] = nvim.channel_id
     nvim.vars["jupynium_num_pending_msgs"] = 0
     # Define helper functions

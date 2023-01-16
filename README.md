@@ -29,10 +29,10 @@ The Jupynium server will receive events from Neovim, keep the copy of the buffer
 - 💻 Linux, macOS and Windows (CMD, PowerShell, WSL2)
 - 🦊 Firefox (Other browsers are not supported due to their limitation with Selenium)
 - ✌️ Neovim >= v0.8
-- 🐍 Python >= 3.10
+- 🐍 Python >= 3.7
 - 📔 Jupyter Notebook 6 (Doesn't support Jupyter Lab)
 
-Don't have system python 3.10? You can use [Conda](https://docs.conda.io/en/latest/miniconda.html).
+Don't have system python 3.7? You can use [Conda](https://docs.conda.io/en/latest/miniconda.html).
 
 ```bash
 conda create -n jupynium
@@ -324,7 +324,7 @@ Rules:
 2. It's OK to close the notebook pages. If you do so, it will stop syncing that buffer.
 3. Changing tab ordering or making it to a separate window is OK.
 
-## Using different languages / kernels
+## 🌽 Using different languages / kernels
 
 Instead of `*.ju.py` if you make files named `*.ju.*` (e.g. `*.ju.r`) you will see all the keybindings and commands.  
 All the procedure should be the same, except that you would need to manually change the kernel from the browser.
