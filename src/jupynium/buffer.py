@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 
 from pkg_resources import resource_stream
@@ -32,7 +34,7 @@ class JupyniumBuffer:
         num_rows_this_cell = 0
         num_rows_per_cell = []
         cell_types = ["header"]
-        for row, line in enumerate(self.buf):
+        for line in self.buf:
             if (
                 line.startswith("# %%%")
                 or line.startswith('"""%%')

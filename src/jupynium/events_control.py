@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import dataclasses
 import json
 import logging
@@ -435,7 +437,7 @@ def process_notification_event(
             nvim_info.detach_buffer(bufnr, driver)
 
         elif event[1] == "stop_sync":
-            logger.info(f"Received stop_sync request: {bufnr = }")
+            logger.info(f"Received stop_sync request: bufnr = {bufnr}")
             nvim_info.detach_buffer(bufnr, driver)
 
 

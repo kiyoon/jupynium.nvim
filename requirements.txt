@@ -5,3 +5,4 @@ pynvim==0.4.3
 psutil==5.9.4
 persist-queue==0.8.0
 packaging==21.3
+importlib-metadata==4.13.0
