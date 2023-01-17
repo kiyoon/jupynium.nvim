@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=42", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -31,7 +31,7 @@ dependencies = [
   "psutil >= 5.9.4",
   "persist-queue >= 0.8.0",
   "packaging >= 22.0",
-  "importlib-metadata < 5.0",
+  "setuptools >= 45.0",       # for pkg_resources. Otherwise get LegacyVersion error
 ]
 
 [project.optional-dependencies]
@@ -43,6 +43,7 @@ test = [
   "pytest >= 6.0",
   "pytest-cov >= 2.0",
   "flake8 >= 3.9",
+  "importlib-metadata < 5.0.0; python_version < '3.8'", # flake8 dependency
   "tox >= 3.24",
 ]
 

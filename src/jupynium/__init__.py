@@ -1,17 +1,7 @@
 try:
-    from importlib.metadata import PackageNotFoundError, version
-
-    try:
-        __version__ = version("jupynium")
-    except PackageNotFoundError:
-        # package is not installed
-        __version__ = "unknown"
+    from ._version import __version__, __version_tuple__
 except ImportError:
-    # For versions of python before 3.8
-    from pkg_resources import DistributionNotFound, get_distribution
+    __version__ = "0.0.0"
+    __version_tuple__ = (0, 0, 0)
 
-    try:
-        __version__ = get_distribution("jupynium").version
-    except DistributionNotFound:
-        # package is not installed
-        __version__ = "unknown"
+all = ["__version__", "__version_tuple__"]
