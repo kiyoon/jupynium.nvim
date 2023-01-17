@@ -1,3 +1,7 @@
-from . import _version
+try:
+    from ._version import __version__, __version_tuple__
+except ImportError:
+    __version__ = "0.0.0"
+    __version_tuple__ = (0, 0, 0)
 
-__version__ = _version.get_versions()["version"]
+all = ["__version__", "__version_tuple__"]

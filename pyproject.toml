@@ -1,9 +1,68 @@
 [build-system]
-requires = ["setuptools>=42"]
-build-backend = "setuptools.build_meta:__legacy__"
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jupynium"
+dynamic = ["version"]
+description = "Neovim plugin that automates Jupyter Notebook editing/browsing using Selenium."
+authors = [
+  { name = "Kiyoon Kim" },
+]
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.7"
+classifiers = [
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "License :: OSI Approved :: MIT License",
+]
+keywords = ["neovim", "vim", "jupyter", "selenium", "jupyter-notebook", "nvim", "neovim-plugin", "nvim-plugin"]
+dependencies = [
+  "pynvim >= 0.4.3",
+  "coloredlogs >= 15.0.0",
+  "verboselogs >= 1.7",
+  "selenium >= 4.7.2",
+  "psutil >= 5.9.4",
+  "persist-queue >= 0.8.0",
+  "packaging >= 22.0",
+  "setuptools >= 45.0",       # for pkg_resources. Otherwise get LegacyVersion error
+]
+
+[project.optional-dependencies]
+dev = [
+  "black >= 22.1.0",
+  "pre-commit >= 2.21.0",
+]
+test = [
+  "pytest >= 6.0",
+  "pytest-cov >= 2.0",
+  "flake8 >= 3.9",
+  "importlib-metadata < 5.0.0; python_version < '3.8'", # flake8 dependency
+  "tox >= 3.24",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/kiyoon/jupynium.nvim"
+
+[project.scripts]
+jupynium = "jupynium.cmds.jupynium:main"
+ipynb2jupy = "jupynium.cmds.ipynb2jupy:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
+write_to = "src/jupynium/_version.py"
 
 [tool.pytest.ini_options]
 addopts = "--cov=jupynium"
 testpaths = [
-    "tests",
+  "tests",
 ]
+
