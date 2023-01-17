@@ -206,6 +206,8 @@ i.e. Any code below this line (and before the next separator) will be a code cel
 - `"""%%`: recommended
 - `'''%%`
 - `# %%%`
+- `# %% [md]`
+- `# %% [markdown]`
 
 **Explicitly specify the first cell separator to use it like a notebook.**
 
