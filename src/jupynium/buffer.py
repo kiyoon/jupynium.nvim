@@ -37,17 +37,19 @@ class JupyniumBuffer:
         for line in self.buf:
             if (
                 line.startswith("# %%%")
+                or line.startswith("# %% [md]")
+                or line.startswith("# %% [markdown]")
                 or line.startswith('"""%%')
                 or line.startswith("'''%%")
             ):
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
                 cell_types.append("markdown")
-            elif line.startswith("# %%"):
-                num_rows_per_cell.append(num_rows_this_cell)
-                num_rows_this_cell = 1
-                cell_types.append("code")
-            elif line.startswith('%%"""') or line.startswith("%%'''"):
+            elif (
+                line.startswith("# %%")
+                or line.startswith('%%"""')
+                or line.startswith("%%'''")
+            ):
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
                 cell_types.append("code")

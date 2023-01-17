@@ -12,6 +12,8 @@ local is_line_separator = function(row)
   if
     string_starts_with(line, "# %%")
     or string_starts_with(line, "# %%%")
+    or string_starts_with(line, "# %% [md]")
+    or string_starts_with(line, "# %% [markdown]")
     or string_starts_with(line, '"""%%')
     or string_starts_with(line, "'''%%")
     or string_starts_with(line, '%%"""')
