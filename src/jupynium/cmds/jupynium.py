@@ -5,6 +5,7 @@ import argparse
 import logging
 import os
 import sys
+import time
 import traceback
 from pathlib import Path
 
@@ -71,6 +72,12 @@ def get_parser():
         "--attach_only",
         action="store_true",
         help="Attach to an existing Jupynium instance. If False, start a new instance or attach to an existing one.",
+    )
+    parser.add_argument(
+        "--sleep_time_idle",
+        type=float,
+        default=0.1,
+        help="Sleep time when there is no event to process.",
     )
     parser.add_argument(
         "-v",
@@ -275,6 +282,8 @@ def main():
                         pass
                     else:
                         attach_new_neovim(driver, new_args, nvims, URL_to_home_windows)
+
+                    time.sleep(args.sleep_time_idle)
                 except WebDriverException:
                     break
 
