@@ -12,7 +12,7 @@ from selenium.webdriver.common.by import By
 
 from . import selenium_helpers as sele
 from .buffer import JupyniumBuffer
-from .ipynb import ipynb2jupy
+from .ipynb import cells_to_jupy
 from .nvim import NvimInfo
 from .rpc_messages import len_pending_messages, receive_message
 
@@ -21,6 +21,10 @@ logger = logging.getLogger(__name__)
 
 update_cell_selection_js_code = (
     resource_stream("jupynium", "js/update_cell_selection.js").read().decode("utf-8")
+)
+
+get_cell_inputs_js_code = (
+    resource_stream("jupynium", "js/get_cell_inputs.js").read().decode("utf-8")
 )
 
 
@@ -237,11 +241,8 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
             return False, None
         driver.switch_to.window(driver.window_handles[tab_idx - 1])
 
-        ipynb = driver.execute_script(
-            "return Jupyter.notebook.toJSON();",
-        )
-        jupy = ipynb2jupy(ipynb)
-        print(jupy)
+        cell_types, texts = driver.execute_script(get_cell_inputs_js_code)
+        jupy = cells_to_jupy(cell_types, texts)
         nvim_info.nvim.buffers[bufnr][:] = jupy
         logger.info(f"Loaded ipynb to the nvim buffer.")
 

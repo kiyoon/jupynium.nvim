@@ -18,8 +18,7 @@ def read_ipynb_texts(ipynb):
     return cell_types, texts
 
 
-def ipynb2jupy(ipynb):
-    cell_types, texts = read_ipynb_texts(ipynb)
+def cells_to_jupy(cell_types, texts):
     cell_types_previous = ["code"] + cell_types[:-1]
 
     jupy: list[str] = []
@@ -41,3 +40,8 @@ def ipynb2jupy(ipynb):
         jupy.extend(text.split("\n"))
 
     return jupy
+
+
+def ipynb2jupy(ipynb):
+    cell_types, texts = read_ipynb_texts(ipynb)
+    return cells_to_jupy(cell_types, texts)
