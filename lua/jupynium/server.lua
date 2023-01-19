@@ -135,20 +135,23 @@ function M.start_and_attach_to_server_cmd(args)
   local notebook_URL = vim.fn.trim(args.args)
 
   if notebook_URL == "" then
-    call_jupynium_cli_bg { "--notebook_URL", options.opts.default_notebook_URL }
-  else
-    call_jupynium_cli_bg { "--notebook_URL", notebook_URL }
+    notebook_URL = options.opts.default_notebook_URL
   end
+  args = { "--notebook_URL", notebook_URL, "--firefox_profiles_ini_path", options.opts.firefox_profiles_ini_path }
+  if options.opts.firefox_profile_name ~= nil and options.opts.firefox_profile_name ~= "" then
+    table.insert(args, "--firefox_profile_name")
+    table.insert(args, options.opts.firefox_profile_name)
+  end
+  call_jupynium_cli_bg(args)
 end
 
 function M.attach_to_server_cmd(args)
   local notebook_URL = vim.fn.trim(args.args)
 
   if notebook_URL == "" then
-    call_jupynium_cli_bg { "--attach_only", "--notebook_URL", options.opts.default_notebook_URL }
-  else
-    call_jupynium_cli_bg { "--attach_only", "--notebook_URL", notebook_URL }
+    notebook_URL = options.opts.default_notebook_URL
   end
+  call_jupynium_cli_bg { "--attach_only", "--notebook_URL", notebook_URL }
 end
 
 return M

@@ -8,6 +8,13 @@ M.default_opts = {
 
   default_notebook_URL = "localhost:8888",
 
+  -- Used to remember the last session (password etc.).
+  -- You may need to change the path.
+  firefox_profiles_ini_path = vim.fn.isdirectory(vim.fn.expand "~/snap/firefox/common/.mozilla/firefox")
+      and "~/snap/firefox/common/.mozilla/firefox/profiles.ini"
+    or "~/.mozilla/firefox/profiles.ini",
+  firefox_profile_name = nil, -- nil means the default profile
+
   -- Open the Jupynium server if it is not already running
   -- which means that it will open the Selenium browser when you open this file.
   -- Related command :JupyniumStartAndAttachToServer
