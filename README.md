@@ -235,6 +235,8 @@ If you want custom keymaps, add `use_default_keybindings = false` and follow `M.
 ### Textobjects
 
 - `[j`, `]j`: go to previous / next cell separator
+  - Repeat with `;` and `,` if you have [nvim-treesitter-textobjects](https://github.com/nvim-treesitter/nvim-treesitter-textobjects).
+    Follow their instructions for keybindings for this.
 - `<space>j`: go to current cell separator
 - `vaj`,`vij`, `vaJ`, `viJ`: select current cell
   - `a`: include separator, `i`: exclude separator

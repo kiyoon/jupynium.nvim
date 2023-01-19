@@ -85,6 +85,12 @@ M.goto_next_cell_separator = function()
   vim.api.nvim_win_set_cursor(0, { row, 0 })
 end
 
+local status, repeat_move = pcall(require, "nvim-treesitter.textobjects.repeatable_move")
+if status then
+  M.goto_next_cell_separator, M.goto_previous_cell_separator =
+    repeat_move.make_repeatable_move_pair(M.goto_next_cell_separator, M.goto_previous_cell_separator)
+end
+
 M.goto_current_cell_separator = function()
   local row = cells.current_cell_separator()
   if row == nil then
