@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import configparser
 import logging
 import os
 import sys
@@ -31,8 +32,56 @@ logger = verboselogs.VerboseLogger(__name__)
 SOURCE_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
 
 
-def webdriver_firefox():
-    profile = webdriver.FirefoxProfile()
+def webdriver_firefox(
+    profiles_ini_path="~/.mozilla/firefox/profiles.ini", profile_name=None
+):
+    """
+    profiles.ini path is used to remember the last session (password, etc.)
+    Args:
+        profiles_ini_path: Path to profiles.ini
+        profile_name: Profile name in profiles.ini. If None, use the default profile.
+    """
+    # Read firefox profile path from profiles.ini
+    profile_path = None
+
+    if profiles_ini_path is not None:
+        profiles_ini_path = Path(profiles_ini_path).expanduser()
+        if profiles_ini_path.exists():
+            config = configparser.ConfigParser()
+            config.read(profiles_ini_path)
+            for section in config.sections():
+                if section.startswith("Profile"):
+                    try:
+                        if profile_name is None or profile_name == "":
+                            if config[section]["Default"] == "1":
+                                section_ = section
+                                break
+                        else:
+                            if config[section]["Name"] == profile_name:
+                                section_ = section
+                                break
+                    except KeyError:
+                        pass
+            else:
+                section_ = None
+                profile_path = None
+
+            if section_ is not None:
+                try:
+                    profile_path = config[section_]["Path"]
+                    is_relative = config[section_]["IsRelative"]
+                    if is_relative == "1":
+                        profile_path = profiles_ini_path.parent / profile_path
+                    else:
+                        profile_path = Path(profile_path)
+                    if not profile_path.exists():
+                        profile_path = None
+                except KeyError:
+                    profile_path = None
+
+    logger.info(f"Using firefox profile: {profile_path}")
+
+    profile = webdriver.FirefoxProfile(profile_path)
     profile.set_preference("browser.link.open_newwindow", 3)
     profile.set_preference("browser.link.open_newwindow.restriction", 0)
     # profile.setAlwaysLoadNoFocusLib(True);
@@ -71,7 +120,9 @@ def get_parser():
     parser.add_argument(
         "--attach_only",
         action="store_true",
-        help="Attach to an existing Jupynium instance. If False, start a new instance or attach to an existing one.",
+        help="Attach to an existing Jupynium instance."
+        "If False, start a new instance or attach to an existing one."
+        "If True, all arguments except nvim_listen_addr and notebook_URL are ignored.",
     )
     parser.add_argument(
         "--sleep_time_idle",
@@ -89,6 +140,15 @@ def get_parser():
         "--check_running",
         action="store_true",
         help="Print pid if Jupynium is running. Otherwise, print nothing.",
+    )
+    parser.add_argument(
+        "--firefox_profiles_ini_path",
+        default="~/.mozilla/firefox/profiles.ini",
+        help="Path to firefox profiles.ini which will be used to remember the last session (password, etc.)",
+    )
+    parser.add_argument(
+        "--firefox_profile_name",
+        help="Firefox profile name. If None, use the default profile.",
     )
 
     # parser.add_argument(
@@ -215,7 +275,9 @@ def main():
 
         # If you load with Safari, it won't let you interact with the browser.
 
-        with webdriver_firefox() as driver:
+        with webdriver_firefox(
+            args.firefox_profiles_ini_path, args.firefox_profile_name
+        ) as driver:
             try:
                 driver.get(args.notebook_URL)
             except WebDriverException:
