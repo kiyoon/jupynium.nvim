@@ -62,7 +62,7 @@ Install with 💤lazy.nvim
     "kiyoon/jupynium.nvim",
     build = "pip3 install --user .",
     -- build = "~/bin/miniconda3/envs/jupynium/bin/pip install .",
-    -- enabled = vim.fn.isdirectory(vim.fn.expand "~/bin/miniconda3/envs/jupynium"),
+    -- enabled = vim.fn.isdirectory(vim.fn.expand "~/miniconda3/envs/jupynium"),
   },
   "rcarriga/nvim-notify",  -- optional
 ```
