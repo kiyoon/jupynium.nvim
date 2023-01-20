@@ -8,8 +8,82 @@ M.server_state = {
   is_autoattached = false,
 }
 
+local function TableConcat(t1, t2)
+  for i = 1, #t2 do
+    t1[#t1 + 1] = t2[i]
+  end
+  return t1
+end
+
+local function run_process_bg(cmd, args)
+  args = args or {}
+  local call_str
+  if vim.fn.has "win32" == 1 then
+    call_str = [[call system('PowerShell "Start-Process -FilePath \"]]
+      .. vim.fn.expand(cmd):gsub("\\", "\\\\")
+      .. [[\" -ArgumentList \"]]
+
+    for _, v in ipairs(args) do
+      call_str = call_str .. [[ `\"]] .. v:gsub("\\", "\\\\") .. [[`\"]]
+    end
+
+    call_str = call_str .. [[\""')]]
+  else
+    call_str = [[call system('"]] .. vim.fn.expand(cmd) .. [["]]
+
+    for _, v in ipairs(args) do
+      call_str = call_str .. [[ "]] .. v:gsub("\\", "\\\\") .. [["]]
+    end
+
+    call_str = call_str .. [[ &')]]
+  end
+
+  vim.cmd(call_str)
+end
+
+local function run_process(cmd, args)
+  args = args or {}
+  local call_str = [[echo system('"]] .. vim.fn.expand(cmd) .. [["]]
+
+  for _, v in ipairs(args) do
+    call_str = call_str .. [[ "]] .. v:gsub("\\", "\\\\") .. [["]]
+  end
+
+  local output = vim.cmd(call_str)
+  if output == nil then
+    return ""
+  else
+    return output
+  end
+end
+
+local function call_jupynium_cli(args, bg)
+  args = args or {}
+  if bg == nil then
+    bg = true
+  end
+
+  args = TableConcat({ "-m", "jupynium", "--nvim_listen_addr", vim.v.servername }, args)
+
+  local cmd
+  if type(options.opts.python_host) == "string" then
+    cmd = options.opts.python_host
+  elseif type(options.opts.python_host) == "table" then
+    cmd = options.opts.python_host[1]
+    args = TableConcat({ unpack(options.opts.python_host, 2) }, args)
+  else
+    error "Invalid python_host type."
+  end
+
+  if bg then
+    run_process_bg(cmd, args)
+  else
+    return run_process(cmd, args)
+  end
+end
+
 function M.jupynium_pid()
-  local pid = vim.fn.trim(vim.fn.system(options.opts.python_host .. " -m jupynium --check_running"))
+  local pid = vim.fn.trim(call_jupynium_cli({ "--check_running" }, false))
   if pid == "" then
     return nil
   else
@@ -103,34 +177,6 @@ function M.add_commands()
   vim.api.nvim_create_user_command("JupyniumAttachToServer", M.attach_to_server_cmd, { nargs = "?" })
 end
 
-local function call_jupynium_cli_bg(args)
-  local call_str
-  if vim.fn.has "win32" == 1 then
-    call_str = [[call system('PowerShell "Start-Process -FilePath \"]]
-      .. vim.fn.expand(options.opts.python_host):gsub("\\", "\\\\")
-      .. [[\" -ArgumentList \"-m jupynium --nvim_listen_addr ]]
-      .. vim.v.servername
-
-    for _, v in ipairs(args) do
-      call_str = call_str .. [[ `\"]] .. v:gsub("\\", "\\\\") .. [[`\"]]
-    end
-
-    call_str = call_str .. [[\""')]]
-  else
-    call_str = [[call system('"]]
-      .. vim.fn.expand(options.opts.python_host)
-      .. [[" -m jupynium --nvim_listen_addr ]]
-      .. vim.v.servername
-
-    for _, v in ipairs(args) do
-      call_str = call_str .. [[ "]] .. v:gsub("\\", "\\\\") .. [["]]
-    end
-
-    call_str = call_str .. [[ &')]]
-  end
-  vim.cmd(call_str)
-end
-
 function M.start_and_attach_to_server_cmd(args)
   local notebook_URL = vim.fn.trim(args.args)
 
@@ -142,7 +188,9 @@ function M.start_and_attach_to_server_cmd(args)
     table.insert(args, "--firefox_profile_name")
     table.insert(args, options.opts.firefox_profile_name)
   end
-  call_jupynium_cli_bg(args)
+  table.insert(args, "--jupyter_command")
+  table.insert(args, options.opts.jupyter_command)
+  call_jupynium_cli(args, true)
 end
 
 function M.attach_to_server_cmd(args)
@@ -151,7 +199,7 @@ function M.attach_to_server_cmd(args)
   if notebook_URL == "" then
     notebook_URL = options.opts.default_notebook_URL
   end
-  call_jupynium_cli_bg { "--attach_only", "--notebook_URL", notebook_URL }
+  call_jupynium_cli({ "--attach_only", "--notebook_URL", notebook_URL }, true)
 end
 
 return M

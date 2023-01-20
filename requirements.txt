@@ -6,3 +6,4 @@ psutil==5.9.4
 persist-queue==0.8.0
 packaging==23.0
 setuptools==66.0
+gitpython==3.1.30
