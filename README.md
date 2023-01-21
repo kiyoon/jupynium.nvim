@@ -30,20 +30,20 @@ The Jupynium server will receive events from Neovim, keep the copy of the buffer
 - 🦊 Firefox (Other browsers are not supported due to their limitation with Selenium)
 - ✌️ Neovim >= v0.8
 - 🐍 Python >= 3.7
-- 📔 Jupyter Notebook 6 (Doesn't support Jupyter Lab)
+- 📔 Jupyter Notebook >= 6.2 (Doesn't support Jupyter Lab)
 
 Don't have system python 3.7? You can use [Conda](https://docs.conda.io/en/latest/miniconda.html).
 
 ```bash
-conda create -n jupynium
-conda activate jupynium && conda install -c conda-forge python=3.11
+conda create -n jupynium python=3
+conda activate jupynium
 ```
 
 Install with vim-plug:
 
 ```vim
 Plug 'kiyoon/jupynium.nvim', { 'do': 'pip3 install --user .' }
-" Plug 'kiyoon/jupynium.nvim', { 'do': '~/miniconda3/bin/envs/jupynium/bin/pip install .' }
+" Plug 'kiyoon/jupynium.nvim', { 'do': '~/miniconda3/envs/jupynium/bin/pip install .' }
 Plug 'rcarriga/nvim-notify'  " optional
 ```
 
@@ -51,7 +51,7 @@ Install with packer.nvim:
 
 ```lua
 use { "kiyoon/jupynium.nvim", run = "pip3 install --user ." }
--- use { "kiyoon/jupynium.nvim", run = "~/miniconda3/bin/envs/jupynium/bin/pip install ." }
+-- use { "kiyoon/jupynium.nvim", run = "~/miniconda3/envs/jupynium/bin/pip install ." }
 use { "rcarriga/nvim-notify" }  -- optional
 ```
 
@@ -81,6 +81,14 @@ require("jupynium").setup({
   python_host = vim.g.python3_host_prog or "python3",
 
   default_notebook_URL = "localhost:8888",
+
+  -- Write jupyter command but without "notebook"
+  -- When you call :JupyniumStartAndAttachToServer and no notebook is open,
+  -- then Jupynium will open the server for you using this command. (only when notebook_URL is localhost)
+  -- It will open at the git directory of the current buffer,
+  -- and start syncing the relevant file (file.ju.py will be synced with file.ipynb)
+  jupyter_command = "jupyter",
+  -- jupyter_command = "~/miniconda3/envs/jupynium/bin/jupyter",
 
   -- Used to remember the last session (password etc.).
   -- You may need to change the path.
@@ -174,6 +182,10 @@ For example:
 
 Running `:JupyniumStartAndAttachToServer` will open the notebook.  
 Type password and once **you need to be on the main page (file browser) for the next steps**.
+
+**New in 0.1.1:**  
+Jupynium will open Jupyter Notebook server for you if not found.  
+It will also open the ipynb file in the current directory and ask you if you want to sync from vim or from ipynb.
 
 ### Sync current buffer to the Jupynium server
 

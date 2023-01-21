@@ -19,6 +19,19 @@ def wait_until_notebook_loaded(driver, timeout=10):
         driver.quit()
 
 
+def wait_until_notebook_list_loaded(driver, timeout=10):
+    """Wait until the Jupyter Notebook home page (list of files) is loaded."""
+    try:
+        WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "#notebook_list > div > div > a > span")
+            )
+        )
+    except TimeoutException:
+        logger.exception("Timed out waiting for page to load")
+        driver.quit()
+
+
 def wait_until_loaded(driver, timeout=10):
     """Wait until the page is ready."""
     try:

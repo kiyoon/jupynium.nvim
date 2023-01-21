@@ -3,10 +3,18 @@ local M = {}
 M.opts = {}
 M.default_opts = {
   -- Conda users:
-  -- python_host = "~/miniconda3/envs/jupynium/bin/python",
+  -- python_host = "~/miniconda3/envs/jupynium/bin/python"
   python_host = vim.g.python3_host_prog or "python3",
 
   default_notebook_URL = "localhost:8888",
+
+  -- Write jupyter command but without "notebook"
+  -- When you call :JupyniumStartAndAttachToServer and no notebook is open,
+  -- then Jupynium will open the server for you using this command. (only when notebook_URL is localhost)
+  -- It will open at the git directory of the current buffer,
+  -- and start syncing the relevant file (file.ju.py will be synced with file.ipynb)
+  jupyter_command = "jupyter",
+  -- jupyter_command = "~/miniconda3/envs/jupynium/bin/jupyter",
 
   -- Used to remember the last session (password etc.).
   -- You may need to change the path.

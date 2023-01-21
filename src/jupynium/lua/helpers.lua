@@ -108,7 +108,13 @@ function Jupynium_load_from_ipynb_tab_cmd(args)
   end
   local tab_idx = tonumber(args.args)
   local buf = vim.api.nvim_get_current_buf()
+  Jupynium_load_from_ipynb_tab(buf, tab_idx)
+end
+
+function Jupynium_load_from_ipynb_tab(buf, tab_idx)
+  buf = buf or vim.api.nvim_get_current_buf()
   local response = Jupynium_rpcrequest("load_from_ipynb_tab", buf, false, tab_idx)
+
   if response ~= "OK" then
     Jupynium_notify.error { "Failed to load from ipynb tab" }
   end
@@ -122,6 +128,11 @@ function Jupynium_load_from_ipynb_tab_and_start_sync_cmd(args)
   end
   local tab_idx = tonumber(args.args)
   local buf = vim.api.nvim_get_current_buf()
+  Jupynium_load_from_ipynb_tab_and_start_sync(buf, tab_idx)
+end
+
+function Jupynium_load_from_ipynb_tab_and_start_sync(buf, tab_idx)
+  buf = buf or vim.api.nvim_get_current_buf()
   local response = Jupynium_rpcrequest("load_from_ipynb_tab", buf, false, tab_idx)
 
   if response == "OK" then
