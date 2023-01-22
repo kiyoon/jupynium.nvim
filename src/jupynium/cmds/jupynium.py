@@ -299,7 +299,6 @@ def fallback_open_notebook_server(notebook_port, jupyter_command, nvim, driver):
         try:
             repo = git.Repo(buffer_dir, search_parent_directories=True)
             root_dir = repo.working_tree_dir
-            print(root_dir)
             rel_dir = os.path.relpath(buffer_dir, root_dir)
         except InvalidGitRepositoryError:
             root_dir = buffer_dir
