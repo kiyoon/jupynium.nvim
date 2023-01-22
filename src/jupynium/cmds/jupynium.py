@@ -284,6 +284,133 @@ def kill_notebook_proc(notebook_proc):
         logger.info("Jupyter Notebook server has been killed.")
 
 
+def fallback_open_notebook_server(notebook_port, jupyter_command, nvim, driver):
+    # Fallback: if the URL is localhost and if selenium can't connect,
+    # open the Jupyter Notebook server and even start syncing.
+    buffer_path = None
+    bufnr = None
+    root_dir = None
+    rel_dir = ""
+    if nvim is not None:
+        # Root dir of the notebook is either the buffer's dir or the git dir.
+        buffer_path = str(nvim.eval("expand('%:p')"))
+        bufnr = int(str(nvim.eval("buffer_number()")))
+        buffer_dir = os.path.dirname(buffer_path)
+        try:
+            repo = git.Repo(buffer_dir, search_parent_directories=True)
+            root_dir = repo.working_tree_dir
+            print(root_dir)
+            rel_dir = os.path.relpath(buffer_dir, root_dir)
+        except InvalidGitRepositoryError:
+            root_dir = buffer_dir
+
+    notebook_token = generate_notebook_token()
+    notebook_args = [
+        "notebook",
+        "--port",
+        str(notebook_port),
+        "--no-browser",
+        f"--NotebookApp.token",
+        notebook_token,
+    ]
+
+    if root_dir is not None:
+        # notebook_args += [f"--ServerApp.root_dir={root_dir}"]
+        notebook_args += ["--NotebookApp.notebook_dir", root_dir]
+
+    try:
+        # strip commands because we need to escape args with dashes.
+        # e.g. --jupyter_command conda run ' --no-capture-output' ' -n' env_name jupyter
+        # However, conda run will run process with another pid so it won't work well here. Don't use it.
+
+        jupyter_command = [command.strip() for command in jupyter_command]
+        jupyter_command[0] = os.path.expanduser(jupyter_command[0])
+
+        notebook_proc = subprocess.Popen(jupyter_command + notebook_args)
+    except FileNotFoundError:
+        # Command doesn't exist
+        exception_no_notebook(f"localhost:{notebook_port}", nvim)
+
+    time.sleep(1)
+    for _ in range(20):
+        try:
+            driver.get(
+                f"localhost:{notebook_port}/tree/{rel_dir}?token={notebook_token}"
+            )
+            break
+        except WebDriverException:
+            poll = notebook_proc.poll()
+            if poll is not None:
+                # Process finished
+                exception_no_notebook(f"localhost:{notebook_port}", nvim)
+
+        time.sleep(0.3)
+    else:
+        # Process still running but timeout for connecting to notebook. Maybe wrong command?
+        kill_notebook_proc(notebook_proc)
+        exception_no_notebook(f"localhost:{notebook_port}", nvim)
+    return buffer_path, bufnr, notebook_proc
+
+
+def fallback_open_ipynb_and_sync(buffer_path, bufnr, notebook_proc, nvim, driver):
+    if notebook_proc is not None and nvim is not None:
+        buffer_name = os.path.basename(buffer_path)
+        sync_ipynb_name = (
+            os.path.splitext(os.path.splitext(buffer_name)[0])[0] + ".ipynb"
+        )
+
+        sele.wait_until_notebook_list_loaded(driver)
+
+        notebook_items = driver.find_elements(
+            By.CSS_SELECTOR, "#notebook_list > div > div"
+        )
+        file_found = False
+        for notebook_item in notebook_items:
+            # is notebook?
+            try:
+                notebook_item.find_element(By.CSS_SELECTOR, "i.notebook_icon")
+            except NoSuchElementException:
+                continue
+
+            try:
+                notebook_elem = notebook_item.find_element(By.CSS_SELECTOR, "a > span")
+            except NoSuchElementException:
+                continue
+            notebook_name = notebook_elem.text
+            if notebook_name == sync_ipynb_name:
+                driver.execute_script("arguments[0].scrollIntoView();", notebook_elem)
+                notebook_elem.click()
+                file_found = True
+                break
+
+        if file_found:
+            new_window = driver.window_handles[1]
+            driver.switch_to.window(new_window)
+            sele.wait_until_notebook_loaded(driver)
+            sync_input = nvim.eval(
+                """input("Press 'v' to sync from n(v)im, 'i' to load from (i)pynb and sync. (v/i/(c)ancel): ")"""
+            )
+
+            if sync_input in ["v", "V"]:
+                tab_idx = driver.window_handles.index(new_window) + 1
+                nvim.lua.Jupynium_start_sync(
+                    bufnr, str(tab_idx), False, async_=True
+                )  # bufnr, tab_idx, ask
+            elif sync_input in ["i", "I"]:
+                tab_idx = driver.window_handles.index(new_window) + 1
+                nvim.lua.Jupynium_load_from_ipynb_tab_and_start_sync(
+                    bufnr, tab_idx, async_=True
+                )
+        else:
+            sync_input = nvim.eval(
+                f"""input("There is no notebook {sync_ipynb_name}. Do you want to create and start syncing? (y/n): ")"""
+            )
+            if sync_input in ["y", "Y"]:
+                nvim.lua.Jupynium_start_sync(
+                    bufnr, sync_ipynb_name, False, async_=True
+                )  # bufnr, filename, ask
+
+
 # flake8: noqa: C901
 def main():
     coloredlogs.install(
@@ -335,76 +462,10 @@ def main():
                 if "://" not in args.notebook_URL:
                     notebook_URL = "http://" + notebook_URL
                 url = urlparse(notebook_URL)
-                print(url)
-                print(url.port)
-                print(url.hostname)
                 if url.port is not None and url.hostname in ["localhost", "127.0.0.1"]:
-                    # Fallback: if the URL is localhost and if selenium can't connect,
-                    # open the Jupyter Notebook server and even start syncing.
-                    root_dir = None
-                    rel_dir = ""
-                    if nvim is not None:
-                        # Root dir of the notebook is either the buffer's dir or the git dir.
-                        buffer_path = str(nvim.eval("expand('%:p')"))
-                        bufnr = int(str(nvim.eval("buffer_number()")))
-                        buffer_dir = os.path.dirname(buffer_path)
-                        try:
-                            repo = git.Repo(buffer_dir, search_parent_directories=True)
-                            root_dir = repo.working_tree_dir
-                            print(root_dir)
-                            rel_dir = os.path.relpath(buffer_dir, root_dir)
-                        except InvalidGitRepositoryError:
-                            root_dir = buffer_dir
-
-                    notebook_token = generate_notebook_token()
-                    notebook_args = [
-                        "notebook",
-                        "--port",
-                        str(url.port),
-                        "--no-browser",
-                        f"--NotebookApp.token",
-                        notebook_token,
-                    ]
-
-                    if root_dir is not None:
-                        # notebook_args += [f"--ServerApp.root_dir={root_dir}"]
-                        notebook_args += ["--NotebookApp.notebook_dir", root_dir]
-
-                    try:
-                        # strip commands because we need to escape args with dashes.
-                        # e.g. --jupyter_command conda run ' --no-capture-output' ' -n' env_name jupyter
-                        # However, conda run will run process with another pid so it won't work well here. Don't use it.
-
-                        jupyter_command = [
-                            command.strip() for command in args.jupyter_command
-                        ]
-                        jupyter_command[0] = os.path.expanduser(jupyter_command[0])
-
-                        notebook_proc = subprocess.Popen(
-                            jupyter_command + notebook_args
-                        )
-                    except FileNotFoundError:
-                        # Command doesn't exist
-                        exception_no_notebook(args.notebook_URL, nvim)
-
-                    time.sleep(1)
-                    for _ in range(20):
-                        try:
-                            driver.get(
-                                f"localhost:{url.port}/tree/{rel_dir}?token={notebook_token}"
-                            )
-                            break
-                        except WebDriverException:
-                            poll = notebook_proc.poll()
-                            if poll is not None:
-                                # Process finished
-                                exception_no_notebook(args.notebook_URL, nvim)
-
-                        time.sleep(0.3)
-                    else:
-                        # Process still running but timeout for connecting to notebook. Maybe wrong command?
-                        kill_notebook_proc(notebook_proc)
-                        exception_no_notebook(args.notebook_URL, nvim)
+                    buffer_path, bufnr, notebook_proc = fallback_open_notebook_server(
+                        url.port, args.jupyter_command, nvim, driver
+                    )
 
                 else:
                     # Not localhost, so not trying to start the notebook server.
@@ -427,66 +488,9 @@ def main():
 
             # Open the notebook if it exists.
             # Only when fallback opening notebook server.
-            if notebook_proc is not None and nvim is not None:
-                buffer_name = os.path.basename(buffer_path)
-                sync_ipynb_name = (
-                    os.path.splitext(os.path.splitext(buffer_name)[0])[0] + ".ipynb"
-                )
-
-                sele.wait_until_notebook_list_loaded(driver)
-
-                notebook_items = driver.find_elements(
-                    By.CSS_SELECTOR, "#notebook_list > div > div"
-                )
-                file_found = False
-                for notebook_item in notebook_items:
-                    # is notebook?
-                    try:
-                        notebook_item.find_element(By.CSS_SELECTOR, "i.notebook_icon")
-                    except NoSuchElementException:
-                        continue
-
-                    try:
-                        notebook_elem = notebook_item.find_element(
-                            By.CSS_SELECTOR, "a > span"
-                        )
-                    except NoSuchElementException:
-                        continue
-                    notebook_name = notebook_elem.text
-                    if notebook_name == sync_ipynb_name:
-                        driver.execute_script(
-                            "arguments[0].scrollIntoView();", notebook_elem
-                        )
-                        notebook_elem.click()
-                        file_found = True
-                        break
-
-                if file_found:
-                    new_window = driver.window_handles[1]
-                    driver.switch_to.window(new_window)
-                    sele.wait_until_notebook_loaded(driver)
-                    sync_input = nvim.eval(
-                        """input("Press 'v' to sync from n(v)im, 'i' to load from (i)pynb and sync. (v/i/(c)ancel): ")"""
-                    )
-
-                    if sync_input in ["v", "V"]:
-                        tab_idx = driver.window_handles.index(new_window) + 1
-                        nvim.lua.Jupynium_start_sync(
-                            bufnr, str(tab_idx), False, async_=True
-                        )  # bufnr, tab_idx, ask
-                    elif sync_input in ["i", "I"]:
-                        tab_idx = driver.window_handles.index(new_window) + 1
-                        nvim.lua.Jupynium_load_from_ipynb_tab_and_start_sync(
-                            bufnr, tab_idx, async_=True
-                        )
-                else:
-                    sync_input = nvim.eval(
-                        f"""input("There is no notebook {sync_ipynb_name}. Do you want to create and start syncing? (y/n): ")"""
-                    )
-                    if sync_input in ["y", "Y"]:
-                        nvim.lua.Jupynium_start_sync(
-                            bufnr, sync_ipynb_name, False, async_=True
-                        )  # bufnr, filename, ask
+            fallback_open_ipynb_and_sync(
+                buffer_path, bufnr, notebook_proc, nvim, driver
+            )
 
             while not sele.is_browser_disconnected(driver):
                 try:
