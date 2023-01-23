@@ -69,6 +69,9 @@ Install with 💤lazy.nvim
 
 Setup is optional for system python users and here are the defaults. Conda users need to change the `python_host`.
 
+**Mac troubleshooting:** Homebrew Python 3.10 and above are broken in the latest pip release. See https://github.com/pypa/pip/issues/11539.  
+Use `build = "/usr/bin/pip3 install --user ."` and change `python_host = "/usr/bin/python3"` in the settings below, to use the system python.
+
 <details>
 <summary>
 Click to see setup defaults
