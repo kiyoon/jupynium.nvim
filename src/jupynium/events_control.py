@@ -185,9 +185,12 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
 
     if event[1] == "start_sync":
         filename, ask, content = event_args
+        filename = filename.strip()
 
         filename: str
         if not filename.isnumeric():
+            if not filename.lower().endswith(".ipynb"):
+                filename += ".ipynb"
             driver.switch_to.window(nvim_info.home_window)
 
             new_btn = driver.find_element(By.ID, "new-buttons")

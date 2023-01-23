@@ -148,8 +148,10 @@ function M.register_autostart_autocmds(augroup, opts)
           end
 
           -- auto start sync
+          filename_wo_ext = vim.fn.expand "%:r:r"
           if vim.fn.exists ":JupyniumStartSync" > 0 then
-            vim.cmd [[JupyniumStartSync]]
+            Jupynium_start_sync(0, filename_wo_ext)
+            -- vim.cmd [[JupyniumStartSync]]
           else
             if M.server_state.is_autostarted or M.server_state.is_autoattached then
               -- wait until command exists
@@ -158,7 +160,8 @@ function M.register_autostart_autocmds(augroup, opts)
               end)
 
               if found then
-                vim.cmd [[JupyniumStartSync]]
+                Jupynium_start_sync(0, filename_wo_ext)
+                -- vim.cmd [[JupyniumStartSync]]
               end
             end
           end
