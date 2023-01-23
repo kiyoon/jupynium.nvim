@@ -137,7 +137,7 @@ function Jupynium_load_from_ipynb_tab_and_start_sync(buf, tab_idx)
 
   if response == "OK" then
     -- start sync with no content copying from nvim and no asking.
-    Jupynium_start_sync(buf, args.args, false)
+    Jupynium_start_sync(buf, tostring(tab_idx), false)
   else
     Jupynium_notify.error { "Failed to load from ipynb tab" }
   end
