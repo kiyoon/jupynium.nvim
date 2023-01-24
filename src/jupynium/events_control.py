@@ -7,7 +7,10 @@ import os
 from dataclasses import dataclass
 
 from pkg_resources import resource_stream
-from selenium.common.exceptions import ElementNotInteractableException
+from selenium.common.exceptions import (
+    ElementNotInteractableException,
+    NoSuchElementException,
+)
 from selenium.webdriver.common.by import By
 
 from . import selenium_helpers as sele
@@ -170,6 +173,101 @@ def process_events(nvim_info: NvimInfo, driver):
     return True, None
 
 
+def start_sync_with_filename(
+    bufnr: int,
+    filename: str,
+    ask: bool,
+    content: list[str],
+    nvim_info: NvimInfo,
+    driver,
+):
+    """
+    Start sync using a filename (not tab index)
+    filename has to end with .ipynb
+    """
+    driver.switch_to.window(nvim_info.home_window)
+    sele.wait_until_notebook_list_loaded(driver)
+
+    if filename == "":
+        file_found = False
+    else:
+        notebook_items = driver.find_elements(
+            By.CSS_SELECTOR, "#notebook_list > div > div"
+        )
+        file_found = False
+        for notebook_item in notebook_items:
+            # is notebook?
+            try:
+                notebook_item.find_element(By.CSS_SELECTOR, "i.notebook_icon")
+            except NoSuchElementException:
+                continue
+
+            try:
+                notebook_elem = notebook_item.find_element(By.CSS_SELECTOR, "a > span")
+            except NoSuchElementException:
+                continue
+            notebook_name = notebook_elem.text
+            if notebook_name == filename:
+                driver.execute_script("arguments[0].scrollIntoView();", notebook_elem)
+                notebook_elem.click()
+                file_found = True
+                break
+
+    if file_found:
+        new_window = driver.window_handles[1]
+        driver.switch_to.window(new_window)
+        sele.wait_until_notebook_loaded(driver)
+
+        if ask:
+            sync_input = str(
+                nvim_info.nvim.eval(
+                    """input("Press 'v' to sync from n(v)im, 'i' to load from (i)pynb and sync. (v/i/(c)ancel): ")"""
+                )
+            ).strip()
+        else:
+            # if ask == False, sync from vim to ipynb
+            sync_input = "v"
+
+        if sync_input in ["v", "V"]:
+            tab_idx = driver.window_handles.index(new_window) + 1
+            nvim_info.nvim.lua.Jupynium_start_sync(
+                bufnr, str(tab_idx), False, async_=True
+            )  # bufnr, tab_idx, ask
+        elif sync_input in ["i", "I"]:
+            tab_idx = driver.window_handles.index(new_window) + 1
+            nvim_info.nvim.lua.Jupynium_load_from_ipynb_tab_and_start_sync(
+                bufnr, tab_idx, async_=True
+            )
+    else:
+        new_btn = driver.find_element(By.ID, "new-buttons")
+        driver.execute_script("arguments[0].scrollIntoView(true);", new_btn)
+        python_btn = driver.find_element(By.ID, "kernel-python3")
+        prev_windows = set(driver.window_handles)
+        try:
+            python_btn.click()
+        except ElementNotInteractableException:
+            new_btn.click()
+            python_btn.click()
+
+        new_window = set(driver.window_handles) - prev_windows
+        assert len(new_window) == 1
+        new_window = new_window.pop()
+
+        driver.switch_to.window(new_window)
+        sele.wait_until_notebook_loaded(driver)
+        if filename != "":
+            driver.execute_script(
+                "Jupyter.notebook.rename(arguments[0]);",
+                filename,
+            )
+        nvim_info.attach_buffer(bufnr, content, driver.current_window_handle)
+
+        nvim_info.jupbufs[bufnr].full_sync_to_notebook(driver)
+        # nvim.lua.Jupynium_start_sync(
+        #     bufnr, sync_ipynb_name, False, async_=True
+        # )  # bufnr, filename, ask
+
+
 def process_request_event(nvim_info: NvimInfo, driver, event):
     """
     Returns:
@@ -189,35 +287,12 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
 
         filename: str
         if not filename.isnumeric():
-            if not filename.lower().endswith(".ipynb"):
+            if filename != "" and not filename.lower().endswith(".ipynb"):
                 filename += ".ipynb"
-            driver.switch_to.window(nvim_info.home_window)
 
-            new_btn = driver.find_element(By.ID, "new-buttons")
-            driver.execute_script("arguments[0].scrollIntoView(true);", new_btn)
-            python_btn = driver.find_element(By.ID, "kernel-python3")
-            prev_windows = set(driver.window_handles)
-            try:
-                python_btn.click()
-            except ElementNotInteractableException:
-                new_btn.click()
-                python_btn.click()
-
-            new_window = set(driver.window_handles) - prev_windows
-            assert len(new_window) == 1
-            new_window = new_window.pop()
-
-            driver.switch_to.window(new_window)
-            sele.wait_until_notebook_loaded(driver)
-            if filename != "":
-                driver.execute_script(
-                    "Jupyter.notebook.rename(arguments[0]);",
-                    filename,
-                )
-            nvim_info.attach_buffer(bufnr, content, driver.current_window_handle)
-
-            nvim_info.jupbufs[bufnr].full_sync_to_notebook(driver)
+            start_sync_with_filename(bufnr, filename, ask, content, nvim_info, driver)
         else:
+            # start sync with tab index
             tab_idx = int(filename)
             driver.switch_to.window(driver.window_handles[tab_idx - 1])
 
