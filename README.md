@@ -5,6 +5,8 @@
 <img src="https://github.com/kiyoon/jupynium.nvim/workflows/Tests/badge.svg?style=flat" />
 </a>
 
+**It's just like a markdown live preview, but it's Jupyter Notebook live preview!**
+
 Jupynium uses Selenium to automate Jupyter Notebook, synchronising everything you type on Neovim.  
 Never leave Neovim. Switch tabs on the browser as you switch files on Neovim.
 
