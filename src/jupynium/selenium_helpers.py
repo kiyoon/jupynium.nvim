@@ -43,6 +43,15 @@ def wait_until_loaded(driver, timeout=10):
         driver.quit()
 
 
+def wait_until_new_window(driver, current_handles, timeout=10):
+    """Wait until the page is ready."""
+    try:
+        WebDriverWait(driver, timeout).until(EC.new_window_is_opened(current_handles))
+    except TimeoutException:
+        logger.exception("Timed out waiting for a new window to open")
+        driver.quit()
+
+
 def is_browser_disconnected(driver):
     """Check if the browser is disconnected."""
     # get_log is not supported by Firefox
