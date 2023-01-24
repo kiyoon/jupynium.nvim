@@ -208,36 +208,41 @@ def start_sync_with_filename(
                 continue
             notebook_name = notebook_elem.text
             if notebook_name == filename:
+                prev_windows = set(driver.window_handles)
                 driver.execute_script("arguments[0].scrollIntoView();", notebook_elem)
                 notebook_elem.click()
                 file_found = True
+                sele.wait_until_new_window(driver, prev_windows)
                 break
 
     if file_found:
-        new_window = driver.window_handles[1]
+        new_window = set(driver.window_handles) - set(prev_windows)
+        assert len(new_window) == 1
+        new_window = new_window.pop()
+
         driver.switch_to.window(new_window)
         sele.wait_until_notebook_loaded(driver)
 
         if ask:
-            sync_input = str(
-                nvim_info.nvim.eval(
-                    """input("Press 'v' to sync from n(v)im, 'i' to load from (i)pynb and sync. (v/i/(c)ancel): ")"""
-                )
-            ).strip()
+            sync_input = nvim_info.nvim.eval(
+                """input("Press 'v' to sync from n[v]im, 'i' to load from [i]pynb and sync. (v/i/[c]ancel): ")"""
+            )
+            sync_input = str(sync_input).strip()
         else:
             # if ask == False, sync from vim to ipynb
             sync_input = "v"
 
         if sync_input in ["v", "V"]:
-            tab_idx = driver.window_handles.index(new_window) + 1
-            nvim_info.nvim.lua.Jupynium_start_sync(
-                bufnr, str(tab_idx), False, async_=True
-            )  # bufnr, tab_idx, ask
+            # Start sync from vim to ipynb tab
+            nvim_info.attach_buffer(bufnr, content, new_window)
+            nvim_info.jupbufs[bufnr].full_sync_to_notebook(driver)
         elif sync_input in ["i", "I"]:
-            tab_idx = driver.window_handles.index(new_window) + 1
-            nvim_info.nvim.lua.Jupynium_load_from_ipynb_tab_and_start_sync(
-                bufnr, tab_idx, async_=True
-            )
+            # load from ipynb tab and start sync
+            cell_types, texts = driver.execute_script(get_cell_inputs_js_code)
+            jupy = cells_to_jupy(cell_types, texts)
+            nvim_info.nvim.buffers[bufnr][:] = jupy
+
+            nvim_info.attach_buffer(bufnr, jupy, new_window)
     else:
         new_btn = driver.find_element(By.ID, "new-buttons")
         driver.execute_script("arguments[0].scrollIntoView(true);", new_btn)
@@ -249,6 +254,7 @@ def start_sync_with_filename(
             new_btn.click()
             python_btn.click()
 
+        sele.wait_until_new_window(driver, prev_windows)
         new_window = set(driver.window_handles) - prev_windows
         assert len(new_window) == 1
         new_window = new_window.pop()
@@ -260,12 +266,9 @@ def start_sync_with_filename(
                 "Jupyter.notebook.rename(arguments[0]);",
                 filename,
             )
+        # start sync
         nvim_info.attach_buffer(bufnr, content, driver.current_window_handle)
-
         nvim_info.jupbufs[bufnr].full_sync_to_notebook(driver)
-        # nvim.lua.Jupynium_start_sync(
-        #     bufnr, sync_ipynb_name, False, async_=True
-        # )  # bufnr, filename, ask
 
 
 def process_request_event(nvim_info: NvimInfo, driver, event):
@@ -303,7 +306,6 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
                 )
             if continue_input in ["y", "Y"]:
                 nvim_info.attach_buffer(bufnr, content, driver.current_window_handle)
-
                 nvim_info.jupbufs[bufnr].full_sync_to_notebook(driver)
             else:
                 event[3].send("N")

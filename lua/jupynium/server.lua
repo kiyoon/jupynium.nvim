@@ -118,6 +118,7 @@ function M.register_autostart_autocmds(augroup, opts)
     pattern = all_patterns,
     callback = function()
       local bufname = vim.api.nvim_buf_get_name(0)
+      local bufnr = vim.api.nvim_get_current_buf()
       if not M.server_state.is_autostarted then
         if
           opts.auto_start_server.enable
@@ -150,7 +151,7 @@ function M.register_autostart_autocmds(augroup, opts)
           -- auto start sync
           filename_wo_ext = vim.fn.expand "%:r:r"
           if vim.fn.exists ":JupyniumStartSync" > 0 then
-            Jupynium_start_sync(0, filename_wo_ext)
+            Jupynium_start_sync(bufnr, filename_wo_ext)
             -- vim.cmd [[JupyniumStartSync]]
           else
             if M.server_state.is_autostarted or M.server_state.is_autoattached then
@@ -160,7 +161,7 @@ function M.register_autostart_autocmds(augroup, opts)
               end)
 
               if found then
-                Jupynium_start_sync(0, filename_wo_ext)
+                Jupynium_start_sync(bufnr, filename_wo_ext)
                 -- vim.cmd [[JupyniumStartSync]]
               end
             end
