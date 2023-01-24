@@ -165,6 +165,13 @@ def get_parser():
         "Don't use `conda run ..` as it won't be killed afterwards (it opens another process with different pid so it's hard to keep track of it.)"
         "It is used only when the --notebook_URL is localhost, and is not running.",
     )
+    parser.add_argument(
+        "--notebook_dir",
+        type=str,
+        help="When jupyter notebook has started using --jupyter_command, the root dir will be this."
+        "If None, open at a git dir of nvim's buffer path and still navigate to the buffer dir."
+        "(e.g. localhost:8888/tree/path/to/buffer)",
+    )
 
     # parser.add_argument(
     #     "--browser",
@@ -283,21 +290,25 @@ def kill_notebook_proc(notebook_proc):
         logger.info("Jupyter Notebook server has been killed.")
 
 
-def fallback_open_notebook_server(notebook_port, jupyter_command, nvim, driver):
+def fallback_open_notebook_server(
+    notebook_port, jupyter_command, notebook_dir, nvim, driver
+):
     # Fallback: if the URL is localhost and if selenium can't connect,
     # open the Jupyter Notebook server and even start syncing.
-    root_dir = None
     rel_dir = ""
-    if nvim is not None:
-        # Root dir of the notebook is either the buffer's dir or the git dir.
-        buffer_path = str(nvim.eval("expand('%:p')"))
-        buffer_dir = os.path.dirname(buffer_path)
-        try:
-            repo = git.Repo(buffer_dir, search_parent_directories=True)
-            root_dir = repo.working_tree_dir
-            rel_dir = os.path.relpath(buffer_dir, root_dir)
-        except InvalidGitRepositoryError:
-            root_dir = buffer_dir
+
+    if notebook_dir is None or notebook_dir == "":
+        notebook_dir = None
+        if nvim is not None:
+            # Root dir of the notebook is either the buffer's dir or the git dir.
+            buffer_path = str(nvim.eval("expand('%:p')"))
+            buffer_dir = os.path.dirname(buffer_path)
+            try:
+                repo = git.Repo(buffer_dir, search_parent_directories=True)
+                notebook_dir = repo.working_tree_dir
+                rel_dir = os.path.relpath(buffer_dir, notebook_dir)
+            except InvalidGitRepositoryError:
+                notebook_dir = buffer_dir
 
     notebook_token = generate_notebook_token()
     notebook_args = [
@@ -309,9 +320,9 @@ def fallback_open_notebook_server(notebook_port, jupyter_command, nvim, driver):
         notebook_token,
     ]
 
-    if root_dir is not None:
+    if notebook_dir is not None:
         # notebook_args += [f"--ServerApp.root_dir={root_dir}"]
-        notebook_args += ["--NotebookApp.notebook_dir", root_dir]
+        notebook_args += ["--NotebookApp.notebook_dir", notebook_dir]
 
     try:
         # strip commands because we need to escape args with dashes.
@@ -400,7 +411,7 @@ def main():
                 url = urlparse(notebook_URL)
                 if url.port is not None and url.hostname in ["localhost", "127.0.0.1"]:
                     notebook_proc = fallback_open_notebook_server(
-                        url.port, args.jupyter_command, nvim, driver
+                        url.port, args.jupyter_command, args.notebook_dir, nvim, driver
                     )
 
                 else:

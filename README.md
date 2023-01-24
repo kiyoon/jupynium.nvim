@@ -88,10 +88,13 @@ require("jupynium").setup({
   -- Write jupyter command but without "notebook"
   -- When you call :JupyniumStartAndAttachToServer and no notebook is open,
   -- then Jupynium will open the server for you using this command. (only when notebook_URL is localhost)
-  -- It will open at the git directory of the current buffer,
-  -- and start syncing the relevant file (file.ju.py will be synced with file.ipynb)
   jupyter_command = "jupyter",
   -- jupyter_command = "~/miniconda3/envs/jupynium/bin/jupyter",
+
+  -- Used when notebook is launched by using jupyter_command.
+  -- If nil or "", it will open at the git directory of the current buffer,
+  -- but still navigate to the directory of the current buffer. (e.g. localhost:8888/tree/path/to/buffer)
+  notebook_dir = nil,
 
   -- Used to remember the last session (password etc.).
   -- You may need to change the path.

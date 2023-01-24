@@ -43,13 +43,15 @@ end
 
 local function run_process(cmd, args)
   args = args or {}
-  local call_str = [[echo system('"]] .. vim.fn.expand(cmd) .. [["]]
+  local call_str = [[system('"]] .. vim.fn.expand(cmd) .. [["]]
 
   for _, v in ipairs(args) do
     call_str = call_str .. [[ "]] .. v:gsub("\\", "\\\\") .. [["]]
   end
 
-  local output = vim.cmd(call_str)
+  call_str = call_str .. [[')]]
+
+  local output = vim.fn.eval(call_str)
   if output == nil then
     return ""
   else
@@ -188,6 +190,10 @@ function M.start_and_attach_to_server_cmd(args)
     notebook_URL = options.opts.default_notebook_URL
   end
   args = { "--notebook_URL", notebook_URL, "--firefox_profiles_ini_path", options.opts.firefox_profiles_ini_path }
+  if options.opts.notebook_dir ~= nil and options.opts.notebook_dir ~= "" then
+    table.insert(args, "--notebook_dir")
+    table.insert(args, options.opts.notebook_dir)
+  end
   if options.opts.firefox_profile_name ~= nil and options.opts.firefox_profile_name ~= "" then
     table.insert(args, "--firefox_profile_name")
     table.insert(args, options.opts.firefox_profile_name)
