@@ -35,7 +35,9 @@ local function run_process_bg(cmd, args)
       cmd_str = cmd_str .. [[ "]] .. v:gsub("\\", "\\\\") .. [["]]
     end
 
-    cmd_str = cmd_str .. [[ &]]
+    -- prior to nvim 0.9.0, stderr will create graphical glitch.
+    -- https://github.com/neovim/neovim/issues/21376
+    cmd_str = cmd_str .. [[ 2> /dev/null &]]
   end
 
   io.popen(cmd_str)
