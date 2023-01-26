@@ -12,7 +12,7 @@ M.default_opts = {
   -- When you call :JupyniumStartAndAttachToServer and no notebook is open,
   -- then Jupynium will open the server for you using this command. (only when notebook_URL is localhost)
   jupyter_command = "jupyter",
-  -- jupyter_command = "~/miniconda3/envs/jupynium/bin/jupyter",
+  -- jupyter_command = "~/miniconda3/bin/jupyter",
 
   -- Used when notebook is launched by using jupyter_command.
   -- If nil or "", it will open at the git directory of the current buffer,

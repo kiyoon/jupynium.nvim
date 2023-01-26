@@ -41,6 +41,12 @@ conda create -n jupynium python=3
 conda activate jupynium
 ```
 
+Upgrade pip. This solves many problems.
+
+```bash
+pip3 install --upgrade pip
+```
+
 Install with vim-plug:
 
 ```vim
@@ -91,7 +97,7 @@ require("jupynium").setup({
   -- When you call :JupyniumStartAndAttachToServer and no notebook is open,
   -- then Jupynium will open the server for you using this command. (only when notebook_URL is localhost)
   jupyter_command = "jupyter",
-  -- jupyter_command = "~/miniconda3/envs/jupynium/bin/jupyter",
+  -- jupyter_command = "~/miniconda3/bin/jupyter",
 
   -- Used when notebook is launched by using jupyter_command.
   -- If nil or "", it will open at the git directory of the current buffer,

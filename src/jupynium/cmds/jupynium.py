@@ -8,6 +8,7 @@ import os
 import secrets
 import subprocess
 import sys
+import tempfile
 import time
 import traceback
 from pathlib import Path
@@ -332,7 +333,11 @@ def fallback_open_notebook_server(
         jupyter_command = [command.strip() for command in jupyter_command]
         jupyter_command[0] = os.path.expanduser(jupyter_command[0])
 
-        notebook_proc = subprocess.Popen(jupyter_command + notebook_args)
+        jupyter_stdout = tempfile.NamedTemporaryFile()
+        logger.info(f"Writing Jupyter Notebook server log to: {jupyter_stdout.name}")
+        notebook_proc = subprocess.Popen(
+            jupyter_command + notebook_args, stdout=jupyter_stdout
+        )
     except FileNotFoundError:
         # Command doesn't exist
         exception_no_notebook(f"localhost:{notebook_port}", nvim)

@@ -17,28 +17,28 @@ end
 
 local function run_process_bg(cmd, args)
   args = args or {}
-  local call_str
+  local cmd_str
   if vim.fn.has "win32" == 1 then
-    call_str = [[call system('PowerShell "Start-Process -FilePath \"]]
+    cmd_str = [[PowerShell "Start-Process -FilePath \"]]
       .. vim.fn.expand(cmd):gsub("\\", "\\\\")
       .. [[\" -ArgumentList \"]]
 
     for _, v in ipairs(args) do
-      call_str = call_str .. [[ `\"]] .. v:gsub("\\", "\\\\") .. [[`\"]]
+      cmd_str = cmd_str .. [[ `\"]] .. v:gsub("\\", "\\\\") .. [[`\"]]
     end
 
-    call_str = call_str .. [[\""')]]
+    cmd_str = cmd_str .. [[\""]]
   else
-    call_str = [[call system('"]] .. vim.fn.expand(cmd) .. [["]]
+    cmd_str = [["]] .. vim.fn.expand(cmd) .. [["]]
 
     for _, v in ipairs(args) do
-      call_str = call_str .. [[ "]] .. v:gsub("\\", "\\\\") .. [["]]
+      cmd_str = cmd_str .. [[ "]] .. v:gsub("\\", "\\\\") .. [["]]
     end
 
-    call_str = call_str .. [[ &')]]
+    cmd_str = cmd_str .. [[ &]]
   end
 
-  vim.cmd(call_str)
+  io.popen(cmd_str)
 end
 
 local function run_process(cmd, args)
@@ -199,7 +199,16 @@ function M.start_and_attach_to_server_cmd(args)
     table.insert(args, options.opts.firefox_profile_name)
   end
   table.insert(args, "--jupyter_command")
-  table.insert(args, options.opts.jupyter_command)
+  if type(options.opts.jupyter_command) == "string" then
+    table.insert(args, options.opts.jupyter_command)
+  elseif type(options.opts.jupyter_command) == "table" then
+    for i, arg in pairs(options.opts.jupyter_command) do
+      -- add space to escape args starting with dashes.
+      table.insert(args, " " .. arg)
+    end
+  else
+    error "Invalid jupyter_command type."
+  end
   call_jupynium_cli(args, true)
 end
 
