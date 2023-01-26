@@ -29,7 +29,7 @@ def check_args(args, parser):
     if args.stdout and args.yes:
         parser.error("Either one of --stdout or --yes can be specified")
 
-    if args.output_jupy_path is not None and not args.stdout:
+    if args.output_jupy_path is not None and args.stdout:
         parser.error("Either one of --stdout or output_jupy_path can be specified")
 
 
