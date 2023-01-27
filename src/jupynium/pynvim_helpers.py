@@ -59,35 +59,10 @@ def attach_and_init(nvim_listen_addr):
 
     nvim.lua.Jupynium_notify.info(
         [
-            "Jupynium sucessfully attached and initialised.",
+            "Jupynium successfully attached and initialised.",
             "Run `:JupyniumStartSync`",
         ],
         async_=True,
     )
-
-    # There is no need for below, as Jupynium already checks if it's running already.
-    # Only be useful if multiple computers try to attach to the same nvim
-    # However, Jupynium can exit unexpectedly so checking the variable is
-    # not the most stable way to check if it's running..
-
-    # elif existing_channel_id < 0:
-    #     logger.info("Jupynium already initialised on nvim, but has exited before.")
-    #     logger.info("Just changing the channel ID and buffer")
-    #     nvim.lua.Jupynium_notify.info(
-    #         [
-    #             "Jupynium sucessfully attached and initialised.",
-    #             "Run `:JupyniumStartSync`",
-    #         ],
-    #         async_=True,
-    #     )
-    #     # Already initialised, but exited once
-    #     nvim.vars["jupynium_channel_id"] = nvim.channel_id
-    #     nvim.vars["jupynium_num_pending_msgs"] = 0
-    # else:
-    #     nvim.lua.Jupynium_notify.error(
-    #         ["Jupynium already running on another side.", "Failed to initialise."],
-    #         async_=True,
-    #     )
-    #     raise Exception("Jupynium already running on another side. Exiting..")
 
     return nvim
