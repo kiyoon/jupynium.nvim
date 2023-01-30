@@ -191,10 +191,14 @@ function M.start_and_attach_to_server_cmd(args)
   if notebook_URL == "" then
     notebook_URL = options.opts.default_notebook_URL
   end
-  args = { "--notebook_URL", notebook_URL, "--firefox_profiles_ini_path", options.opts.firefox_profiles_ini_path }
+  args = { "--notebook_URL", notebook_URL }
   if options.opts.notebook_dir ~= nil and options.opts.notebook_dir ~= "" then
     table.insert(args, "--notebook_dir")
     table.insert(args, options.opts.notebook_dir)
+  end
+  if options.opts.firefox_profiles_ini_path ~= nil and options.opts.firefox_profiles_ini_path ~= "" then
+    table.insert(args, "--firefox_profiles_ini_path")
+    table.insert(args, options.opts.firefox_profiles_ini_path)
   end
   if options.opts.firefox_profile_name ~= nil and options.opts.firefox_profile_name ~= "" then
     table.insert(args, "--firefox_profile_name")

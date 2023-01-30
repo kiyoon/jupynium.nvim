@@ -127,13 +127,13 @@ def get_parser():
         "--attach_only",
         action="store_true",
         help="Attach to an existing Jupynium instance."
-        "If False, start a new instance or attach to an existing one."
+        "If False, start a new instance or attach to an existing one.\n"
         "If True, all arguments except nvim_listen_addr and notebook_URL are ignored.",
     )
     parser.add_argument(
         "--sleep_time_idle",
         type=float,
-        default=0.1,
+        default=0.05,
         help="Sleep time when there is no event to process.",
     )
     parser.add_argument(
@@ -149,8 +149,10 @@ def get_parser():
     )
     parser.add_argument(
         "--firefox_profiles_ini_path",
-        default="~/.mozilla/firefox/profiles.ini",
-        help="Path to firefox profiles.ini which will be used to remember the last session (password, etc.)",
+        help="Path to firefox profiles.ini which will be used to remember the last session (password, etc.)\n"
+        "Example path:\n"
+        "~/.mozilla/firefox/profiles.ini\n"
+        "~/snap/firefox/common/.mozilla/firefox/profiles.ini",
     )
     parser.add_argument(
         "--firefox_profile_name",
@@ -161,16 +163,16 @@ def get_parser():
         type=str,
         nargs="+",
         default=["jupyter"],
-        help="Command to start Jupyter Notebook (but without notebook)."
-        "To use conda env, use `--jupyter_command ~/miniconda3/envs/env_name/bin/jupyter`."
-        "Don't use `conda run ..` as it won't be killed afterwards (it opens another process with different pid so it's hard to keep track of it.)"
+        help="Command to start Jupyter Notebook (but without notebook).\n"
+        "To use conda env, use `--jupyter_command ~/miniconda3/envs/env_name/bin/jupyter`.\n"
+        "Don't use `conda run ..` as it won't be killed afterwards (it opens another process with different pid so it's hard to keep track of it.)\n"
         "It is used only when the --notebook_URL is localhost, and is not running.",
     )
     parser.add_argument(
         "--notebook_dir",
         type=str,
-        help="When jupyter notebook has started using --jupyter_command, the root dir will be this."
-        "If None, open at a git dir of nvim's buffer path and still navigate to the buffer dir."
+        help="When jupyter notebook has started using --jupyter_command, the root dir will be this.\n"
+        "If None, open at a git dir of nvim's buffer path and still navigate to the buffer dir.\n"
         "(e.g. localhost:8888/tree/path/to/buffer)",
     )
 

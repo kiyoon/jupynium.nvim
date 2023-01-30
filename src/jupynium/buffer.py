@@ -21,6 +21,11 @@ class JupyniumBuffer:
     """
 
     def __init__(self, buf: list[str] = [""]):
+        """
+        self.buf is a list of lines of the nvim buffer,
+        with the exception that the commented magic commands are normal magic commands.
+        e.g. '# %time' -> '%time'
+        """
         self.buf = buf
         if self.buf == [""]:
             self.num_rows_per_cell: list[int] = [
@@ -34,7 +39,7 @@ class JupyniumBuffer:
         num_rows_this_cell = 0
         num_rows_per_cell = []
         cell_types = ["header"]
-        for line in self.buf:
+        for row, line in enumerate(self.buf):
             if (
                 line.startswith("# %%%")
                 or line.startswith("# %% [md]")
@@ -53,6 +58,12 @@ class JupyniumBuffer:
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
                 cell_types.append("code")
+            elif line.startswith("# %"):
+                # Use '# %' for magic commands
+                # e.g. '# %matplotlib inline'
+                # Remove the comment
+                self.buf[row] = self.buf[row][2:]
+                num_rows_this_cell += 1
             else:
                 num_rows_this_cell += 1
         num_rows_per_cell.append(num_rows_this_cell)
