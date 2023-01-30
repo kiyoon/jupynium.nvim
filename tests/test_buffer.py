@@ -9,6 +9,19 @@ def test_buffer_1():
     assert buffer.cell_types == ["header", "code"]
 
 
+def test_magic_command_1():
+    """
+    Everything else except magic commands should be preserved after __init__() or fully_analysed_buf()
+    """
+    lines = ["a", "b", "c", "# %%", "# %time", "e", "f"]
+    buffer = JupyniumBuffer(lines)
+    assert buffer.buf[4] == "%time"
+    for i, line in enumerate(lines):
+        if i == 4:
+            continue
+        assert buffer.buf[i] == line
+
+
 def test_buffer_markdown():
     buffer = JupyniumBuffer(["a", "b", "c", "# %%%", "d", "# %%", "f"])
     assert buffer.num_rows_per_cell == [3, 2, 2]
