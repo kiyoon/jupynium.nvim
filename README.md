@@ -44,6 +44,7 @@ conda activate jupynium
 Upgrade pip. This solves many problems.
 
 ```bash
+# pip >= 23.0 recommended
 pip3 install --upgrade pip
 ```
 
@@ -77,12 +78,9 @@ Install with 💤lazy.nvim
 
 Setup is optional for system python users and here are the defaults. Conda users need to change the `python_host`.
 
-**Mac troubleshooting:** Homebrew Python 3.10 and above are broken in the latest pip release. See https://github.com/pypa/pip/issues/11539.  
-Use `build = "/usr/bin/pip3 install --user ."` and change `python_host = "/usr/bin/python3"` in the settings below, to use the system python.
-
 <details>
 <summary>
-Click to see setup defaults
+Click to see the setup defaults
 </summary>
 
 ```lua
@@ -351,9 +349,9 @@ ipynb2jupy [-h] [--stdout] file.ipynb [file.ju.py]
 
 ## ⚠️ Caution
 
-The program is in an alpha stage. If it crashes it's likely that the whole browser turns off without saving!
+The program is in the alpha stage. If it crashes it's likely that the whole browser turns off without saving!
 
-Rules:
+#### Rules:
 
 1. Always leave the home page accessible. Jupynium interacts with it to open files. Do not close, or move to another website.
 
@@ -362,10 +360,19 @@ Rules:
 2. It's OK to close the notebook pages. If you do so, it will stop syncing that buffer.
 3. Changing tab ordering or making it to a separate window is OK.
 
-## 🌽 Using different languages / kernels
+## 🤔 FAQ
+
+> 🌽 How do I use different languages / kernels?
 
 Instead of `*.ju.py` if you make files named `*.ju.*` (e.g. `*.ju.r`) you will see all the keybindings and commands.  
-All the procedure should be the same, except that you would need to manually change the kernel from the browser.
+All the procedures should be the same, except that you would need to manually change the kernel from the browser.
+
+> The notebook content is not in sync with vim. How do I fix it?
+
+You probably would have accidentally modified directly from the notebook.
+
+1. If you want to keep the vim content and sync to the notebook, just <ins>add one more cell in the notebook and start making changes in vim</ins>. It works because Jupynium tries to only update the currently modified cell if the number of cells is the same in both. If it differs, it will fully update the entire content.
+2. To keep the notebook content and load that to vim, run `:JupyniumLoadFromIpynbTab [tab_index]` without making changes on vim.
 
 ## 📰 Fun Facts
 
