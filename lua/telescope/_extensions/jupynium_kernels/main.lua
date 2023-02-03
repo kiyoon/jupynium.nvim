@@ -18,10 +18,13 @@ M.jupynium_kernels = function(opts)
     return false
   end
 
+  if jupynium_kernel_name_and_spec == nil then
+    -- it should have already errored out with notification.
+    return false
+  end
+
   local current_kernel_name = jupynium_kernel_name_and_spec[1]
   local jupynium_kernel_spec = jupynium_kernel_name_and_spec[2]
-  print(current_kernel_name)
-  print(jupynium_kernel_spec)
 
   -- Example:
   -- local jupynium_kernels = { "python3", "conda-env-jupynium-py" } -- first one is default
