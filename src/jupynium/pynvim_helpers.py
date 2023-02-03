@@ -46,10 +46,7 @@ def attach_and_init(nvim_listen_addr):
     lua_code = resource_stream("jupynium", "lua/notify.lua").read().decode("utf-8")
     nvim.exec_lua(lua_code)
 
-    # keymaps
     lua_code = resource_stream("jupynium", "lua/commands.lua").read().decode("utf-8")
-    nvim.exec_lua(lua_code)
-    lua_code = resource_stream("jupynium", "lua/keymaps.lua").read().decode("utf-8")
     nvim.exec_lua(lua_code)
 
     lua_code = (
