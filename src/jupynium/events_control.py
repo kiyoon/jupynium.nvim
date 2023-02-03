@@ -330,6 +330,16 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
         logger.info("Nvim closed. Clearing nvim")
         return False, event[3]
 
+    elif event[1] == "get_kernel_spec":
+        driver.switch_to.window(nvim_info.window_handles[bufnr])
+        kernel_specs = driver.execute_script(
+            "return [Jupyter.notebook.kernel.name, Jupyter.kernelselector.kernelspecs];"
+        )
+        logger.info(f"Current kernel name: {kernel_specs[0]}")
+        logger.info(f"Kernel specs: {kernel_specs[1]}")
+        event[3].send(kernel_specs)
+        return True, None
+
     if event[3] is not None:
         event[3].send("OK")
 
@@ -497,6 +507,15 @@ def process_notification_event(
                 "Jupyter.notebook.clear_cells_outputs(Jupyter.notebook.get_selected_cells_indices())"
             )
             # driver.execute_script("Jupyter.notebook.clear_output();")
+        elif event[1] == "restart_kernel":
+            driver.switch_to.window(nvim_info.window_handles[bufnr])
+            driver.execute_script("Jupyter.notebook.kernel.restart()")
+        elif event[1] == "change_kernel":
+            (kernel_name,) = event_args
+            driver.switch_to.window(nvim_info.window_handles[bufnr])
+            driver.execute_script(
+                "Jupyter.kernelselector.set_kernel(arguments[0])", kernel_name
+            )
         elif event[1] == "scroll_to_cell":
             (cursor_pos_row,) = event_args
             scroll_to_cell(driver, nvim_info, bufnr, cursor_pos_row)

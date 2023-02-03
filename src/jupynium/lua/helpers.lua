@@ -393,3 +393,52 @@ function Jupynium_clear_selected_cells_outputs(bufnr)
 
   Jupynium_rpcnotify("clear_selected_cells_outputs", bufnr, true)
 end
+
+function Jupynium_get_kernel_spec(bufnr)
+  -- Users shouldn't have to call this function directly, and thus it won't be available as a command.
+  -- returns a table
+  -- ret[1] = current kernel name
+  -- ret[2] = table of kernel names to spec
+  --   ret[2].python3.spec.display_name
+  --   ret[2].python3.spec.language
+  --   ret[2].python3.spec.metadata.conda_env_name
+  --   ret[2].python3.spec.metadata.conda_env_path
+
+  if bufnr == nil or bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
+  if Jupynium_syncing_bufs[bufnr] == nil then
+    Jupynium_notify.error { [[Cannot get kernel list without synchronising.]], [[Run `:JupyniumStartSync`]] }
+    return
+  end
+
+  local kernel_spec = Jupynium_rpcrequest("get_kernel_spec", bufnr, true)
+  return kernel_spec
+end
+
+function Jupynium_change_kernel(bufnr, kernel_name)
+  -- note that the kernel name is different from the display name in the kernel list in Jupyter Notebook.
+  -- Users shouldn't have to call this function directly, and thus it won't be available as a command.
+  if bufnr == nil or bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
+  if Jupynium_syncing_bufs[bufnr] == nil then
+    Jupynium_notify.error { [[Cannot change kernel without synchronising.]], [[Run `:JupyniumStartSync`]] }
+    return
+  end
+
+  Jupynium_rpcnotify("change_kernel", bufnr, true, kernel_name)
+end
+
+function Jupynium_restart_kernel(bufnr)
+  -- note that the kernel name is different from the display name in the kernel list in Jupyter Notebook.
+  if bufnr == nil or bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
+  if Jupynium_syncing_bufs[bufnr] == nil then
+    Jupynium_notify.error { [[Cannot restart kernel without synchronising.]], [[Run `:JupyniumStartSync`]] }
+    return
+  end
+
+  Jupynium_rpcnotify("restart_kernel", bufnr, true)
+end
