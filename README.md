@@ -247,13 +247,13 @@ i.e. Any code below this line (and before the next separator) will be a code cel
   - Contents before the first cell are ignored, so use it as a heading (shebang etc.)
 - If there is no cell, it works as a markdown preview mode.
   - It will still open ipynb file but will one have one markdown cell.
-  
+
 **Magic commands**
+
 - `# %time` becomes `%time` in notebook.
 - If you want to really comment out magic commands, make the line not start with `# %`. For example,
   - `## %time`
   - `#%time`
-  
 
 ## ⌨️ Keybindings
 
@@ -302,6 +302,9 @@ If you want custom keymaps, add `textobjects = { use_default_keybindings = false
 :JupyniumExecuteSelectedCells
 :JupyniumClearSelectedCellsOutputs
 :JupyniumToggleSelectedCellsOutputsScroll
+
+:JupyniumRestartKernel
+:Telescope jupynium_kernels  " change kernel
 
 " Highlight
 :JupyniumShortsightedToggle
