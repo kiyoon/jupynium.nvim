@@ -6,6 +6,7 @@ import configparser
 import logging
 import os
 import secrets
+import signal
 import subprocess
 import sys
 import tempfile
@@ -287,10 +288,16 @@ def kill_notebook_proc(notebook_proc):
     Used if we opened a Jupyter Notebook server using the --jupyter_command and when no server is running.
     """
     if notebook_proc is not None:
-        notebook_proc.terminate()
-        # notebook_proc.kill()
-        notebook_proc.wait()
-        logger.info("Jupyter Notebook server has been killed.")
+        if os.name == "nt":
+            # Windows
+            os.kill(notebook_proc.pid, signal.CTRL_C_EVENT)
+        else:
+            notebook_proc.terminate()
+            # notebook_proc.kill()
+            notebook_proc.wait()
+        logger.info(
+            "Jupyter Notebook server (pid={notebook_proc.pid}) has been killed."
+        )
 
 
 def fallback_open_notebook_server(
@@ -464,6 +471,7 @@ def main():
                     for listen_addr, rpcrequest_event in del_list:
                         nvims[listen_addr].close(driver)
                         if rpcrequest_event is not None:
+                            logger.info("event sent OK")
                             rpcrequest_event.send("OK")
                         del nvims[listen_addr]
 
