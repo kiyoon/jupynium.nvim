@@ -45,7 +45,12 @@ local function run_process(cmd, args)
       end
     else
       -- cmd.exe
-      cmd_str = [["]] .. vim.fn.expand(cmd) .. [["]]
+      -- Wrapping the command with double quotes means it's a file, not a command
+      -- So you need to check if you're running a command or a file.
+      cmd_str = vim.fn.expand(cmd)
+      if cmd_str:find " " ~= nil then
+        cmd_str = [["]] .. cmd_str .. [["]]
+      end
       for _, v in ipairs(args) do
         cmd_str = cmd_str .. [[ "]] .. v .. [["]]
       end
@@ -129,8 +134,9 @@ function M.register_autostart_autocmds(augroup, opts)
       local bufname = vim.api.nvim_buf_get_name(0)
       local bufnr = vim.api.nvim_get_current_buf()
       if not M.server_state.is_autostarted then
-        if opts.auto_start_server.enable
-            and utils.list_wildcard_match(bufname, opts.auto_start_server.file_pattern) ~= nil
+        if
+          opts.auto_start_server.enable
+          and utils.list_wildcard_match(bufname, opts.auto_start_server.file_pattern) ~= nil
         then
           vim.cmd [[JupyniumStartAndAttachToServer]]
           M.server_state.is_autostarted = true
@@ -138,8 +144,9 @@ function M.register_autostart_autocmds(augroup, opts)
       end
 
       if not M.server_state.is_autostarted and not M.server_state.is_autoattached then
-        if opts.auto_attach_to_server.enable
-            and utils.list_wildcard_match(bufname, opts.auto_attach_to_server.file_pattern) ~= nil
+        if
+          opts.auto_attach_to_server.enable
+          and utils.list_wildcard_match(bufname, opts.auto_attach_to_server.file_pattern) ~= nil
         then
           vim.cmd [[JupyniumAttachToServer]]
           M.server_state.is_autoattached = true
