@@ -471,7 +471,6 @@ def main():
                     for listen_addr, rpcrequest_event in del_list:
                         nvims[listen_addr].close(driver)
                         if rpcrequest_event is not None:
-                            logger.info("event sent OK")
                             rpcrequest_event.send("OK")
                         del nvims[listen_addr]
 
