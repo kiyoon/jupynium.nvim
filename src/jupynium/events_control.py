@@ -165,7 +165,11 @@ def process_events(nvim_info: NvimInfo, driver):
                 return False, request_event
         else:
             # process and update prev_lazy_args
-            process_notification_event(nvim_info, driver, event, prev_lazy_args_per_buf)
+            status = process_notification_event(
+                nvim_info, driver, event, prev_lazy_args_per_buf
+            )
+            if not status:
+                return False, None
 
     # After the loop (here) you need to process the last on_lines event.
     prev_lazy_args_per_buf.process_all(nvim_info, driver)
@@ -327,6 +331,7 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
         logger.info(f"Loaded ipynb to the nvim buffer.")
 
     elif event[1] == "VimLeavePre":
+        # For non-Windows, use rpcrequest
         logger.info("Nvim closed. Clearing nvim")
         return False, event[3]
 
@@ -412,7 +417,7 @@ def process_notification_event(
     assert event[0] == "notification"
 
     if skip_bloated(nvim_info):
-        return
+        return True
 
     bufnr = event[2][0]
     event_args = event[2][1:]
@@ -540,11 +545,17 @@ def process_notification_event(
             logger.info(f"Received stop_sync request: bufnr = {bufnr}")
             nvim_info.detach_buffer(bufnr, driver)
 
+        elif event[1] == "VimLeavePre":
+            # Only for Windows, use rpcnotify
+            logger.info("Nvim closed. Clearing nvim")
+            return False
+
+    return True
+
 
 def update_cell_selection(
     nvim_info: NvimInfo, driver, bufnr, update_selection_args: UpdateSelectionArgs
 ):
-
     cursor_pos_row, visual_start_row = dataclasses.astuple(update_selection_args)
 
     if nvim_info.jupbufs[bufnr].num_cells == 1:

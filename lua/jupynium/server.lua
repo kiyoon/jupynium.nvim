@@ -8,52 +8,62 @@ M.server_state = {
   is_autoattached = false,
 }
 
-local function TableConcat(t1, t2)
-  for i = 1, #t2 do
-    t1[#t1 + 1] = t2[i]
-  end
-  return t1
-end
-
 local function run_process_bg(cmd, args)
   args = args or {}
   local cmd_str
   if vim.fn.has "win32" == 1 then
-    cmd_str = [[PowerShell "Start-Process -FilePath \"]]
-      .. vim.fn.expand(cmd):gsub("\\", "\\\\")
-      .. [[\" -ArgumentList \"]]
+    cmd_str = [[PowerShell "Start-Process -NoNewWindow -FilePath \"]] .. vim.fn.expand(cmd) .. [[\" -ArgumentList \"]]
 
     for _, v in ipairs(args) do
-      cmd_str = cmd_str .. [[ `\"]] .. v:gsub("\\", "\\\\") .. [[`\"]]
+      cmd_str = cmd_str .. [[ `\"]] .. v .. [[`\"]]
     end
 
     cmd_str = cmd_str .. [[\""]]
   else
-    cmd_str = [["]] .. vim.fn.expand(cmd) .. [["]]
+    cmd_str = [[']] .. vim.fn.expand(cmd) .. [[']]
 
     for _, v in ipairs(args) do
-      cmd_str = cmd_str .. [[ "]] .. v:gsub("\\", "\\\\") .. [["]]
+      -- cmd_str = cmd_str .. [[ ']] .. v:gsub("\\", "\\\\") .. [[']]
+      cmd_str = cmd_str .. [[ ']] .. v .. [[']]
     end
 
-    -- prior to nvim 0.9.0, stderr will create graphical glitch.
-    -- https://github.com/neovim/neovim/issues/21376
-    cmd_str = cmd_str .. [[ 2> /dev/null &]]
+    cmd_str = cmd_str .. [[ &]]
   end
 
-  io.popen(cmd_str)
+  vim.fn.system(cmd_str)
 end
 
 local function run_process(cmd, args)
   args = args or {}
-  local call_str = [[system('"]] .. vim.fn.expand(cmd) .. [["]]
+  local cmd_str
 
-  for _, v in ipairs(args) do
-    call_str = call_str .. [[ "]] .. v:gsub("\\", "\\\\") .. [["]]
+  if vim.fn.has "win32" == 1 then
+    if utils.string_begins_with(vim.o.shell, "powershell") then
+      cmd_str = [[& ']] .. vim.fn.expand(cmd) .. [[']]
+      for _, v in ipairs(args) do
+        cmd_str = cmd_str .. [[ ']] .. v .. [[']]
+      end
+    else
+      -- cmd.exe
+      -- Wrapping the command with double quotes means it's a file, not a command
+      -- So you need to check if you're running a command or a file.
+      cmd_str = vim.fn.expand(cmd)
+      if cmd_str:find " " ~= nil then
+        cmd_str = [["]] .. cmd_str .. [["]]
+      end
+      for _, v in ipairs(args) do
+        cmd_str = cmd_str .. [[ "]] .. v .. [["]]
+      end
+    end
+  else
+    -- linux, mac
+    cmd_str = [[']] .. vim.fn.expand(cmd) .. [[']]
+    for _, v in ipairs(args) do
+      cmd_str = cmd_str .. [[ ']] .. v .. [[']]
+    end
   end
 
-  call_str = call_str .. [[')]]
-
-  local output = vim.fn.eval(call_str)
+  local output = vim.fn.system(cmd_str)
   if output == nil then
     return ""
   else
@@ -67,14 +77,14 @@ local function call_jupynium_cli(args, bg)
     bg = true
   end
 
-  args = TableConcat({ "-m", "jupynium", "--nvim_listen_addr", vim.v.servername }, args)
+  args = utils.table_concat({ "-m", "jupynium", "--nvim_listen_addr", vim.v.servername }, args)
 
   local cmd
   if type(options.opts.python_host) == "string" then
     cmd = options.opts.python_host
   elseif type(options.opts.python_host) == "table" then
     cmd = options.opts.python_host[1]
-    args = TableConcat({ unpack(options.opts.python_host, 2) }, args)
+    args = utils.table_concat({ unpack(options.opts.python_host, 2) }, args)
   else
     error "Invalid python_host type."
   end

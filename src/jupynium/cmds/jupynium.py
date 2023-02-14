@@ -6,6 +6,7 @@ import configparser
 import logging
 import os
 import secrets
+import signal
 import subprocess
 import sys
 import tempfile
@@ -17,6 +18,7 @@ from urllib.parse import urlparse
 import coloredlogs
 import git
 import persistqueue
+import psutil
 import verboselogs
 from git.exc import InvalidGitRepositoryError
 from persistqueue.exceptions import Empty
@@ -164,8 +166,7 @@ def get_parser():
         nargs="+",
         default=["jupyter"],
         help="Command to start Jupyter Notebook (but without notebook).\n"
-        "To use conda env, use `--jupyter_command ~/miniconda3/envs/env_name/bin/jupyter`.\n"
-        "Don't use `conda run ..` as it won't be killed afterwards (it opens another process with different pid so it's hard to keep track of it.)\n"
+        "To use conda env, use `--jupyter_command conda run ' --no-capture-output' ' -n' base jupyter`. Notice the space before the dash.\n"
         "It is used only when the --notebook_URL is localhost, and is not running.",
     )
     parser.add_argument(
@@ -281,16 +282,39 @@ def exception_no_notebook(notebook_URL, nvim):
     sys.exit(1)
 
 
+def kill_child_processes(parent_pid, sig=signal.SIGTERM):
+    try:
+        parent = psutil.Process(parent_pid)
+    except psutil.NoSuchProcess:
+        return
+    children = parent.children(recursive=True)
+    for process in children:
+        process.send_signal(sig)
+    psutil.wait_procs(children, timeout=3)
+
+
 def kill_notebook_proc(notebook_proc):
     """
     Kill the notebook process.
     Used if we opened a Jupyter Notebook server using the --jupyter_command and when no server is running.
     """
     if notebook_proc is not None:
-        notebook_proc.terminate()
-        # notebook_proc.kill()
-        notebook_proc.wait()
-        logger.info("Jupyter Notebook server has been killed.")
+        if os.name == "nt":
+            # Windows
+            os.kill(notebook_proc.pid, signal.CTRL_C_EVENT)
+        else:
+            # Twice to properly close
+            kill_child_processes(notebook_proc.pid, signal.SIGINT)
+            kill_child_processes(notebook_proc.pid, signal.SIGINT)
+
+            ## Below doesn't work when the notebook is started like
+            ## conda run --no-capture-output -n base jupyter notebook
+            # notebook_proc.terminate()
+            # # notebook_proc.kill()
+            # notebook_proc.wait()
+        logger.info(
+            f"Jupyter Notebook server (pid={notebook_proc.pid}) has been killed."
+        )
 
 
 def fallback_open_notebook_server(
@@ -330,7 +354,6 @@ def fallback_open_notebook_server(
     try:
         # strip commands because we need to escape args with dashes.
         # e.g. --jupyter_command conda run ' --no-capture-output' ' -n' env_name jupyter
-        # However, conda run will run process with another pid so it won't work well here. Don't use it.
 
         jupyter_command = [command.strip() for command in jupyter_command]
         jupyter_command[0] = os.path.expanduser(jupyter_command[0])

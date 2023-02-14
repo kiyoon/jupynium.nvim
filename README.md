@@ -52,7 +52,7 @@ Install with vim-plug:
 
 ```vim
 Plug 'kiyoon/jupynium.nvim', { 'do': 'pip3 install --user .' }
-" Plug 'kiyoon/jupynium.nvim', { 'do': '~/miniconda3/envs/jupynium/bin/pip install .' }
+" Plug 'kiyoon/jupynium.nvim', { 'do': 'conda run --no-capture-output -n jupynium pip install .' }
 Plug 'rcarriga/nvim-notify'  " optional
 ```
 
@@ -60,7 +60,7 @@ Install with packer.nvim:
 
 ```lua
 use { "kiyoon/jupynium.nvim", run = "pip3 install --user ." }
--- use { "kiyoon/jupynium.nvim", run = "~/miniconda3/envs/jupynium/bin/pip install ." }
+-- use { "kiyoon/jupynium.nvim", run = "conda run --no-capture-output -n jupynium pip install ." }
 use { "rcarriga/nvim-notify" }  -- optional
 ```
 
@@ -70,7 +70,7 @@ Install with 💤lazy.nvim
   {
     "kiyoon/jupynium.nvim",
     build = "pip3 install --user .",
-    -- build = "~/miniconda3/envs/jupynium/bin/pip install .",
+    -- build = "conda run --no-capture-output -n jupynium pip install .",
     -- enabled = vim.fn.isdirectory(vim.fn.expand "~/miniconda3/envs/jupynium"),
   },
   "rcarriga/nvim-notify",  -- optional
@@ -85,8 +85,8 @@ Click to see the setup defaults
 
 ```lua
 require("jupynium").setup({
-  -- Conda users:
-  -- python_host = "~/miniconda3/envs/jupynium/bin/python",
+  --- For Conda environment named "jupynium",
+  -- python_host = { "conda", "run", "--no-capture-output", "-n", "jupynium", "python" },
   python_host = vim.g.python3_host_prog or "python3",
 
   default_notebook_URL = "localhost:8888",
@@ -95,7 +95,9 @@ require("jupynium").setup({
   -- When you call :JupyniumStartAndAttachToServer and no notebook is open,
   -- then Jupynium will open the server for you using this command. (only when notebook_URL is localhost)
   jupyter_command = "jupyter",
-  -- jupyter_command = "~/miniconda3/bin/jupyter",
+  --- For Conda, maybe use base environment
+  --- then you can `conda install -n base nb_conda_kernels` to switch environment in Jupyter Notebook
+  -- jupyter_command = { "conda", "run", "--no-capture-output", "-n", "base", "jupyter" },
 
   -- Used when notebook is launched by using jupyter_command.
   -- If nil or "", it will open at the git directory of the current buffer,

@@ -2,8 +2,8 @@ local M = {}
 
 M.opts = {}
 M.default_opts = {
-  -- Conda users:
-  -- python_host = "~/miniconda3/envs/jupynium/bin/python"
+  --- For Conda environment named "jupynium",
+  -- python_host = { "conda", "run", "--no-capture-output", "-n", "jupynium", "python" },
   python_host = vim.g.python3_host_prog or "python3",
 
   default_notebook_URL = "localhost:8888",
@@ -12,7 +12,9 @@ M.default_opts = {
   -- When you call :JupyniumStartAndAttachToServer and no notebook is open,
   -- then Jupynium will open the server for you using this command. (only when notebook_URL is localhost)
   jupyter_command = "jupyter",
-  -- jupyter_command = "~/miniconda3/bin/jupyter",
+  --- For Conda, maybe use base environment
+  --- then you can `conda install -n base nb_conda_kernels` to switch environment in Jupyter Notebook
+  -- jupyter_command = { "conda", "run", "--no-capture-output", "-n", "base", "jupyter" },
 
   -- Used when notebook is launched by using jupyter_command.
   -- If nil or "", it will open at the git directory of the current buffer,
