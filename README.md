@@ -52,7 +52,7 @@ Install with vim-plug:
 
 ```vim
 Plug 'kiyoon/jupynium.nvim', { 'do': 'pip3 install --user .' }
-" Plug 'kiyoon/jupynium.nvim', { 'do': '~/miniconda3/envs/jupynium/bin/pip install .' }
+" Plug 'kiyoon/jupynium.nvim', { 'do': 'conda run --no-capture-output -n jupynium pip install .' }
 Plug 'rcarriga/nvim-notify'  " optional
 ```
 
@@ -60,7 +60,7 @@ Install with packer.nvim:
 
 ```lua
 use { "kiyoon/jupynium.nvim", run = "pip3 install --user ." }
--- use { "kiyoon/jupynium.nvim", run = "~/miniconda3/envs/jupynium/bin/pip install ." }
+-- use { "kiyoon/jupynium.nvim", run = "conda run --no-capture-output -n jupynium pip install ." }
 use { "rcarriga/nvim-notify" }  -- optional
 ```
 
@@ -70,7 +70,7 @@ Install with 💤lazy.nvim
   {
     "kiyoon/jupynium.nvim",
     build = "pip3 install --user .",
-    -- build = "~/miniconda3/envs/jupynium/bin/pip install .",
+    -- build = "conda run --no-capture-output -n jupynium pip install .",
     -- enabled = vim.fn.isdirectory(vim.fn.expand "~/miniconda3/envs/jupynium"),
   },
   "rcarriga/nvim-notify",  -- optional
