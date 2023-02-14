@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 import coloredlogs
 import git
 import persistqueue
+import psutil
 import verboselogs
 from git.exc import InvalidGitRepositoryError
 from persistqueue.exceptions import Empty
@@ -282,6 +283,17 @@ def exception_no_notebook(notebook_URL, nvim):
     sys.exit(1)
 
 
+def kill_child_processes(parent_pid, sig=signal.SIGTERM):
+    try:
+        parent = psutil.Process(parent_pid)
+    except psutil.NoSuchProcess:
+        return
+    children = parent.children(recursive=True)
+    for process in children:
+        process.send_signal(sig)
+    psutil.wait_procs(children, timeout=3)
+
+
 def kill_notebook_proc(notebook_proc):
     """
     Kill the notebook process.
@@ -292,11 +304,17 @@ def kill_notebook_proc(notebook_proc):
             # Windows
             os.kill(notebook_proc.pid, signal.CTRL_C_EVENT)
         else:
-            notebook_proc.terminate()
-            # notebook_proc.kill()
-            notebook_proc.wait()
+            # Twice to properly close
+            kill_child_processes(notebook_proc.pid, signal.SIGINT)
+            kill_child_processes(notebook_proc.pid, signal.SIGINT)
+
+            ## Below doesn't work when the notebook is started like
+            ## conda run --no-capture-output -n base jupyter notebook
+            # notebook_proc.terminate()
+            # # notebook_proc.kill()
+            # notebook_proc.wait()
         logger.info(
-            "Jupyter Notebook server (pid={notebook_proc.pid}) has been killed."
+            f"Jupyter Notebook server (pid={notebook_proc.pid}) has been killed."
         )
 
 
