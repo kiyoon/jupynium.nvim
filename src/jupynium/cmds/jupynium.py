@@ -166,8 +166,7 @@ def get_parser():
         nargs="+",
         default=["jupyter"],
         help="Command to start Jupyter Notebook (but without notebook).\n"
-        "To use conda env, use `--jupyter_command ~/miniconda3/envs/env_name/bin/jupyter`.\n"
-        "Don't use `conda run ..` as it won't be killed afterwards (it opens another process with different pid so it's hard to keep track of it.)\n"
+        "To use conda env, use `--jupyter_command conda run ' --no-capture-output' ' -n' base jupyter`. Notice the space before the dash.\n"
         "It is used only when the --notebook_URL is localhost, and is not running.",
     )
     parser.add_argument(
@@ -355,7 +354,6 @@ def fallback_open_notebook_server(
     try:
         # strip commands because we need to escape args with dashes.
         # e.g. --jupyter_command conda run ' --no-capture-output' ' -n' env_name jupyter
-        # However, conda run will run process with another pid so it won't work well here. Don't use it.
 
         jupyter_command = [command.strip() for command in jupyter_command]
         jupyter_command[0] = os.path.expanduser(jupyter_command[0])
