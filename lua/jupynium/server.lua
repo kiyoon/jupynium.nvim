@@ -8,13 +8,6 @@ M.server_state = {
   is_autoattached = false,
 }
 
-local function TableConcat(t1, t2)
-  for i = 1, #t2 do
-    t1[#t1 + 1] = t2[i]
-  end
-  return t1
-end
-
 local function run_process_bg(cmd, args)
   args = args or {}
   local cmd_str
@@ -27,15 +20,14 @@ local function run_process_bg(cmd, args)
 
     cmd_str = cmd_str .. [[\""]]
   else
-    cmd_str = [["]] .. vim.fn.expand(cmd) .. [["]]
+    cmd_str = [[']] .. vim.fn.expand(cmd) .. [[']]
 
     for _, v in ipairs(args) do
-      cmd_str = cmd_str .. [[ "]] .. v:gsub("\\", "\\\\") .. [["]]
+      -- cmd_str = cmd_str .. [[ ']] .. v:gsub("\\", "\\\\") .. [[']]
+      cmd_str = cmd_str .. [[ ']] .. v .. [[']]
     end
 
-    -- prior to nvim 0.9.0, stderr will create graphical glitch.
-    -- https://github.com/neovim/neovim/issues/21376
-    cmd_str = cmd_str .. [[ 2> /dev/null &]]
+    cmd_str = cmd_str .. [[ &]]
   end
 
   vim.fn.system(cmd_str)
@@ -60,9 +52,9 @@ local function run_process(cmd, args)
     end
   else
     -- linux, mac
-    cmd_str = [["]] .. vim.fn.expand(cmd) .. [["]]
+    cmd_str = [[']] .. vim.fn.expand(cmd) .. [[']]
     for _, v in ipairs(args) do
-      cmd_str = cmd_str .. [[ "]] .. v:gsub("\\", "\\\\") .. [["]]
+      cmd_str = cmd_str .. [[ ']] .. v .. [[']]
     end
   end
 
@@ -80,14 +72,14 @@ local function call_jupynium_cli(args, bg)
     bg = true
   end
 
-  args = TableConcat({ "-m", "jupynium", "--nvim_listen_addr", vim.v.servername }, args)
+  args = utils.table_concat({ "-m", "jupynium", "--nvim_listen_addr", vim.v.servername }, args)
 
   local cmd
   if type(options.opts.python_host) == "string" then
     cmd = options.opts.python_host
   elseif type(options.opts.python_host) == "table" then
     cmd = options.opts.python_host[1]
-    args = TableConcat({ unpack(options.opts.python_host, 2) }, args)
+    args = utils.table_concat({ unpack(options.opts.python_host, 2) }, args)
   else
     error "Invalid python_host type."
   end
@@ -137,9 +129,8 @@ function M.register_autostart_autocmds(augroup, opts)
       local bufname = vim.api.nvim_buf_get_name(0)
       local bufnr = vim.api.nvim_get_current_buf()
       if not M.server_state.is_autostarted then
-        if
-          opts.auto_start_server.enable
-          and utils.list_wildcard_match(bufname, opts.auto_start_server.file_pattern) ~= nil
+        if opts.auto_start_server.enable
+            and utils.list_wildcard_match(bufname, opts.auto_start_server.file_pattern) ~= nil
         then
           vim.cmd [[JupyniumStartAndAttachToServer]]
           M.server_state.is_autostarted = true
@@ -147,9 +138,8 @@ function M.register_autostart_autocmds(augroup, opts)
       end
 
       if not M.server_state.is_autostarted and not M.server_state.is_autoattached then
-        if
-          opts.auto_attach_to_server.enable
-          and utils.list_wildcard_match(bufname, opts.auto_attach_to_server.file_pattern) ~= nil
+        if opts.auto_attach_to_server.enable
+            and utils.list_wildcard_match(bufname, opts.auto_attach_to_server.file_pattern) ~= nil
         then
           vim.cmd [[JupyniumAttachToServer]]
           M.server_state.is_autoattached = true
