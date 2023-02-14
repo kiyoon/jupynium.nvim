@@ -19,12 +19,10 @@ local function run_process_bg(cmd, args)
   args = args or {}
   local cmd_str
   if vim.fn.has "win32" == 1 then
-    cmd_str = [[PowerShell "Start-Process -FilePath \"]]
-      .. vim.fn.expand(cmd):gsub("\\", "\\\\")
-      .. [[\" -ArgumentList \"]]
+    cmd_str = [[PowerShell "Start-Process -NoNewWindow -FilePath \"]] .. vim.fn.expand(cmd) .. [[\" -ArgumentList \"]]
 
     for _, v in ipairs(args) do
-      cmd_str = cmd_str .. [[ `\"]] .. v:gsub("\\", "\\\\") .. [[`\"]]
+      cmd_str = cmd_str .. [[ `\"]] .. v .. [[`\"]]
     end
 
     cmd_str = cmd_str .. [[\""]]
@@ -40,20 +38,35 @@ local function run_process_bg(cmd, args)
     cmd_str = cmd_str .. [[ 2> /dev/null &]]
   end
 
-  io.popen(cmd_str)
+  vim.fn.system(cmd_str)
 end
 
 local function run_process(cmd, args)
   args = args or {}
-  local call_str = [[system('"]] .. vim.fn.expand(cmd) .. [["]]
+  local cmd_str
 
-  for _, v in ipairs(args) do
-    call_str = call_str .. [[ "]] .. v:gsub("\\", "\\\\") .. [["]]
+  if vim.fn.has "win32" == 1 then
+    if utils.string_begins_with(vim.o.shell, "powershell") then
+      cmd_str = [[& ']] .. vim.fn.expand(cmd) .. [[']]
+      for _, v in ipairs(args) do
+        cmd_str = cmd_str .. [[ ']] .. v .. [[']]
+      end
+    else
+      -- cmd.exe
+      cmd_str = [["]] .. vim.fn.expand(cmd) .. [["]]
+      for _, v in ipairs(args) do
+        cmd_str = cmd_str .. [[ "]] .. v .. [["]]
+      end
+    end
+  else
+    -- linux, mac
+    cmd_str = [["]] .. vim.fn.expand(cmd) .. [["]]
+    for _, v in ipairs(args) do
+      cmd_str = cmd_str .. [[ "]] .. v:gsub("\\", "\\\\") .. [["]]
+    end
   end
 
-  call_str = call_str .. [[')]]
-
-  local output = vim.fn.eval(call_str)
+  local output = vim.fn.system(cmd_str)
   if output == nil then
     return ""
   else
