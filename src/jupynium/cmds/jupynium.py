@@ -303,15 +303,14 @@ def kill_notebook_proc(notebook_proc):
             # Windows
             os.kill(notebook_proc.pid, signal.CTRL_C_EVENT)
         else:
-            # Twice to properly close
-            kill_child_processes(notebook_proc.pid, signal.SIGINT)
-            kill_child_processes(notebook_proc.pid, signal.SIGINT)
+            # Need to kill children if the notebook server is started using `conda run` like
+            # conda run --no-capture-output -n base jupyter notebook
+            kill_child_processes(notebook_proc.pid, signal.SIGKILL)
 
-            ## Below doesn't work when the notebook is started like
-            ## conda run --no-capture-output -n base jupyter notebook
             # notebook_proc.terminate()
-            # # notebook_proc.kill()
-            # notebook_proc.wait()
+            notebook_proc.kill()
+            notebook_proc.wait()
+
         logger.info(
             f"Jupyter Notebook server (pid={notebook_proc.pid}) has been killed."
         )
