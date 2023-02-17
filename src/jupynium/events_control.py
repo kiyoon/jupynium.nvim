@@ -535,10 +535,8 @@ def process_notification_event(
             if driver.current_window_handle == nvim_info.window_handles[bufnr]:
                 nvim_info.jupbufs[bufnr].full_sync_to_notebook(driver)
 
-        elif event[1] == "BufWinLeave":
-            logger.info("Buffer closed on nvim. Closing on Jupyter Notebook")
-            # driver.switch_to.window(nvim_info.window_handles[buf])
-            # driver.close()
+        elif event[1] == "BufUnload":
+            logger.info("Buffer unloaded on nvim. Closing on Jupyter Notebook")
             nvim_info.detach_buffer(bufnr, driver)
 
         elif event[1] == "stop_sync":

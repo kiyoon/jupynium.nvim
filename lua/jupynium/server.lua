@@ -89,6 +89,10 @@ local function call_jupynium_cli(args, bg)
     error "Invalid python_host type."
   end
 
+  if not options.opts.auto_close_tab then
+    table.insert(args, "--no_auto_close_tab")
+  end
+
   if bg then
     run_process_bg(cmd, args)
   else

@@ -18,6 +18,7 @@ class NvimInfo:
     home_window: str
     jupbufs: dict[int, JupyniumBuffer] = field(default_factory=dict)  # key = buffer ID
     window_handles: dict[int, str] = field(default_factory=dict)  # key = buffer ID
+    auto_close_tab: bool = True
 
     def attach_buffer(self, buf_id, content: list[str], window_handle):
         if buf_id in self.jupbufs or buf_id in self.window_handles:
@@ -30,10 +31,11 @@ class NvimInfo:
         if buf_id in self.jupbufs:
             del self.jupbufs[buf_id]
         if buf_id in self.window_handles:
-            if self.window_handles[buf_id] in driver.window_handles:
-                driver.switch_to.window(self.window_handles[buf_id])
-                driver.close()
-                driver.switch_to.window(self.home_window)
+            if self.auto_close_tab:
+                if self.window_handles[buf_id] in driver.window_handles:
+                    driver.switch_to.window(self.window_handles[buf_id])
+                    driver.close()
+                    driver.switch_to.window(self.home_window)
             del self.window_handles[buf_id]
 
     def check_window_alive_and_update(self, driver):

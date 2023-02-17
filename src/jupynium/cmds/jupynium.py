@@ -176,6 +176,11 @@ def get_parser():
         "If None, open at a git dir of nvim's buffer path and still navigate to the buffer dir.\n"
         "(e.g. localhost:8888/tree/path/to/buffer)",
     )
+    parser.add_argument(
+        "--no_auto_close_tab",
+        action="store_true",
+        help="Disable auto closing of tabs when closing vim buffer that is in sync.",
+    )
 
     # parser.add_argument(
     #     "--browser",
@@ -244,7 +249,9 @@ def attach_new_neovim(
                 home_window = driver.current_window_handle
                 URL_to_home_windows[new_args.notebook_URL] = home_window
 
-            nvim_info = NvimInfo(nvim, home_window)
+            nvim_info = NvimInfo(
+                nvim, home_window, auto_close_tab=not new_args.no_auto_close_tab
+            )
             nvims[new_args.nvim_listen_addr] = nvim_info
         except Exception:
             logger.exception("Exception occurred while attaching a new nvim. Ignoring.")
@@ -456,7 +463,11 @@ def main():
 
             URL_to_home_windows = {args.notebook_URL: home_window}
             if args.nvim_listen_addr is not None and nvim is not None:
-                nvims = {args.nvim_listen_addr: NvimInfo(nvim, home_window)}
+                nvims = {
+                    args.nvim_listen_addr: NvimInfo(
+                        nvim, home_window, auto_close_tab=not args.no_auto_close_tab
+                    )
+                }
             else:
                 logger.info(
                     "No nvim attached. Waiting for nvim to attach. Run jupynium --nvim_listen_addr /tmp/example (use `:echo v:servername` of nvim)"
