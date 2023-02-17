@@ -237,11 +237,10 @@ function Jupynium_start_sync(bufnr, filename, ask)
     group = augroup,
   })
 
-  vim.api.nvim_create_autocmd({ "BufWinLeave" }, {
+  vim.api.nvim_create_autocmd({ "BufUnload" }, {
     buffer = bufnr,
     callback = function()
-      -- notify before detaching
-      Jupynium_rpcnotify("BufWinLeave", bufnr, true)
+      Jupynium_rpcnotify("BufUnload", bufnr, true)
       Jupynium_stop_sync(bufnr)
     end,
     group = augroup,

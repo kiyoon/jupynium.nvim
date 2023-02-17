@@ -142,6 +142,9 @@ require("jupynium").setup({
   -- Related command :JupyniumDownloadIpynb
   auto_download_ipynb = true,
 
+  -- Automatically close tab that is in sync when you close buffer in vim.
+  auto_close_tab = true,
+
   -- Always scroll to the current cell.
   -- Related command :JupyniumScrollToCell
   autoscroll = {
