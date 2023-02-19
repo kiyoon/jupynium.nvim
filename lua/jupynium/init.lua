@@ -59,11 +59,6 @@ function M.setup(opts)
   end
   shortsighted.add_commands()
 
-  local status, telescope = pcall(require, "telescope")
-  if status then
-    telescope.load_extension "jupynium_kernels"
-  end
-
   vim.g.__jupynium_setup_completed = true
 end
 

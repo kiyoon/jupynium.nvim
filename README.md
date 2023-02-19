@@ -53,7 +53,8 @@ Install with vim-plug:
 ```vim
 Plug 'kiyoon/jupynium.nvim', { 'do': 'pip3 install --user .' }
 " Plug 'kiyoon/jupynium.nvim', { 'do': 'conda run --no-capture-output -n jupynium pip install .' }
-Plug 'rcarriga/nvim-notify'  " optional
+Plug 'rcarriga/nvim-notify'   " optional
+Plug 'stevearc/dressing.nvim' " optional, UI for :JupyniumSelectKernel
 ```
 
 Install with packer.nvim:
@@ -61,7 +62,8 @@ Install with packer.nvim:
 ```lua
 use { "kiyoon/jupynium.nvim", run = "pip3 install --user ." }
 -- use { "kiyoon/jupynium.nvim", run = "conda run --no-capture-output -n jupynium pip install ." }
-use { "rcarriga/nvim-notify" }  -- optional
+use { "rcarriga/nvim-notify" }   -- optional
+use { "stevearc/dressing.nvim" } -- optional, UI for :JupyniumSelectKernel
 ```
 
 Install with 💤lazy.nvim
@@ -73,7 +75,8 @@ Install with 💤lazy.nvim
     -- build = "conda run --no-capture-output -n jupynium pip install .",
     -- enabled = vim.fn.isdirectory(vim.fn.expand "~/miniconda3/envs/jupynium"),
   },
-  "rcarriga/nvim-notify",  -- optional
+  "rcarriga/nvim-notify",   -- optional
+  "stevearc/dressing.nvim", -- optional, UI for :JupyniumSelectKernel
 ```
 
 Setup is optional for system python users and here are the defaults. Conda users need to change the `python_host`.
@@ -309,7 +312,7 @@ If you want custom keymaps, add `textobjects = { use_default_keybindings = false
 :JupyniumToggleSelectedCellsOutputsScroll
 
 :JupyniumRestartKernel
-:Telescope jupynium_kernels  " change kernel
+:JupyniumSelectKernel
 
 " Highlight
 :JupyniumShortsightedToggle

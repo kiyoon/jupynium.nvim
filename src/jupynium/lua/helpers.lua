@@ -441,3 +441,54 @@ function Jupynium_restart_kernel(bufnr)
 
   Jupynium_rpcnotify("restart_kernel", bufnr, true)
 end
+
+function Jupynium_select_kernel(bufnr)
+  -- note that the kernel name is different from the display name in the kernel list in Jupyter Notebook.
+  if bufnr == nil or bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
+  if Jupynium_syncing_bufs[bufnr] == nil then
+    Jupynium_notify.error { [[Cannot select kernel without synchronising.]], [[Run `:JupyniumStartSync`]] }
+    return
+  end
+
+  local jupynium_kernel_name_and_spec = Jupynium_get_kernel_spec(bufnr)
+  local current_kernel_name = jupynium_kernel_name_and_spec[1]
+  local kernel_spec = jupynium_kernel_name_and_spec[2]
+  local kernel_display_names, kernel_dispname_to_name = {}, {}
+  for kernel_name, kern in pairs(kernel_spec) do
+    -- filter by language
+    if kern.spec.language:lower() == vim.bo.filetype then
+      if kernel_name ~= current_kernel_name then
+        table.insert(kernel_display_names, kern.spec.display_name)
+      else
+        -- current kernel is always first (default)
+        table.insert(kernel_display_names, 1, kern.spec.display_name)
+      end
+      kernel_dispname_to_name[kern.spec.display_name] = kernel_name
+    end
+  end
+
+  if kernel_dispname_to_name[kernel_display_names[1]] ~= current_kernel_name then
+    -- by applying filtering, we dropped the current kernel.
+    -- cancel the filtering and include everything.
+    kernel_display_names = {}
+    kernel_dispname_to_name = {}
+    for kernel_name, kern in pairs(kernel_spec) do
+      if kernel_name ~= current_kernel_name then
+        table.insert(kernel_display_names, kern.spec.display_name)
+      else
+        -- current kernel is always first (default)
+        table.insert(kernel_display_names, 1, kern.spec.display_name)
+      end
+      kernel_dispname_to_name[kern.spec.display_name] = kernel_name
+    end
+  end
+
+  -- Use dressing.nvim to use Telescope, fzf-lua etc.
+  vim.ui.select(kernel_display_names, {
+    prompt = "Select a kernel for Jupynium (Jupyter Notebook)",
+  }, function(selected)
+    Jupynium_change_kernel(bufnr, kernel_dispname_to_name[selected])
+  end)
+end
