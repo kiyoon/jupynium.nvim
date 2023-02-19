@@ -22,3 +22,4 @@ vim.api.nvim_create_user_command("JupyniumScrollDown", "lua Jupynium_scroll_down
 vim.api.nvim_create_user_command("JupyniumAutoscrollToggle", "lua Jupynium_autoscroll_toggle()", {})
 
 vim.api.nvim_create_user_command("JupyniumRestartKernel", "lua Jupynium_restart_kernel()", {})
+vim.api.nvim_create_user_command("JupyniumSelectKernel", "lua Jupynium_select_kernel()", {})
