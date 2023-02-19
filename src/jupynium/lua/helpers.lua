@@ -155,7 +155,11 @@ function Jupynium_start_sync_cmd(args)
   Jupynium_start_sync(buf, filename)
 end
 
-function Jupynium_start_sync(bufnr, filename, ask)
+---Start synchronising the buffer with the ipynb file
+---@param bufnr integer buffer number
+---@param ipynb_filename string name of the ipynb file
+---@param ask boolean whether to ask for confirmation
+function Jupynium_start_sync(bufnr, ipynb_filename, ask)
   if bufnr == nil or bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()
   end
@@ -173,7 +177,12 @@ function Jupynium_start_sync(bufnr, filename, ask)
 
   local content = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
-  local response = Jupynium_rpcrequest("start_sync", bufnr, false, filename, ask, content)
+  -- Used for choosing the correct kernel
+  local buf_filetype = vim.api.nvim_buf_get_option(bufnr, "filetype")
+  local conda_env_path = vim.env.CONDA_PREFIX
+
+  local response =
+    Jupynium_rpcrequest("start_sync", bufnr, false, ipynb_filename, ask, content, buf_filetype, conda_env_path)
   if response ~= "OK" then
     Jupynium_notify.info { "Cancelling sync.." }
     return
