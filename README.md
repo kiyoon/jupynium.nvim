@@ -383,7 +383,7 @@ The program is in the alpha stage. If it crashes it's likely that the whole brow
 > 🌽 How do I use different languages / kernels?
 
 Instead of `*.ju.py` if you make files named `*.ju.*` (e.g. `*.ju.r`) you will see all the keybindings and commands.  
-All the procedures should be the same, except that you would need to manually change the kernel from the browser.
+All the procedures should be the same.
 
 > The notebook content is not in sync with vim. How do I fix it?
 

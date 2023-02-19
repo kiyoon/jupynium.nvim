@@ -179,9 +179,11 @@ def process_events(nvim_info: NvimInfo, driver):
 
 def start_sync_with_filename(
     bufnr: int,
-    filename: str,
+    ipynb_filename: str,
     ask: bool,
     content: list[str],
+    buf_filetype: str,
+    conda_env_path: str | None,
     nvim_info: NvimInfo,
     driver,
 ):
@@ -192,7 +194,7 @@ def start_sync_with_filename(
     driver.switch_to.window(nvim_info.home_window)
     sele.wait_until_notebook_list_loaded(driver)
 
-    if filename == "":
+    if ipynb_filename == "":
         file_found = False
     else:
         notebook_items = driver.find_elements(
@@ -211,7 +213,7 @@ def start_sync_with_filename(
             except NoSuchElementException:
                 continue
             notebook_name = notebook_elem.text
-            if notebook_name == filename:
+            if notebook_name == ipynb_filename:
                 prev_windows = set(driver.window_handles)
                 driver.execute_script("arguments[0].scrollIntoView();", notebook_elem)
                 notebook_elem.click()
@@ -250,13 +252,19 @@ def start_sync_with_filename(
     else:
         new_btn = driver.find_element(By.ID, "new-buttons")
         driver.execute_script("arguments[0].scrollIntoView(true);", new_btn)
-        python_btn = driver.find_element(By.ID, "kernel-python3")
+        kernel_name = choose_default_kernel(
+            driver, "main", buf_filetype, conda_env_path
+        )
+        if kernel_name is None:
+            kernel_name = "python3"
+        kernel_btn = driver.find_element(By.ID, f"kernel-{kernel_name}")
+        driver.execute_script("arguments[0].scrollIntoView(true);", kernel_btn)
         prev_windows = set(driver.window_handles)
         try:
-            python_btn.click()
+            kernel_btn.click()
         except ElementNotInteractableException:
             new_btn.click()
-            python_btn.click()
+            kernel_btn.click()
 
         sele.wait_until_new_window(driver, prev_windows)
         new_window = set(driver.window_handles) - prev_windows
@@ -265,14 +273,72 @@ def start_sync_with_filename(
 
         driver.switch_to.window(new_window)
         sele.wait_until_notebook_loaded(driver)
-        if filename != "":
+        if ipynb_filename != "":
             driver.execute_script(
                 "Jupyter.notebook.rename(arguments[0]);",
-                filename,
+                ipynb_filename,
             )
         # start sync
         nvim_info.attach_buffer(bufnr, content, driver.current_window_handle)
         nvim_info.jupbufs[bufnr].full_sync_to_notebook(driver)
+
+
+def choose_default_kernel(driver, page_type: str, buf_filetype, conda_env_path):
+    """
+    Choose kernel based on buffer's filetype and conda env
+    """
+    if page_type == "notebook":
+        kernel_specs = driver.execute_script(
+            "return Jupyter.kernelselector.kernelspecs;"
+        )
+    elif page_type == "main":
+        kernel_specs = driver.execute_script("return Jupyter.kernel_list.kernelspecs;")
+    else:
+        raise ValueError(f"Invalid page_type: {page_type}")
+
+    valid_kernel_names = []
+    for kernel_name, kern in kernel_specs.items():
+        # Filter by language
+        if kern["spec"]["language"].lower() == buf_filetype.lower():
+            valid_kernel_names.append(kernel_name)
+
+    if len(valid_kernel_names) == 0:
+        return
+    elif len(valid_kernel_names) == 1:
+        return valid_kernel_names[0]
+    else:
+        # Filter by conda env
+        if conda_env_path is None or conda_env_path == "":
+            # Remove conda kernels
+            valid_kernel_names_old = valid_kernel_names
+            valid_kernel_names = []
+            for valid_kernel_name in valid_kernel_names_old:
+                if (
+                    "conda_env_path"
+                    not in kernel_specs[valid_kernel_name]["spec"]["metadata"].keys()
+                ):
+                    valid_kernel_names.append(valid_kernel_name)
+            if len(valid_kernel_names) == 0:
+                return
+            else:
+                return valid_kernel_names[0]
+
+        else:
+            for valid_kernel_name in valid_kernel_names:
+                try:
+                    if (
+                        kernel_specs[valid_kernel_name]["spec"]["metadata"][
+                            "conda_env_path"
+                        ]
+                        == conda_env_path
+                    ):
+                        return valid_kernel_name
+                except KeyError:
+                    pass
+            else:
+                return valid_kernel_names[0]
+
+    return
 
 
 def process_request_event(nvim_info: NvimInfo, driver, event):
@@ -289,18 +355,27 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
     event_args = event[2][1:]
 
     if event[1] == "start_sync":
-        filename, ask, content = event_args
-        filename = filename.strip()
+        ipynb_filename, ask, content, buf_filetype, conda_env_path = event_args
+        ipynb_filename: str
+        ipynb_filename = ipynb_filename.strip()
 
-        filename: str
-        if not filename.isnumeric():
-            if filename != "" and not filename.lower().endswith(".ipynb"):
-                filename += ".ipynb"
+        if not ipynb_filename.isnumeric():
+            if ipynb_filename != "" and not ipynb_filename.lower().endswith(".ipynb"):
+                ipynb_filename += ".ipynb"
 
-            start_sync_with_filename(bufnr, filename, ask, content, nvim_info, driver)
+            start_sync_with_filename(
+                bufnr,
+                ipynb_filename,
+                ask,
+                content,
+                buf_filetype,
+                conda_env_path,
+                nvim_info,
+                driver,
+            )
         else:
             # start sync with tab index
-            tab_idx = int(filename)
+            tab_idx = int(ipynb_filename)
             driver.switch_to.window(driver.window_handles[tab_idx - 1])
 
             continue_input = "y"
@@ -311,6 +386,16 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
             if continue_input in ["y", "Y"]:
                 nvim_info.attach_buffer(bufnr, content, driver.current_window_handle)
                 nvim_info.jupbufs[bufnr].full_sync_to_notebook(driver)
+                ## Automatically setting kernel not activated when sync with tab index
+                ## In the future we could activate by doing the following
+                #
+                # kernel_name = choose_default_kernel(
+                #     driver, "notebook", buf_filetype, conda_env_path
+                # )
+                # if kernel_name is not None:
+                #     driver.execute_script(
+                #         "Jupyter.kernelselector.set_kernel(arguments[0])", kernel_name
+                #     )
             else:
                 event[3].send("N")
                 event[3] = None
