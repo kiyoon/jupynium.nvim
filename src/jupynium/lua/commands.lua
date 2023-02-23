@@ -21,5 +21,10 @@ vim.api.nvim_create_user_command("JupyniumScrollUp", "lua Jupynium_scroll_up()",
 vim.api.nvim_create_user_command("JupyniumScrollDown", "lua Jupynium_scroll_down()", {})
 vim.api.nvim_create_user_command("JupyniumAutoscrollToggle", "lua Jupynium_autoscroll_toggle()", {})
 
+---@deprecated
 vim.api.nvim_create_user_command("JupyniumRestartKernel", "lua Jupynium_restart_kernel()", {})
 vim.api.nvim_create_user_command("JupyniumSelectKernel", "lua Jupynium_select_kernel()", {})
+
+vim.api.nvim_create_user_command("JupyniumKernelRestart", "lua Jupynium_kernel_restart()", {})
+vim.api.nvim_create_user_command("JupyniumKernelInterrupt", "lua Jupynium_kernel_interrupt()", {})
+vim.api.nvim_create_user_command("JupyniumKernelSelect", "lua Jupynium_kernel_select()", {})
