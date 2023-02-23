@@ -10,12 +10,37 @@ function M.default_keybindings(augroup)
     pattern = "*.ju.*",
     callback = function()
       local buf_id = vim.api.nvim_get_current_buf()
-      vim.keymap.set({ "n", "x" }, "<space>x", "<cmd>JupyniumExecuteSelectedCells<CR>", { buffer = buf_id })
-      vim.keymap.set({ "n", "x" }, "<space>c", "<cmd>JupyniumClearSelectedCellsOutputs<CR>", { buffer = buf_id })
-      vim.keymap.set({ "n", "x" }, "<space>S", "<cmd>JupyniumScrollToCell<cr>", { buffer = buf_id })
-      vim.keymap.set({ "n", "x" }, "<space>T", "<cmd>JupyniumToggleSelectedCellsOutputsScroll<cr>", { buffer = buf_id })
-      vim.keymap.set("", "<PageUp>", "<cmd>JupyniumScrollUp<cr>", { buffer = buf_id })
-      vim.keymap.set("", "<PageDown>", "<cmd>JupyniumScrollDown<cr>", { buffer = buf_id })
+      vim.keymap.set(
+        { "n", "x" },
+        "<space>x",
+        "<cmd>JupyniumExecuteSelectedCells<CR>",
+        { buffer = buf_id, desc = "Jupynium execute selected cells" }
+      )
+      vim.keymap.set(
+        { "n", "x" },
+        "<space>c",
+        "<cmd>JupyniumClearSelectedCellsOutputs<CR>",
+        { buffer = buf_id, desc = "Jupynium clear selected cells" }
+      )
+      vim.keymap.set(
+        { "n", "x" },
+        "<space>S",
+        "<cmd>JupyniumScrollToCell<cr>",
+        { buffer = buf_id, desc = "Jupynium scroll to cell" }
+      )
+      vim.keymap.set(
+        { "n", "x" },
+        "<space>T",
+        "<cmd>JupyniumToggleSelectedCellsOutputsScroll<cr>",
+        { buffer = buf_id, desc = "Jupynium toggle selected cell output scroll" }
+      )
+      vim.keymap.set("", "<PageUp>", "<cmd>JupyniumScrollUp<cr>", { buffer = buf_id, desc = "Jupynium scroll up" })
+      vim.keymap.set(
+        "",
+        "<PageDown>",
+        "<cmd>JupyniumScrollDown<cr>",
+        { buffer = buf_id, desc = "Jupynium scroll down" }
+      )
     end,
     group = augroup,
   })
