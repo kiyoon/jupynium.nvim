@@ -30,7 +30,7 @@ The Jupynium server will receive events from Neovim, keep the copy of the buffer
 
 - 💻 Linux, macOS and Windows (CMD, PowerShell, WSL2)
 - 🦊 Firefox (Other browsers are not supported due to their limitation with Selenium)
-- 🦎 Mozilla geckodriver
+- 🦎 Mozilla geckodriver (May be automatically installed with Firefox. Check `geckodriver -V`)
 - ✌️ Neovim >= v0.8
 - 🐍 Python >= 3.7
 - 📔 Jupyter Notebook >= 6.2 (Doesn't support Jupyter Lab)
