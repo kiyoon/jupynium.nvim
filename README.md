@@ -312,11 +312,38 @@ If you want custom keymaps, add `textobjects = { use_default_keybindings = false
 :JupyniumClearSelectedCellsOutputs
 :JupyniumToggleSelectedCellsOutputsScroll
 
-:JupyniumRestartKernel
-:JupyniumSelectKernel
+:JupyniumKernelRestart
+:JupyniumKernelInterrupt
+:JupyniumKernelSelect
 
 " Highlight
 :JupyniumShortsightedToggle
+```
+
+### Lua API
+
+The core API is provided as a global function.
+
+```lua
+--- Execute javascript in the browser. It will switch to the correct tab before executing.
+---@param bufnr: integer | nil If given, before executing the code it will switch to the tab of this buffer. Requires syncing in advance.
+---@param code string Javascript code
+---@return boolean, object: Success, response
+Jupynium_execute_javascript(bufnr, code)
+```
+
+Example: get kernel name and language
+
+```lua
+-- Use bufnr=nil if you don't want to switch tab
+local code = [[return [Jupyter.notebook.kernel.name, Jupyter.kernelselector.kernelspecs];]]
+local status_ok, kernel_name_and_spec = Jupynium_execute_javascript(0, code)
+if status_ok then
+  local kernel_name = kernel_name_and_spec[1]   -- "python3"
+  local kernel_spec = kernel_name_and_spec[2]
+  local kernel_language = kernel_spec[kernel_name].spec.language  -- "python"
+  local kernel_display_name = kernel_spec[kernel_name].spec.display_name  -- "Python 3 (ipykernel)"
+end
 ```
 
 ## 👨‍💻️ Command-Line Usage (Attach to Remote NeoVim)

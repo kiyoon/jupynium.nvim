@@ -89,6 +89,30 @@ function Jupynium_rpcrequest(event, buf, ensure_syncing, ...)
   return response
 end
 
+--- API: Execute javascript in the browser. It will switch to the correct tab before executing.
+---@param bufnr integer | nil If given, before executing the code it will switch to the tab of this buffer. Requires syncing in advance.
+---@param code string Javascript code
+---@return boolean, object: Success, response
+function Jupynium_execute_javascript(bufnr, code)
+  local ensure_syncing = true
+  if bufnr == nil then
+    ensure_syncing = false
+  elseif bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
+
+  if ensure_syncing and Jupynium_syncing_bufs[bufnr] == nil then
+    Jupynium_notify.error {
+      [[Cannot execute javascript because it's not synchronised]],
+      [[Run `:JupyniumStartSync` or set bufnr=nil in Jupynium_execute_javascript()]],
+    }
+    return false, nil
+  end
+
+  -- set ensure_syncing to false, because we checked that already.
+  return true, Jupynium_rpcrequest("execute_javascript", bufnr, false, code)
+end
+
 function Jupynium_grab_entire_buffer(bufnr)
   if bufnr == nil or bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()
@@ -402,7 +426,7 @@ function Jupynium_clear_selected_cells_outputs(bufnr)
   Jupynium_rpcnotify("clear_selected_cells_outputs", bufnr, true)
 end
 
-function Jupynium_get_kernel_spec(bufnr)
+function Jupynium_kernel_get_spec(bufnr)
   -- Users shouldn't have to call this function directly, and thus it won't be available as a command.
   -- returns a table
   -- ret[1] = current kernel name
@@ -420,11 +444,11 @@ function Jupynium_get_kernel_spec(bufnr)
     return
   end
 
-  local kernel_spec = Jupynium_rpcrequest("get_kernel_spec", bufnr, true)
+  local kernel_spec = Jupynium_rpcrequest("kernel_get_spec", bufnr, true)
   return kernel_spec
 end
 
-function Jupynium_change_kernel(bufnr, kernel_name)
+function Jupynium_kernel_change(bufnr, kernel_name)
   -- note that the kernel name is different from the display name in the kernel list in Jupyter Notebook.
   -- Users shouldn't have to call this function directly, and thus it won't be available as a command.
   if bufnr == nil or bufnr == 0 then
@@ -435,10 +459,14 @@ function Jupynium_change_kernel(bufnr, kernel_name)
     return
   end
 
-  Jupynium_rpcnotify("change_kernel", bufnr, true, kernel_name)
+  Jupynium_rpcnotify("kernel_change", bufnr, true, kernel_name)
 end
 
 function Jupynium_restart_kernel(bufnr)
+  Jupynium_notify.error { [[Sorry! Command name changed.]], [[Please use :JupyniumKernelRestart]] }
+end
+
+function Jupynium_kernel_restart(bufnr)
   -- note that the kernel name is different from the display name in the kernel list in Jupyter Notebook.
   if bufnr == nil or bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()
@@ -448,10 +476,28 @@ function Jupynium_restart_kernel(bufnr)
     return
   end
 
-  Jupynium_rpcnotify("restart_kernel", bufnr, true)
+  Jupynium_rpcnotify("kernel_restart", bufnr, true)
+end
+
+function Jupynium_kernel_interrupt(bufnr)
+  -- note that the kernel name is different from the display name in the kernel list in Jupyter Notebook.
+  -- Users shouldn't have to call this function directly, and thus it won't be available as a command.
+  if bufnr == nil or bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
+  if Jupynium_syncing_bufs[bufnr] == nil then
+    Jupynium_notify.error { [[Cannot interrupt kernel without synchronising.]], [[Run `:JupyniumStartSync`]] }
+    return
+  end
+
+  Jupynium_rpcnotify("kernel_interrupt", bufnr, true)
 end
 
 function Jupynium_select_kernel(bufnr)
+  Jupynium_notify.error { [[Sorry! Command name changed.]], [[Please use :JupyniumKernelSelect]] }
+end
+
+function Jupynium_kernel_select(bufnr)
   -- note that the kernel name is different from the display name in the kernel list in Jupyter Notebook.
   if bufnr == nil or bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()
@@ -461,7 +507,7 @@ function Jupynium_select_kernel(bufnr)
     return
   end
 
-  local jupynium_kernel_name_and_spec = Jupynium_get_kernel_spec(bufnr)
+  local jupynium_kernel_name_and_spec = Jupynium_kernel_get_spec(bufnr)
   local current_kernel_name = jupynium_kernel_name_and_spec[1]
   local kernel_spec = jupynium_kernel_name_and_spec[2]
   local kernel_display_names, kernel_dispname_to_name = {}, {}
@@ -498,6 +544,6 @@ function Jupynium_select_kernel(bufnr)
   vim.ui.select(kernel_display_names, {
     prompt = "Select a kernel for Jupynium (Jupyter Notebook)",
   }, function(selected)
-    Jupynium_change_kernel(bufnr, kernel_dispname_to_name[selected])
+    Jupynium_kernel_change(bufnr, kernel_dispname_to_name[selected])
   end)
 end

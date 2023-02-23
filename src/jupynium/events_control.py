@@ -420,7 +420,7 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
         logger.info("Nvim closed. Clearing nvim")
         return False, event[3]
 
-    elif event[1] == "get_kernel_spec":
+    elif event[1] == "kernel_get_spec":
         driver.switch_to.window(nvim_info.window_handles[bufnr])
         kernel_specs = driver.execute_script(
             "return [Jupyter.notebook.kernel.name, Jupyter.kernelselector.kernelspecs];"
@@ -428,6 +428,17 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
         logger.info(f"Current kernel name: {kernel_specs[0]}")
         logger.info(f"Kernel specs: {kernel_specs[1]}")
         event[3].send(kernel_specs)
+        return True, None
+
+    elif event[1] == "execute_javascript":
+        (code,) = event_args
+        if bufnr is not None:
+            driver.switch_to.window(nvim_info.window_handles[bufnr])
+            logger.info(f"Executing javascript code in bufnr {bufnr}, code {code}")
+
+        logger.info(f"Executing javascript code in bufnr {bufnr}, code {code}")
+        ret_obj = driver.execute_script(code)
+        event[3].send(ret_obj)
         return True, None
 
     if event[3] is not None:
@@ -597,10 +608,13 @@ def process_notification_event(
                 "Jupyter.notebook.clear_cells_outputs(Jupyter.notebook.get_selected_cells_indices())"
             )
             # driver.execute_script("Jupyter.notebook.clear_output();")
-        elif event[1] == "restart_kernel":
+        elif event[1] == "kernel_restart":
             driver.switch_to.window(nvim_info.window_handles[bufnr])
             driver.execute_script("Jupyter.notebook.kernel.restart()")
-        elif event[1] == "change_kernel":
+        elif event[1] == "kernel_interrupt":
+            driver.switch_to.window(nvim_info.window_handles[bufnr])
+            driver.execute_script("Jupyter.notebook.kernel.interrupt()")
+        elif event[1] == "kernel_change":
             (kernel_name,) = event_args
             driver.switch_to.window(nvim_info.window_handles[bufnr])
             driver.execute_script(
