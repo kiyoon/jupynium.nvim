@@ -463,7 +463,8 @@ function Jupynium_kernel_change(bufnr, kernel_name)
 end
 
 function Jupynium_restart_kernel(bufnr)
-  Jupynium_notify.error { [[Sorry! Command name changed.]], [[Please use :JupyniumKernelRestart]] }
+  Jupynium_notify.warn { [[Sorry! Command name changed.]], [[Please use :JupyniumKernelRestart]] }
+  return Jupynium_kernel_restart(bufnr)
 end
 
 function Jupynium_kernel_restart(bufnr)
@@ -494,7 +495,8 @@ function Jupynium_kernel_interrupt(bufnr)
 end
 
 function Jupynium_select_kernel(bufnr)
-  Jupynium_notify.error { [[Sorry! Command name changed.]], [[Please use :JupyniumKernelSelect]] }
+  Jupynium_notify.warn { [[Sorry! Command name changed.]], [[Please use :JupyniumKernelSelect]] }
+  return Jupynium_kernel_select(bufnr)
 end
 
 function Jupynium_kernel_select(bufnr)
