@@ -33,6 +33,120 @@ def test_buffer_markdown_2(jupbuf1):
     assert jupbuf1.cell_types == ["header", "markdown", "code"]
 
 
+def test_buffer_markdown_jupytext():
+    buffer = JupyniumBuffer(["a", "b", "c", "# %% [md]", "d", "# %%", "f"])
+    assert buffer.num_rows_per_cell == [3, 2, 2]
+    assert buffer.cell_types == ["header", "markdown (jupytext)", "code"]
+    assert buffer.buf[4] == "d"
+
+
+def test_buffer_markdown_jupytext_2():
+    buffer = JupyniumBuffer(
+        [
+            "a",
+            "# b",
+            "# # c",
+            "# %% [markdown]",
+            "# # header",
+            "# content",
+            "noescape",
+            "# %%",
+            "f",
+        ]
+    )
+    assert buffer.num_rows_per_cell == [3, 4, 2]
+    assert buffer.cell_types == ["header", "markdown (jupytext)", "code"]
+
+    assert buffer.buf[0] == "a"
+    assert buffer.buf[1] == "# b"
+    assert buffer.buf[2] == "# # c"
+
+    assert buffer.buf[4] == "# header"
+    assert buffer.buf[5] == "content"
+    assert buffer.buf[6] == "noescape"
+
+
+def test_buffer_markdown_jupytext_inject():
+    buffer = JupyniumBuffer(
+        [
+            "a",
+            "# b",
+            "# # c",
+            "# %% [markdown]",
+            "# # header",
+            "# content",
+            "noescape",
+            "# %%",
+            "f",
+        ],
+        "markdown (jupytext)",
+    )
+    assert buffer.num_rows_per_cell == [3, 4, 2]
+    assert buffer.cell_types == ["markdown (jupytext)", "markdown (jupytext)", "code"]
+
+    assert buffer.buf[0] == "a"
+    assert buffer.buf[1] == "b"
+    assert buffer.buf[2] == "# c"
+
+    assert buffer.buf[4] == "# header"
+    assert buffer.buf[5] == "content"
+    assert buffer.buf[6] == "noescape"
+
+
+def test_buffer_markdown_jupytext_inject_2():
+    buffer = JupyniumBuffer(
+        [
+            "a",
+            "# b",
+            "# # c",
+            "# %% [markdown]",
+            "# # header",
+            "# content",
+            "noescape",
+            "# %%",
+            "f",
+        ],
+        "markdown",
+    )
+    assert buffer.num_rows_per_cell == [3, 4, 2]
+    assert buffer.cell_types == ["markdown", "markdown (jupytext)", "code"]
+
+    assert buffer.buf[0] == "a"
+    assert buffer.buf[1] == "# b"
+    assert buffer.buf[2] == "# # c"
+
+    assert buffer.buf[4] == "# header"
+    assert buffer.buf[5] == "content"
+    assert buffer.buf[6] == "noescape"
+
+
+def test_buffer_markdown_jupytext_inject_3():
+    buffer = JupyniumBuffer(
+        [
+            "a",
+            "# b",
+            "# # c",
+            "# %% [markdown]",
+            "# # header",
+            "# content",
+            "noescape",
+            "# %%",
+            "f",
+        ],
+        "code",
+    )
+    assert buffer.num_rows_per_cell == [3, 4, 2]
+    assert buffer.cell_types == ["code", "markdown (jupytext)", "code"]
+
+    assert buffer.buf[0] == "a"
+    assert buffer.buf[1] == "# b"
+    assert buffer.buf[2] == "# # c"
+
+    assert buffer.buf[4] == "# header"
+    assert buffer.buf[5] == "content"
+    assert buffer.buf[6] == "noescape"
+
+
 def test_get_cell_start_row(jupbuf1):
     assert jupbuf1.get_cell_start_row(0) == 0
     assert jupbuf1.get_cell_start_row(1) == 3
