@@ -20,11 +20,21 @@ class JupyniumBuffer:
     This does have a functionality to sync with the Notebook.
     """
 
-    def __init__(self, buf: list[str] = [""]):
+    def __init__(
+        self,
+        buf: list[str] = [""],
+        header_cell_type="header",
+    ):
         """
         self.buf is a list of lines of the nvim buffer,
         with the exception that the commented magic commands are normal magic commands.
         e.g. '# %time' -> '%time'
+        and jupytext markdown cell content also strips the leading comment.
+        e.g. '# # Markdown header' -> '# Markdown header'
+
+        Args:
+            header_cell_type (str, optional): Use only when partial update.
+            header_cell_separator (str, optional): Use only when partial update.
         """
         self.buf = buf
         if self.buf == [""]:
@@ -33,23 +43,41 @@ class JupyniumBuffer:
             ]  # each cell's row length. 0-th cell is not a cell, but it's the header. You can put anything above and it won't be synced to Jupyter Notebook.
             self.cell_types = ["header"]  # 0-th cell is not a cell.
         else:
-            self.full_analyse_buf()
+            self.full_analyse_buf(header_cell_type)
 
-    def full_analyse_buf(self):
+    def full_analyse_buf(self, header_cell_type="header"):
+        """
+        Main parser for the jupynium format (*.ju.*).
+        This function needs to support partial update.
+
+        E.g. by looking at 1 line of change, it should be able to understand if:
+            - the change is within a cell
+            - cell creation/deletion
+            - cell type change
+
+        During the partial update, the header cell will be continuation from the existing cell.
+        We don't know if it will be header/cell/markdown.
+        So we need to pass the header_cell_type.
+
+        Args:
+            header_cell_type (str, optional): Use only when partial update.
+        """
         num_rows_this_cell = 0
         num_rows_per_cell = []
-        cell_types = ["header"]
+        cell_types = [header_cell_type]
         for row, line in enumerate(self.buf):
             if (
                 line.startswith("# %%%")
-                or line.startswith("# %% [md]")
-                or line.startswith("# %% [markdown]")
                 or line.startswith('"""%%')
                 or line.startswith("'''%%")
             ):
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
                 cell_types.append("markdown")
+            elif line.startswith("# %% [md]") or line.startswith("# %% [markdown]"):
+                num_rows_per_cell.append(num_rows_this_cell)
+                num_rows_this_cell = 1
+                cell_types.append("markdown (jupytext)")
             elif (
                 line.startswith("# %%")
                 or line.startswith('%%"""')
@@ -62,7 +90,15 @@ class JupyniumBuffer:
                 # Use '# %' for magic commands
                 # e.g. '# %matplotlib inline'
                 # Remove the comment
-                self.buf[row] = self.buf[row][2:]
+                if cell_types[-1] == "code":
+                    self.buf[row] = self.buf[row][2:]
+                num_rows_this_cell += 1
+            elif line.startswith("# "):
+                # Remove the comment for markdown cells
+                # Only activated if the cell separator is like Jupytext's
+                # Useful for non-python languages like R
+                if cell_types[-1] == "markdown (jupytext)":
+                    self.buf[row] = self.buf[row][2:]
                 num_rows_this_cell += 1
             else:
                 num_rows_this_cell += 1
@@ -103,9 +139,7 @@ class JupyniumBuffer:
         notebook_cell_operations = []
 
         try:
-            cell_idx, cell_start_row, row_within_cell = self.get_cell_index_from_row(
-                start_row
-            )
+            cell_idx, _, row_within_cell = self.get_cell_index_from_row(start_row)
 
             if row_within_cell == 0 and cell_idx > 0:
                 # If the row is the first row of a cell, and it's not the first cell, then it's a cell separator.
@@ -135,7 +169,12 @@ class JupyniumBuffer:
             lines_to_remove -= 1
 
         # Analyse how many cells are added
-        new_lines_buf = JupyniumBuffer(lines)
+        new_lines_buf = JupyniumBuffer(
+            lines,
+            header_cell_type=self.cell_types[
+                cell_idx
+            ],  # This is required as we're analysing partially.
+        )
         if new_lines_buf.num_cells - 1 == 0:
             self.num_rows_per_cell[cell_idx] += new_lines_buf.num_rows_per_cell[0]
             notebook_cell_operations = notebook_cell_delete_operations
@@ -184,7 +223,7 @@ class JupyniumBuffer:
 
         # Now actually replace the lines
         # Optimisation: if the number of lines is not changed, which is most of the cases,
-        # then we can just replace the lines.
+        # then we can just replace the the strings in the list instead of modifying list itself.
         if old_end_row == new_end_row:
             for i, line in enumerate(lines):
                 self.buf[start_row + i] = line
@@ -213,7 +252,8 @@ class JupyniumBuffer:
                     logger.info(
                         f"Cell {nb_cell_idx + i} type change to {cell_type} from Notebook"
                     )
-                    if cell_type == "markdown":
+                    # "markdown" or "markdown (jupytext)"
+                    if cell_type.startswith("markdown"):
                         driver.execute_script(
                             "Jupyter.notebook.cells_to_markdown([arguments[0]]);",
                             nb_cell_idx + i,
@@ -229,28 +269,49 @@ class JupyniumBuffer:
     def get_cell_start_row(self, cell_idx):
         return sum(self.num_rows_per_cell[:cell_idx])
 
-    def get_cell_index_from_row(self, row):
+    def get_cell_index_from_row(
+        self,
+        row: int,
+        num_rows_per_cell: list[int] | None = None,
+        raise_out_of_bound: bool = True,
+    ) -> tuple[int, int, int]:
         """
         Returns the cell index for the given row.
+
+        Args:
+            row (int): row index
+            num_rows_per_cell (list): number of rows per cell. If None, use self.num_rows_per_cell
+            raise_out_of_bound (bool): whether to raise an IndexError if the row is out of bound
 
         Returns:
             int: cell index
             int: cell start row
             int: row index within the cell
         """
+        if num_rows_per_cell is None:
+            num_rows_per_cell = self.num_rows_per_cell
+
         cell_start_row = 0
-        for i, num_rows in enumerate(self.num_rows_per_cell):
+        i = 0
+        for i, num_rows in enumerate(num_rows_per_cell):
             if cell_start_row + num_rows > row:
                 return i, cell_start_row, row - cell_start_row
             cell_start_row += num_rows
 
-        raise IndexError("Could not find cell for row {}".format(row))
+        # Out of bound. Could be adding a new line.
+        if raise_out_of_bound:
+            raise IndexError(f"Could not find cell for row {row}")
+        else:
+            return i, cell_start_row, row - cell_start_row
 
     def _check_validity(self):
         assert len(self.buf) == sum(self.num_rows_per_cell)
         assert len(self.cell_types) == len(self.num_rows_per_cell)
         assert self.cell_types[0] == "header"
-        assert all(x in ("code", "markdown") for x in self.cell_types[1:])
+        assert all(
+            x in ("code", "markdown", "markdown (jupytext)")
+            for x in self.cell_types[1:]
+        )
 
     def _partial_sync_to_notebook(
         self, driver, start_cell_idx, end_cell_idx, strip=True
@@ -316,7 +377,8 @@ class JupyniumBuffer:
                 for i, cell_type in enumerate(
                     self.cell_types[start_cell_idx : end_cell_idx + 1]
                 )
-                if cell_type == "markdown"
+                if cell_type.startswith("markdown")
+                # "markdown" or "markdown (jupytext)"
             ]
 
             if len(code_cell_indices) > 0:
