@@ -192,8 +192,9 @@ require("jupynium").setup({
 ## 🚦 Usage
 
 There are 2 general steps to using Jupynium:
-    1. Setup a Jupynium file
-    2. Connect to the Jupynium server
+
+1. Setup a Jupynium file
+2. Connect to the Jupynium server
 
 ### Setup a Jupynium file
 
@@ -216,6 +217,7 @@ $ jupyter notebook    # leave notebook opened
 #### If you want to open an existing notebook
 
 There are currently 2 ways of converting an existing `.ipynb` file to a Jupynium file:
+
 **Option 1**: Use an included command line tool:
 
 ```bash
@@ -271,8 +273,7 @@ If you have `auto_attach_to_server = false` during setup, you need to run `:Jupy
 ## 👨‍💻️ Command-Line Usage (attach to remote Neovim)
 
 **You don't need to install the vim plugin to use Jupynium.**  
-**The plugin is responsible of adding `:JupyniumStartAndAttachToServer` etc. that just calls the command line program,**  
-**plus it has textobjects and shortsighted support.**
+**The plugin is responsible of adding `:JupyniumStartAndAttachToServer` etc. that just calls the command line program, plus it has textobjects and shortsighted support.**
 
 Install Jupynium if you haven't already:
 
