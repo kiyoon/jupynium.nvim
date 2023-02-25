@@ -63,7 +63,7 @@ With vim-plug:
 Plug 'kiyoon/jupynium.nvim', { 'do': 'pip3 install --user .' }
 " Plug 'kiyoon/jupynium.nvim', { 'do': 'conda run --no-capture-output -n jupynium pip install .' }
 Plug 'rcarriga/nvim-notify'   " optional
-Plug 'stevearc/dressing.nvim' " optional, UI for :JupyniumSelectKernel
+Plug 'stevearc/dressing.nvim' " optional, UI for :JupyniumKernelSelect
 ```
 
 With packer.nvim:
@@ -72,7 +72,7 @@ With packer.nvim:
 use { "kiyoon/jupynium.nvim", run = "pip3 install --user ." }
 -- use { "kiyoon/jupynium.nvim", run = "conda run --no-capture-output -n jupynium pip install ." }
 use { "rcarriga/nvim-notify" }   -- optional
-use { "stevearc/dressing.nvim" } -- optional, UI for :JupyniumSelectKernel
+use { "stevearc/dressing.nvim" } -- optional, UI for :JupyniumKernelSelect
 ```
 
 With 💤lazy.nvim:
@@ -85,7 +85,7 @@ With 💤lazy.nvim:
     -- enabled = vim.fn.isdirectory(vim.fn.expand "~/miniconda3/envs/jupynium"),
   },
   "rcarriga/nvim-notify",   -- optional
-  "stevearc/dressing.nvim", -- optional, UI for :JupyniumSelectKernel
+  "stevearc/dressing.nvim", -- optional, UI for :JupyniumKernelSelect
 ```
 
 The default configuration values are below and work well for system-level Python users. If you're a Conda user, you may need to change `python_host` to execute using the `conda` command instead.
@@ -198,7 +198,7 @@ require("jupynium").setup({
   - You'll see everything you type below that will be synchronised in the browser.
   - Execute cells using the default keybind `<space>x`.
 
-For detailed instructions, see Usage.
+For detailed instructions, see Usage below.
 
 ## 🚦 Usage
 
