@@ -10,15 +10,15 @@
 Jupynium uses Selenium to automate Jupyter Notebook, synchronising everything you type on Neovim.  
 Never leave Neovim. Switch tabs on the browser as you switch files on Neovim.
 
-<img src=https://user-images.githubusercontent.com/12980409/211894627-73037e83-4730-4387-827c-98ed2522740d.gif width=100% />
-
 Note that it doesn't sync from Notebook to Neovim so only modify from Neovim.
 
-### How does it work?
+<img src=https://user-images.githubusercontent.com/12980409/211894627-73037e83-4730-4387-827c-98ed2522740d.gif width=100% />
+
+## How does it work?
 
 <img src=https://user-images.githubusercontent.com/12980409/211933889-e31e844c-1cf3-4d1a-acdc-70cb6e244ee4.png width=50% />
 
-The Jupynium server will receive events from Neovim, keep the copy of the buffer and apply that to the Jupyter Notebook by using Selenium browser automation. It interacts only through the front end so it doesn't require installing extensions on the kernel etc., which makes it possible to
+The Jupynium server will receive events from Neovim, keep the copy of the buffer and apply that to the Jupyter Notebook by using Selenium browser automation. It interacts only through the front end so it doesn't require installing extensions on the kernel etc., which makes it possible to:
 
 - Develop locally, run remotely (or vice versa)
 - Use university-hosted Jupyter Notebook
@@ -29,27 +29,36 @@ The Jupynium server will receive events from Neovim, keep the copy of the buffer
 ### Requirements
 
 - 💻 Linux, macOS and Windows (CMD, PowerShell, WSL2)
-- 🦊 Firefox (Other browsers are not supported due to their limitation with Selenium)
-- 🦎 Mozilla geckodriver (May be automatically installed with Firefox. Check `geckodriver -V`)
 - ✌️ Neovim >= v0.8
+- 🦊 Firefox
+  - Other browsers are not supported due to their limitation with Selenium
+- 🦎 Mozilla geckodriver
+  - May already be installed with Firefox. Check `geckodriver -V`
 - 🐍 Python >= 3.7
-- 📔 Jupyter Notebook >= 6.2 (Doesn't support Jupyter Lab)
+  - Supported Python installation methods include system-level and [miniconda](https://docs.conda.io/en/latest/miniconda.html)
+  - [Anaconda](https://www.anaconda.com/products/distribution) support is experimental
+- 📔 Jupyter Notebook >= 6.2
+  - Jupyter Lab is not supported
 
-Don't have system python 3.7? You can use [Conda](https://docs.conda.io/en/latest/miniconda.html).
+### Install Python
+
+Don't have system Python 3.7? You can use [miniconda](https://docs.conda.io/en/latest/miniconda.html):
 
 ```bash
 conda create -n jupynium python=3
 conda activate jupynium
 ```
 
-Upgrade pip. This solves many problems.
+Upgrade pip. This solves many problems:
 
 ```bash
 # pip >= 23.0 recommended
 pip3 install --upgrade pip
 ```
 
-Install with vim-plug:
+### Install Jupynium
+
+With vim-plug:
 
 ```vim
 Plug 'kiyoon/jupynium.nvim', { 'do': 'pip3 install --user .' }
@@ -58,7 +67,7 @@ Plug 'rcarriga/nvim-notify'   " optional
 Plug 'stevearc/dressing.nvim' " optional, UI for :JupyniumSelectKernel
 ```
 
-Install with packer.nvim:
+With packer.nvim:
 
 ```lua
 use { "kiyoon/jupynium.nvim", run = "pip3 install --user ." }
@@ -67,7 +76,7 @@ use { "rcarriga/nvim-notify" }   -- optional
 use { "stevearc/dressing.nvim" } -- optional, UI for :JupyniumSelectKernel
 ```
 
-Install with 💤lazy.nvim
+With 💤lazy.nvim:
 
 ```lua
   {
@@ -80,7 +89,7 @@ Install with 💤lazy.nvim
   "stevearc/dressing.nvim", -- optional, UI for :JupyniumSelectKernel
 ```
 
-Setup is optional for system python users and here are the defaults. Conda users need to change the `python_host`.
+The default configuration values are below and work well for system-level Python users. If you're a miniconda user, you may need to change `python_host` to execute using the `conda` command instead.
 
 <details>
 <summary>
@@ -182,64 +191,133 @@ require("jupynium").setup({
 
 ## 🚦 Usage
 
-First, I recommend setting password on your notebook (rather than using tokens)
+There are 2 general steps to using Jupynium:
+    1. Setup a Jupynium file
+    2. Connect to the Jupynium server
+
+### Setup a Jupynium file
+
+Jupynium uses a unique file format (see the `Jupynium file format` section below). This `.ju.py` file is what you will primarily be interacting with, rather than the `.ipynb` file directly. The contents of the Jupynium file are synced to the browser notebook where it can be viewed in real-time. If you want to keep a copy of the notebook, it can be downloaded as an `.ipynb` file later.
+
+First, it's recommended to set a password on your notebook (rather than using tokens):
 
 ```console
 $ jupyter notebook password
 Enter password: 🔒
 
-$ jupyter notebook 			# leave notebook opened
+$ jupyter notebook    # leave notebook opened
 ```
 
-**Jupynium server stays alive as long as the browser is alive.**  
-So you can see them as the same thing in this doc.  
+#### If you want to start a new notebook
+
+1. Manually create a local Jupynium file called `<filename>.ju.py`
+2. Done! The rest happens after connecting to the server
+
+#### If you want to open an existing notebook
+
+There are currently 2 ways of converting an existing `.ipynb` file to a Jupynium file:
+**Option 1**: Use an included command line tool:
+
+```bash
+ipynb2jupy [-h] [--stdout] file.ipynb [file.ju.py]
+```
+
+**Option 2**: This method requires that you have already connected to the Jupynium server:
+
+1. Open your `.ipynb` file in the web browser after connecting to the server
+2. In a new Neovim buffer, run `:JupyniumLoadFromIpynbTab`. This will convert the contents of the notebook file to Jupynium format.
+3. Save your buffer as `<filename>.ju.py`
+
+When using Jupynium for the first time, it's recommended to start a new notebook to make sure everything works before trying to load existing files.
+
+### Connect to the Jupynium server
+
+**This is for local Neovim only. For remote Neovim, see [Command-Line Usage](#%EF%B8%8F-command-line-usage-attach-to-remote-neovim).**
+
+The Jupynium server stays alive as long as the browser is alive. So you can see them as the same thing in this doc.
 For example:
 
 - Starting Jupynium server = opening a Selenium browser
 - Manually closing the browser = closing the Jupynium server
 
-### Open and attach to a Jupynium server
+In Neovim, with your Jupynium `.ju.py` file open, you can run `:JupyniumStartAndAttachToServer` to start the notebook server.
 
-**This is for local neovim only. For remote neovim, see [Command-Line Usage](#%EF%B8%8F-command-line-usage-attach-to-remote-neovim).**
+#### Sync current buffer to the Jupynium server
 
-Running `:JupyniumStartAndAttachToServer` will open the notebook.  
-Type password and once **you need to be on the main page (file browser) for the next steps**.
+You need to be on the main notebook page (file browser) for the next few steps.
 
-**New in 0.1.1:**  
-Jupynium will open Jupyter Notebook server for you if not found.  
-It will also open the ipynb file in the current directory and ask you if you want to sync from vim or from ipynb.
+Although Neovim is now attached to the server, it won't automatically start syncing.
 
-### Sync current buffer to the Jupynium server
-
-You attached your nvim instance to the server, but it won't automatically start syncing.  
-Run `:JupyniumStartSync` to create a new ipynb file and start syncing from vim to notebook.
+To sync your Neovim Jupynium file to a notebook, run `:JupyniumStartSync`.
 
 You can also:
 
-1. `:JupyniumStartSync filename` to give name (`filename.ipynb`) instead of `Untitled.ipynb`.
+- `:JupyniumStartSync filename` to give a name to the notebook (`filename.ipynb`) instead of `Untitled.ipynb`. This does not open existing files. If a file with that name already exists then the filename argument will just be ignored.
+- To sync a Jupynium file to an existing notebook, manually open the file in the browser, and `:JupyniumStartSync 2` to sync to the 2nd tab (count from 1).
 
-- This will not open a file if it exists. Instead filename will be ignored.
+At this point, any changes you make within the Neovim Jupynium file will be reflected live in the browser. Make sure you do not make changes inside the browser itself, as the sync is only one-way (from Neovim to browser).
 
-2. Manually open the file from the browser, and `:JupyniumStartSync 2` to sync using the 2nd tab (count from 1).
+If you want to save a copy of the `.ipynb` file, run `:JupyniumSaveIpynb`. There is also a configuration option to enable automatic saving/downloading.
 
-### Use multiple buffers
+#### Sync multiple Jupynium files
 
-Run `:JupyniumStartSync` again with a new buffer you want to sync.
+You can sync multiple files at the same time. Simple run `:JupyniumStartSync` again with the new file you want to sync.
 
-### Use multiple neovim
+#### Use multiple Neovim
 
-You can run `:JupyniumStartSync` on a new neovim instance.  
+You can run `:JupyniumStartSync` on a new Neovim instance.  
 If you have `auto_attach_to_server = false` during setup, you need to run `:JupyniumAttachToServer` and `:JupyniumStartSync`.
 
-## 📝 .ju.py (or .ju.\*) file format
+## 👨‍💻️ Command-Line Usage (attach to remote Neovim)
 
-The file format is designed to be LSP friendly even with markdown code injected in it. The markdown cells will be part of python string `"""%%` ... `%%"""`.
+**You don't need to install the vim plugin to use Jupynium.**  
+**The plugin is responsible of adding `:JupyniumStartAndAttachToServer` etc. that just calls the command line program,**  
+**plus it has textobjects and shortsighted support.**
+
+Install Jupynium if you haven't already:
+
+```bash
+pip3 install jupynium
+```
+
+Open a python/markdown file with nvim and see `:echo v:servername`.  
+Run Jupynium like:
+
+```bash
+jupynium --nvim_listen_addr /tmp/your_socket_path
+```
+
+Or, you can run Neovim like
+
+```bash
+nvim --listen localhost:18898 notebook.ju.py
+```
+
+Then start Jupynium as well as attaching the neovim to it.
+
+```bash
+jupynium --nvim_listen_addr localhost:18898
+```
+
+Note that you can attach to remote neovim by changing `localhost` to `servername.com` or using SSH port forwarding.
+
+This will open Firefox with Selenium, defaulting to `http://localhost:8888`.
+
+Additionally,
+
+- You can run `jupynium` command multiple times to attach more than one Neovim instance.
+- `jupynium --notebook_URL localhost:18888` to view different notebook.
+- You can just run `jupynium` without arguments to just leave the server / browser running and wait for nvim to attach.
+
+## 📝 Jupynium file format (.ju.py or .ju.\*)
+
+The file format is designed to be LSP friendly even with markdown code injected into it. The markdown cells will be part of a Python docstring: `"""%%` ... `%%"""`.
 
 **Code cell separators:**  
 i.e. Any code below this line (and before the next separator) will be a code cell.
 
 - `# %%`: recommended
-- `%%"""`: use when you want to close markdown cell
+- `%%"""`: use when you want to close a markdown cell
 - `%%'''`
 
 **Markdown cell separators:**
@@ -288,7 +366,7 @@ If you want custom keymaps, add `textobjects = { use_default_keybindings = false
 ## 📡 Available Vim Commands
 
 ```vim
-" Server (only used when neovim is local. See Command-Line Usage for remote neovim)
+" Server (only used when Neovim is local. See Command-Line Usage for remote neovim)
 :JupyniumStartAndAttachToServer [notebook_URL]
 :JupyniumAttachToServer [notebook_URL]
 
@@ -320,7 +398,7 @@ If you want custom keymaps, add `textobjects = { use_default_keybindings = false
 :JupyniumShortsightedToggle
 ```
 
-### Lua API
+## Lua API
 
 The core API is provided as a global function.
 
@@ -346,58 +424,11 @@ if status_ok then
 end
 ```
 
-## 👨‍💻️ Command-Line Usage (Attach to Remote NeoVim)
-
-**You don't need to install the vim plugin to use Jupynium.**  
-**The plugin is responsible of adding `:JupyniumStartAndAttachToServer` etc. that just calls the command line program,**  
-**plus it has textobjects and shortsighted support.**
-
-Install Jupynium if you haven't.
-
-```bash
-$ pip3 install jupynium
-```
-
-Open a python/markdown file with nvim and see `:echo v:servername`.  
-Run Jupynium like:
-
-```bash
-$ jupynium --nvim_listen_addr /tmp/your_socket_path
-```
-
-Or, you can run Neovim like
-
-```bash
-$ nvim --listen localhost:18898 notebook.ju.py
-```
-
-Then start Jupynium as well as attaching the neovim to it.
-
-```bash
-$ jupynium --nvim_listen_addr localhost:18898
-```
-
-Note that you can attach to remote neovim by changing `localhost` to `servername.com` or using SSH port forwarding.
-
-This will open Firefox with Selenium, defaulting to `http://localhost:8888`.
-
-Additionally,
-
-- You can run `jupynium` command multiple times to attach more than one Neovim instance.
-- `jupynium --notebook_URL localhost:18888` to view different notebook.
-- You can just run `jupynium` without arguments to just let the server / browser running and wait for nvim to attach.
-
-### Converting ipynb to Jupynium file
-
-```bash
-ipynb2jupy [-h] [--stdout] file.ipynb [file.ju.py]
-```
-
 ## ⚠️ Caution
 
 The program is in the alpha stage. If it crashes it's likely that the whole browser turns off without saving!
 
-#### Rules:
+### Rules
 
 1. Always leave the home page accessible. Jupynium interacts with it to open files. Do not close, or move to another website.
 
