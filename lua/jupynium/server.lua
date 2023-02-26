@@ -33,7 +33,7 @@ local function run_process_bg(cmd, args)
   vim.fn.system(cmd_str)
 end
 
-local function run_process(cmd, args)
+local function get_system_cmd(cmd, args)
   args = args or {}
   local cmd_str
 
@@ -63,6 +63,12 @@ local function run_process(cmd, args)
     end
   end
 
+  return cmd_str
+end
+
+local function run_process(cmd, args)
+  local cmd_str = get_system_cmd(cmd, args)
+
   local output = vim.fn.system(cmd_str)
   if output == nil then
     return ""
@@ -71,10 +77,14 @@ local function run_process(cmd, args)
   end
 end
 
-local function call_jupynium_cli(args, bg)
+local function call_jupynium_cli(args, opts)
   args = args or {}
-  if bg == nil then
-    bg = true
+  opts = opts or {}
+  if opts.bg == nil then
+    opts.bg = true
+  end
+  if opts.terminal == nil then
+    opts.terminal = false
   end
 
   args = utils.table_concat({ "-m", "jupynium", "--nvim_listen_addr", vim.v.servername }, args)
@@ -93,7 +103,11 @@ local function call_jupynium_cli(args, bg)
     table.insert(args, "--no_auto_close_tab")
   end
 
-  if bg then
+  if opts.terminal then
+    vim.cmd([[split | terminal ]] .. get_system_cmd(cmd, args))
+    vim.cmd [[normal! G]] -- enable auto scroll
+    vim.cmd.wincmd "p" -- go back to previous window
+  elseif opts.bg then
     run_process_bg(cmd, args)
   else
     return run_process(cmd, args)
@@ -101,7 +115,7 @@ local function call_jupynium_cli(args, bg)
 end
 
 function M.jupynium_pid()
-  local pid = vim.fn.trim(call_jupynium_cli({ "--check_running" }, false))
+  local pid = vim.fn.trim(call_jupynium_cli({ "--check_running" }, { bg = false }))
   if pid == "" then
     return nil
   else
@@ -196,10 +210,18 @@ function M.add_commands()
   -- It only includes wrapper that calls Python Jupynium package.
   -- The rest of the commands will be added when you attach a server.
   vim.api.nvim_create_user_command("JupyniumStartAndAttachToServer", M.start_and_attach_to_server_cmd, { nargs = "?" })
+  vim.api.nvim_create_user_command(
+    "JupyniumStartAndAttachToServerInTerminal",
+    M.start_and_attach_to_server_in_terminal_cmd,
+    { nargs = "?" }
+  )
   vim.api.nvim_create_user_command("JupyniumAttachToServer", M.attach_to_server_cmd, { nargs = "?" })
 end
 
-function M.start_and_attach_to_server_cmd(args)
+function M.start_and_attach_to_server_cmd(args, call_cli_opts)
+  if call_cli_opts == nil then
+    call_cli_opts = { bg = true }
+  end
   local notebook_URL = vim.fn.trim(args.args)
 
   if notebook_URL == "" then
@@ -229,7 +251,11 @@ function M.start_and_attach_to_server_cmd(args)
   else
     error "Invalid jupyter_command type."
   end
-  call_jupynium_cli(args, true)
+  call_jupynium_cli(args, call_cli_opts)
+end
+
+function M.start_and_attach_to_server_in_terminal_cmd(args)
+  return M.start_and_attach_to_server_cmd(args, { terminal = true })
 end
 
 function M.attach_to_server_cmd(args)
@@ -238,7 +264,7 @@ function M.attach_to_server_cmd(args)
   if notebook_URL == "" then
     notebook_URL = options.opts.default_notebook_URL
   end
-  call_jupynium_cli({ "--attach_only", "--notebook_URL", notebook_URL }, true)
+  call_jupynium_cli({ "--attach_only", "--notebook_URL", notebook_URL }, { bg = true })
 end
 
 return M

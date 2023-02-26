@@ -100,6 +100,12 @@ class JupyniumBuffer:
                 if cell_types[-1] == "markdown (jupytext)":
                     self.buf[row] = self.buf[row][2:]
                 num_rows_this_cell += 1
+            elif line == '"""':
+                # Remove the comment for markdown cells
+                # Only activated if the cell separator is like Jupytext's
+                if cell_types[-1] == "markdown (jupytext)":
+                    self.buf[row] = ""
+                num_rows_this_cell += 1
             else:
                 num_rows_this_cell += 1
         num_rows_per_cell.append(num_rows_this_cell)

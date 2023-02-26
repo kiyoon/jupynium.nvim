@@ -30,6 +30,10 @@ get_cell_inputs_js_code = (
     resource_stream("jupynium", "js/get_cell_inputs.js").read().decode("utf-8")
 )
 
+kernel_inspect_js_code = (
+    resource_stream("jupynium", "js/kernel_inspect.js").read().decode("utf-8")
+)
+
 
 @dataclass
 class OnLinesArgs:
@@ -428,6 +432,14 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
         logger.info(f"Current kernel name: {kernel_specs[0]}")
         logger.info(f"Kernel specs: {kernel_specs[1]}")
         event[3].send(kernel_specs)
+        return True, None
+
+    elif event[1] == "kernel_inspect":
+        (line, col) = event_args
+        driver.switch_to.window(nvim_info.window_handles[bufnr])
+        inspect_result = driver.execute_async_script(kernel_inspect_js_code, line, col)
+        logger.info(f"Kernel inspect: {inspect_result}")
+        event[3].send(inspect_result)
         return True, None
 
     elif event[1] == "execute_javascript":

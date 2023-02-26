@@ -318,8 +318,10 @@ i.e. Any code below this line (and before the next separator) will be a code cel
 
 - `<space>x`: Execute selected cells
 - `<space>c`: Clear selected cells
-- `<space>S`: Scroll to cell (if autoscroll is disabled)
 - `<PageUp>`, `<PageDown>`: Scroll notebook
+- `<space>js`: Scroll to cell (if autoscroll is disabled)
+- `<space>K`: Hover (inspect a variable)
+- `<space>jo`: Toggle output scroll (when output is long)
 
 If you want custom keymaps, add `use_default_keybindings = false` and follow `M.default_keybindings()` in [lua/jupynium/init.lua](lua/jupynium/init.lua).
 
@@ -328,7 +330,7 @@ If you want custom keymaps, add `use_default_keybindings = false` and follow `M.
 - `[j`, `]j`: go to previous / next cell separator
   - Repeat with `;` and `,` if you have [nvim-treesitter-textobjects](https://github.com/nvim-treesitter/nvim-treesitter-textobjects).
     Follow their instructions for keybindings for this.
-- `<space>j`: go to current cell separator
+- `<space>jj`: go to current cell separator
 - `vaj`,`vij`, `vaJ`, `viJ`: select current cell
   - `a`: include separator, `i`: exclude separator
   - `j`: exclude next separator, `J`: include next separator
@@ -340,6 +342,7 @@ If you want custom keymaps, add `textobjects = { use_default_keybindings = false
 ```vim
 " Server (only used when Neovim is local. See Command-Line Usage for remote neovim)
 :JupyniumStartAndAttachToServer [notebook_URL]
+:JupyniumStartAndAttachToServerInTerminal [notebook_URL]    " Useful for debugging
 :JupyniumAttachToServer [notebook_URL]
 
 " Sync
@@ -365,6 +368,7 @@ If you want custom keymaps, add `textobjects = { use_default_keybindings = false
 :JupyniumKernelRestart
 :JupyniumKernelInterrupt
 :JupyniumKernelSelect
+:JupyniumKernelHover      " See value like LSP hover
 
 " Highlight
 :JupyniumShortsightedToggle
