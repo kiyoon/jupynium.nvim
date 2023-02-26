@@ -20,7 +20,7 @@ import git
 import persistqueue
 import psutil
 import verboselogs
-from git.exc import InvalidGitRepositoryError
+from git.exc import InvalidGitRepositoryError, NoSuchPathError
 from persistqueue.exceptions import Empty
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
@@ -342,6 +342,8 @@ def fallback_open_notebook_server(
                 rel_dir = os.path.relpath(buffer_dir, notebook_dir)
             except InvalidGitRepositoryError:
                 notebook_dir = buffer_dir
+            except NoSuchPathError:
+                notebook_dir = Path.cwd()
 
     notebook_token = generate_notebook_token()
     notebook_args = [

@@ -23,14 +23,20 @@ function M.default_keybindings(augroup)
         { buffer = buf_id, desc = "Jupynium clear selected cells" }
       )
       vim.keymap.set(
+        { "n" },
+        "<space>K",
+        "<cmd>JupyniumKernelHover<cr>",
+        { buffer = buf_id, desc = "Jupynium hover (inspect a variable)" }
+      )
+      vim.keymap.set(
         { "n", "x" },
-        "<space>S",
+        "<space>js",
         "<cmd>JupyniumScrollToCell<cr>",
         { buffer = buf_id, desc = "Jupynium scroll to cell" }
       )
       vim.keymap.set(
         { "n", "x" },
-        "<space>T",
+        "<space>jo",
         "<cmd>JupyniumToggleSelectedCellsOutputsScroll<cr>",
         { buffer = buf_id, desc = "Jupynium toggle selected cell output scroll" }
       )

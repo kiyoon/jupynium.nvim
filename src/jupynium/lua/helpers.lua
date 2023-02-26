@@ -546,6 +546,76 @@ function Jupynium_kernel_select(bufnr)
   vim.ui.select(kernel_display_names, {
     prompt = "Select a kernel for Jupynium (Jupyter Notebook)",
   }, function(selected)
+    if selected == nil then
+      return
+    end
     Jupynium_kernel_change(bufnr, kernel_dispname_to_name[selected])
   end)
+end
+
+--- Inspect kernel and return the response.
+---@param bufnr integer
+---@param code_line string
+---@param col integer 0-indexed
+---@return table | nil
+function Jupynium_kernel_inspect(bufnr, code_line, col)
+  if bufnr == nil or bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
+  if Jupynium_syncing_bufs[bufnr] == nil then
+    Jupynium_notify.error { [[Cannot inspect kernel without synchronising.]], [[Run `:JupyniumStartSync`]] }
+    return
+  end
+  return Jupynium_rpcrequest("kernel_inspect", bufnr, true, code_line, col)
+end
+
+--- Inspect kernel at cursor and display the response on a floating window.
+--- Just like vim.lsp.buf.hover().
+--- Code mainly from https://github.com/lkhphuc/jupyter-kernel.nvim
+---@param bufnr integer
+function Jupynium_kernel_hover(bufnr)
+  if bufnr == nil or bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
+  if Jupynium_syncing_bufs[bufnr] == nil then
+    Jupynium_notify.error { [[Cannot inspect kernel without synchronising.]], [[Run `:JupyniumStartSync`]] }
+    return
+  end
+  -- (1, 0)-indexed
+  local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+  -- 0-indexed
+  local code_line = vim.api.nvim_buf_get_lines(bufnr, row - 1, row, false)[1]
+  local inspect = Jupynium_kernel_inspect(bufnr, code_line, col)
+  local out = ""
+
+  if inspect == nil or inspect == vim.NIL then
+    out = "Failed to inspect kernel. Maybe the kernel has timed out."
+  elseif inspect.status ~= "ok" then
+    out = inspect.status
+  elseif inspect.found == false then
+    out = "No information from kernel"
+  elseif inspect.found == true then
+    -- Strip ANSI Escape code: https://stackoverflow.com/a/55324681
+    -- The above regexes do the following:
+    -- 1. \x1b is the escape character
+    -- 2. %[%d+; is the ANSI escape code for a digit color
+    -- and so on
+    out = inspect.data["text/plain"]
+      :gsub("\x1b%[%d+;%d+;%d+;%d+;%d+m", "")
+      :gsub("\x1b%[%d+;%d+;%d+;%d+m", "")
+      :gsub("\x1b%[%d+;%d+;%d+m", "")
+      :gsub("\x1b%[%d+;%d+m", "")
+      :gsub("\x1b%[%d+m", "")
+    -- The following regex convert ansi code for tab
+    -- out = out:gsub("\x1b%[H", "\t")
+  end
+
+  local lines = {}
+  for line in vim.gsplit(out, "\n") do
+    table.insert(lines, line)
+  end
+
+  vim.lsp.util.open_floating_preview(lines, "markdown", {
+    max_width = 84,
+  })
 end

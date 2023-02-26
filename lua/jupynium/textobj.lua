@@ -130,7 +130,7 @@ M.default_keybindings = function(augroup)
       )
       vim.keymap.set(
         { "n", "x", "o" },
-        "<space>j",
+        "<space>jj",
         "<cmd>lua require'jupynium.textobj'.goto_current_cell_separator()<cr>",
         { buffer = buf_id, desc = "Go to current Jupynium cell" }
       )

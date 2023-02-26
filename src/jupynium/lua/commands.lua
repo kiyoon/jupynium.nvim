@@ -28,3 +28,4 @@ vim.api.nvim_create_user_command("JupyniumSelectKernel", "lua Jupynium_select_ke
 vim.api.nvim_create_user_command("JupyniumKernelRestart", "lua Jupynium_kernel_restart()", {})
 vim.api.nvim_create_user_command("JupyniumKernelInterrupt", "lua Jupynium_kernel_interrupt()", {})
 vim.api.nvim_create_user_command("JupyniumKernelSelect", "lua Jupynium_kernel_select()", {})
+vim.api.nvim_create_user_command("JupyniumKernelHover", "lua Jupynium_kernel_hover()", {})
