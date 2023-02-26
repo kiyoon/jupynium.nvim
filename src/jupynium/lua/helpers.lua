@@ -237,6 +237,21 @@ function Jupynium_start_sync(bufnr, ipynb_filename, ask)
     group = augroup,
   })
 
+  -- Load completion items when cursor hold
+  -- vim.api.nvim_create_autocmd({ "CursorHoldI" }, {
+  --   buffer = bufnr,
+  --   callback = function()
+  --     local winid = vim.call("bufwinid", bufnr)
+  --     -- (1, 0)-indexed
+  --     local row, col = unpack(vim.api.nvim_win_get_cursor(winid))
+  --     -- 0-indexed
+  --     local code_line = vim.api.nvim_buf_get_lines(bufnr, row - 1, row, false)[1]
+  --     local completion = Jupynium_kernel_complete(bufnr, code_line, col)
+  --     vim.pretty_print(completion)
+  --   end,
+  --   group = augroup,
+  -- })
+
   vim.api.nvim_create_autocmd({ "ModeChanged" }, {
     buffer = bufnr,
     callback = function()
@@ -264,7 +279,7 @@ function Jupynium_start_sync(bufnr, ipynb_filename, ask)
   vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     buffer = bufnr,
     callback = function()
-      buf_filepath = vim.api.nvim_buf_get_name(bufnr)
+      local buf_filepath = vim.api.nvim_buf_get_name(bufnr)
       Jupynium_rpcnotify("BufWritePre", bufnr, true, buf_filepath)
     end,
     group = augroup,
@@ -364,7 +379,7 @@ function Jupynium_download_ipynb(bufnr, output_name)
     return
   end
 
-  buf_filepath = vim.api.nvim_buf_get_name(bufnr)
+  local buf_filepath = vim.api.nvim_buf_get_name(bufnr)
   if buf_filepath == "" then
     Jupynium_notify.error { [[Cannot download ipynb without having the filename for the buffer.]] }
     return
@@ -582,7 +597,8 @@ function Jupynium_kernel_hover(bufnr)
     return
   end
   -- (1, 0)-indexed
-  local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+  local winid = vim.call("bufwinid", bufnr)
+  local row, col = unpack(vim.api.nvim_win_get_cursor(winid))
   -- 0-indexed
   local code_line = vim.api.nvim_buf_get_lines(bufnr, row - 1, row, false)[1]
   local inspect = Jupynium_kernel_inspect(bufnr, code_line, col)
@@ -618,4 +634,23 @@ function Jupynium_kernel_hover(bufnr)
   vim.lsp.util.open_floating_preview(lines, "markdown", {
     max_width = 84,
   })
+end
+
+--- Get completion candidates from kernel.
+---@param bufnr integer
+---@param code_line string
+---@param col integer 0-indexed
+---@return table | nil
+function Jupynium_kernel_complete(bufnr, code_line, col)
+  if bufnr == nil or bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
+  if Jupynium_syncing_bufs[bufnr] == nil then
+    Jupynium_notify.error {
+      [[Cannot get completion through kernel without synchronising.]],
+      [[Run `:JupyniumStartSync`]],
+    }
+    return
+  end
+  return Jupynium_rpcrequest("kernel_complete", bufnr, true, code_line, col)
 end

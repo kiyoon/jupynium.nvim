@@ -34,6 +34,44 @@ kernel_inspect_js_code = (
     resource_stream("jupynium", "js/kernel_inspect.js").read().decode("utf-8")
 )
 
+kernel_complete_js_code = (
+    resource_stream("jupynium", "js/kernel_complete.js").read().decode("utf-8")
+)
+
+CompletionItemKind = {
+    "text": 1,
+    "method": 2,
+    "function": 3,
+    "constructor": 4,
+    "field": 5,
+    "variable": 6,
+    "class": 7,
+    "interface": 8,
+    "module": 9,
+    "property": 10,
+    "unit": 11,
+    "value": 12,
+    "enum": 13,
+    "keyword": 14,
+    "snippet": 15,
+    "color": 16,
+    "file": 17,
+    "reference": 18,
+    "folder": 19,
+    "enumMember": 20,
+    "constant": 21,
+    "struct": 22,
+    "event": 23,
+    "operator": 24,
+    "typeParameter": 25,
+    # Jupyter specific
+    "dict key": 14,
+    "instance": 6,
+    "magic": 23,
+    "path": 19,
+    "statement": 13,
+}
+
 
 @dataclass
 class OnLinesArgs:
@@ -440,6 +478,36 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
         inspect_result = driver.execute_async_script(kernel_inspect_js_code, line, col)
         logger.info(f"Kernel inspect: {inspect_result}")
         event[3].send(inspect_result)
+        return True, None
+
+    elif event[1] == "kernel_complete":
+        (line, col) = event_args
+        driver.switch_to.window(nvim_info.window_handles[bufnr])
+        reply = driver.execute_async_script(kernel_complete_js_code, line, col)
+        logger.info(f"Kernel complete: {reply}")
+
+        # Code from jupyter-kernel.nvim
+        has_experimental_types = (
+            "metadata" in reply.keys()
+            and "_jupyter_types_experimental" in reply["metadata"].keys()
+        )
+        if has_experimental_types:
+            replies = reply["metadata"]["_jupyter_types_experimental"]
+            matches = [
+                {
+                    "label": match["text"],
+                    "documentation": {
+                        "kind": "markdown",
+                        "value": f"```python\n{match['signature']}\n```",
+                    },
+                    # default kind: text = 1
+                    "kind": CompletionItemKind.get(match["type"], 1),
+                }
+                for match in replies
+            ]
+            event[3].send(matches)
+        else:
+            event[3].send([{"label": m} for m in reply["matches"]])
         return True, None
 
     elif event[1] == "execute_javascript":

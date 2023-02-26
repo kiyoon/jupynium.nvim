@@ -54,6 +54,9 @@ def attach_and_init(nvim_listen_addr):
     )
     nvim.exec_lua(lua_code)
 
+    lua_code = resource_stream("jupynium", "lua/cmp.lua").read().decode("utf-8")
+    nvim.exec_lua(lua_code)
+
     nvim.lua.Jupynium_notify.info(
         [
             "Jupynium successfully attached and initialised.",
