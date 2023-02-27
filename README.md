@@ -184,6 +184,17 @@ require("jupynium").setup({
     use_default_keybindings = true,
   },
 
+  syntax_highlight = {
+    enable = true,
+
+    highlight_groups = {
+      -- Set to nil to disable each entry
+      code_cell_separator = "Folded",
+      markdown_cell_separator = "Pmenu",
+      magic_command = "Keyword",
+    },
+  },
+
   -- Dim all cells except the current one
   -- Related command :JupyniumShortsightedToggle
   shortsighted = false,

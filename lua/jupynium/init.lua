@@ -1,7 +1,7 @@
 local M = {}
 
 local textobj = require "jupynium.textobj"
-local shortsighted = require "jupynium.shortsighted"
+local highlighter = require "jupynium.highlighter"
 local server = require "jupynium.server"
 local options = require "jupynium.options"
 
@@ -83,12 +83,19 @@ function M.setup(opts)
     textobj.default_keybindings(augroup)
   end
 
-  if options.opts.shortsighted then
-    shortsighted.enable()
+  highlighter.options.highlight_groups = options.opts.syntax_highlight.highlight_groups
+  if options.opts.syntax_highlight.enable then
+    highlighter.enable()
   else
-    shortsighted.disable()
+    highlighter.disable()
   end
-  shortsighted.add_commands()
+
+  if options.opts.shortsighted then
+    highlighter.shortsighted_enable()
+  else
+    highlighter.shortsighted_disable()
+  end
+  highlighter.add_commands()
 
   vim.g.__jupynium_setup_completed = true
 end
