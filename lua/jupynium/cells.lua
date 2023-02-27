@@ -33,6 +33,40 @@ function M.line_type(line)
   return "others" -- code
 end
 
+--- Get the line types of the entire buffer
+--- Similar to `line_type` but returns a table of line types, and it returns more types
+--- i.e. cell content: code, cell content: markdown, cell content: header
+--- Useful for highlighting
+---@return table
+function M.line_types_entire_buf(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+  local current_cell_type = "header"
+
+  local line_types = {}
+
+  for i, line in ipairs(lines) do
+    local line_type = M.line_type(line)
+    if line_type == "others" or line_type == "empty" then
+      line_types[i] = "cell content: " .. current_cell_type
+    elseif line_type == "cell separator: markdown" then
+      current_cell_type = "markdown"
+      line_types[i] = line_type
+    elseif line_type == "cell separator: markdown (jupytext)" then
+      current_cell_type = "markdown (jupytext)"
+      line_types[i] = line_type
+    elseif line_type == "cell separator: code" then
+      current_cell_type = "code"
+      line_types[i] = line_type
+    else
+      line_types[i] = line_type
+    end
+  end
+
+  return line_types
+end
+
 --- Check if the line is a cell separator
 ---@param line string | number 1-indexed
 ---@return boolean

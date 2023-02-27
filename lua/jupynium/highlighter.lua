@@ -110,11 +110,7 @@ function M.update()
   end
 
   local end_of_file = vim.fn.line "$"
-  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-  local line_types = {}
-  for i, line in ipairs(lines) do
-    line_types[i] = cells.line_type(line)
-  end
+  local line_types = cells.line_types_entire_buf()
 
   if M.options.enable then
     for i, line_type in ipairs(line_types) do
@@ -122,6 +118,10 @@ function M.update()
         M.set_line_hlgroup(0, ns_highlight, i - 1, M.options.highlight_groups.code_cell_separator)
       elseif utils.string_begins_with(line_type, "cell separator: markdown") then
         M.set_line_hlgroup(0, ns_highlight, i - 1, M.options.highlight_groups.markdown_cell_separator)
+      elseif utils.string_begins_with(line_type, "cell content: code") then
+        M.set_line_hlgroup(0, ns_highlight, i - 1, M.options.highlight_groups.code_cell_content)
+      elseif utils.string_begins_with(line_type, "cell content: markdown") then
+        M.set_line_hlgroup(0, ns_highlight, i - 1, M.options.highlight_groups.markdown_cell_content)
       elseif line_type == "magic command" then
         M.set_line_hlgroup(0, ns_highlight, i - 1, M.options.highlight_groups.magic_command)
       end
