@@ -34,6 +34,44 @@ kernel_inspect_js_code = (
     resource_stream("jupynium", "js/kernel_inspect.js").read().decode("utf-8")
 )
 
+kernel_complete_js_code = (
+    resource_stream("jupynium", "js/kernel_complete.js").read().decode("utf-8")
+)
+
+CompletionItemKind = {
+    "text": 1,
+    "method": 2,
+    "function": 3,
+    "constructor": 4,
+    "field": 5,
+    "variable": 6,
+    "class": 7,
+    "interface": 8,
+    "module": 9,
+    "property": 10,
+    "unit": 11,
+    "value": 12,
+    "enum": 13,
+    "keyword": 14,
+    "snippet": 15,
+    "color": 16,
+    "file": 17,
+    "reference": 18,
+    "folder": 19,
+    "enumMember": 20,
+    "constant": 21,
+    "struct": 22,
+    "event": 23,
+    "operator": 24,
+    "typeParameter": 25,
+    # Jupyter specific
+    "dict key": 14,
+    "instance": 6,
+    "magic": 23,
+    "path": 19,
+    "statement": 13,
+}
+
 
 @dataclass
 class OnLinesArgs:
@@ -632,6 +670,49 @@ def process_notification_event(
             driver.execute_script(
                 "Jupyter.kernelselector.set_kernel(arguments[0])", kernel_name
             )
+        elif event[1] == "kernel_complete_async":
+            (line, col, callback_id) = event_args
+            if (
+                nvim_info.nvim.vars["jupynium_kernel_complete_async_callback_id"]
+                != callback_id
+            ):
+                logger.info(f"Ignoring outdated kernel_complete_async request")
+                return True
+            driver.switch_to.window(nvim_info.window_handles[bufnr])
+            reply = driver.execute_async_script(kernel_complete_js_code, line, col)
+            logger.info(f"Kernel complete: {reply}")
+
+            # Code from jupyter-kernel.nvim
+            has_experimental_types = (
+                "metadata" in reply.keys()
+                and "_jupyter_types_experimental" in reply["metadata"].keys()
+            )
+            if has_experimental_types:
+                replies = reply["metadata"]["_jupyter_types_experimental"]
+                matches = [
+                    {
+                        "label": match["text"],
+                        "documentation": {
+                            "kind": "markdown",
+                            "value": f"```python\n{match['signature']}\n```",
+                        },
+                        # default kind: text = 1
+                        "kind": CompletionItemKind.get(match["type"], 1),
+                    }
+                    for match in replies
+                ]
+            else:
+                matches = [{"label": m} for m in reply["matches"]]
+
+            if (
+                nvim_info.nvim.vars["jupynium_kernel_complete_async_callback_id"]
+                != callback_id
+            ):
+                logger.info(f"Ignoring outdated kernel_complete_async request")
+                return True
+
+            nvim_info.nvim.lua.Jupynium_kernel_complete_async_callback(matches)
+
         elif event[1] == "scroll_to_cell":
             (cursor_pos_row,) = event_args
             scroll_to_cell(driver, nvim_info, bufnr, cursor_pos_row)
