@@ -14,7 +14,8 @@ function completeCallback(result) {
 
 Jupyter.notebook.kernel.complete(arguments[0], arguments[1], completeCallback)
 
-// Only wait for 5 seconds
+// Only wait for 2 seconds
+// Blocking for more than 2 seconds for completion doesn't make sense.
 setTimeout(function() {
 	return_callback(null)
-}, 5000)
+}, 2000)

@@ -682,6 +682,10 @@ def process_notification_event(
             reply = driver.execute_async_script(kernel_complete_js_code, line, col)
             logger.info(f"Kernel complete: {reply}")
 
+            if reply is None:
+                logger.info("Getting kernel completion timed out")
+                return True
+
             # Code from jupyter-kernel.nvim
             has_experimental_types = (
                 "metadata" in reply.keys()
@@ -689,18 +693,34 @@ def process_notification_event(
             )
             if has_experimental_types:
                 replies = reply["metadata"]["_jupyter_types_experimental"]
-                matches = [
-                    {
-                        "label": match["text"],
-                        "documentation": {
-                            "kind": "markdown",
-                            "value": f"```python\n{match['signature']}\n```",
-                        },
-                        # default kind: text = 1
-                        "kind": CompletionItemKind.get(match["type"], 1),
-                    }
-                    for match in replies
-                ]
+                matches = []
+                for match in replies:
+                    if "signature" in match.keys():
+                        matches.append(
+                            {
+                                "label": match.get("text", ""),
+                                "documentation": {
+                                    "kind": "markdown",
+                                    "value": f"```python\n{match['signature']}\n```",
+                                },
+                                # default kind: text = 1
+                                # sometimes match['type'] is '<unknown>'
+                                "kind": CompletionItemKind.get(
+                                    match.get("type", "text"), 1
+                                ),
+                            }
+                        )
+                    else:
+                        matches.append(
+                            {
+                                "label": match.get("text", ""),
+                                # default kind: text = 1
+                                # sometimes match['type'] is '<unknown>'
+                                "kind": CompletionItemKind.get(
+                                    match.get("type", "text"), 1
+                                ),
+                            }
+                        )
             else:
                 matches = [{"label": m} for m in reply["matches"]]
 
