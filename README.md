@@ -12,7 +12,7 @@ Never leave Neovim. Switch tabs on the browser as you switch files on Neovim.
 
 Note that it doesn't sync from Notebook to Neovim so only modify from Neovim.
 
-<img src=https://user-images.githubusercontent.com/12980409/211894627-73037e83-4730-4387-827c-98ed2522740d.gif width=100% />
+<img src=https://user-images.githubusercontent.com/12980409/221559945-46f12a38-2fb8-4156-bb94-b87e831ac8f5.gif width=100% />
 
 ## How does it work?
 
