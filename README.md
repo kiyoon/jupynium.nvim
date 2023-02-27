@@ -62,6 +62,7 @@ With vim-plug:
 ```vim
 Plug 'kiyoon/jupynium.nvim', { 'do': 'pip3 install --user .' }
 " Plug 'kiyoon/jupynium.nvim', { 'do': 'conda run --no-capture-output -n jupynium pip install .' }
+Plug 'hrsh7th/nvim-cmp'       " optional, for completion
 Plug 'rcarriga/nvim-notify'   " optional
 Plug 'stevearc/dressing.nvim' " optional, UI for :JupyniumKernelSelect
 ```
@@ -71,6 +72,7 @@ With packer.nvim:
 ```lua
 use { "kiyoon/jupynium.nvim", run = "pip3 install --user ." }
 -- use { "kiyoon/jupynium.nvim", run = "conda run --no-capture-output -n jupynium pip install ." }
+use { "hrsh7th/nvim-cmp" }       -- optional, for completion
 use { "rcarriga/nvim-notify" }   -- optional
 use { "stevearc/dressing.nvim" } -- optional, UI for :JupyniumKernelSelect
 ```
@@ -84,11 +86,14 @@ With 💤lazy.nvim:
     -- build = "conda run --no-capture-output -n jupynium pip install .",
     -- enabled = vim.fn.isdirectory(vim.fn.expand "~/miniconda3/envs/jupynium"),
   },
+  "hrsh7th/nvim-cmp",       -- optional, for completion
   "rcarriga/nvim-notify",   -- optional
   "stevearc/dressing.nvim", -- optional, UI for :JupyniumKernelSelect
 ```
 
-The default configuration values are below and work well for system-level Python users. If you're a Conda user, you may need to change `python_host` to execute using the `conda` command instead.
+#### Configure Jupynium
+
+The default configuration values are below and work well for system-level Python users. If you're a Conda user, you need to change `python_host` to execute using the `conda` command instead.
 
 <details>
 <summary>
@@ -187,6 +192,30 @@ require("jupynium").setup({
 ```
 
 </details>
+
+#### Optionally, configure `nvim-cmp` to show Jupyter kernel completion
+
+```lua
+local cmp = require "cmp"
+local compare = cmp.config.compare
+
+cmp.setup {
+  sources = {
+    { name = "jupynium", priority = 1000 },  -- consider higher priority than LSP
+    { name = "nvim_lsp", priority = 100 },
+    -- ...
+  },
+  sorting = {
+    priority_weight = 1.0,
+    comparators = {
+      compare.score,            -- Jupyter kernel completion shows prior to LSP
+      compare.recently_used,
+      compare.locality,
+      -- ...
+    },
+  },
+}
+```
 
 ## 🏃 Quick Start
 

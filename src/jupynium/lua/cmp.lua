@@ -41,8 +41,8 @@ function source:complete(params, callback)
   local row, col = unpack(vim.api.nvim_win_get_cursor(0))
   -- 0-indexed
   local code_line = vim.api.nvim_buf_get_lines(0, row - 1, row, false)[1]
-  local items = Jupynium_kernel_complete(0, code_line, col)
-  callback(items)
+
+  Jupynium_kernel_complete_async(0, code_line, col, callback)
 end
 
 ---Resolve completion item (optional). This is called right before the completion is about to be displayed.
