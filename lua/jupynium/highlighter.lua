@@ -48,7 +48,12 @@ function M.setup(opts)
   end
   local hlgroup
   if vim.fn.hlexists "JupyniumCodeCellSeparator" == 0 then
-    vim.cmd [[hi! link JupyniumCodeCellSeparator Folded]]
+    if colorscheme == "tokyonight" then
+      hlgroup = "Pmenu"
+    else
+      hlgroup = "Folded"
+    end
+    vim.cmd([[hi! link JupyniumCodeCellSeparator ]] .. hlgroup)
   end
   if vim.fn.hlexists "JupyniumMarkdownCellSeparator" == 0 then
     vim.cmd [[hi! link JupyniumMarkdownCellSeparator Pmenu]]
