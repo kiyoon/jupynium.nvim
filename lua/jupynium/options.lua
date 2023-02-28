@@ -88,10 +88,10 @@ M.default_opts = {
     enable = true,
 
     highlight_groups = {
-      -- Set to nil to disable each entry
+      -- Set to false to disable each entry
       code_cell_separator = "Folded",
       markdown_cell_separator = "Pmenu",
-      code_cell_content = nil,
+      code_cell_content = false,
       markdown_cell_content = "CursorLine",
       magic_command = "Keyword",
     },
