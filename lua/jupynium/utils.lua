@@ -1,10 +1,16 @@
 local M = {}
 
 function M.string_begins_with(str, start)
+  if str == nil then
+    return false
+  end
   return start == "" or str:sub(1, #start) == start
 end
 
 function M.string_ends_with(str, ending)
+  if str == nil then
+    return false
+  end
   return ending == "" or str:sub(-#ending) == ending
 end
 

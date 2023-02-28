@@ -43,6 +43,9 @@ function M.setup(opts)
   -- If the colourscheme doesn't support Jupynium yet, link to some default highlight groups
   -- Here we can define some default settings per colourscheme.
   local colorscheme = vim.g.colors_name
+  if colorscheme == nil then
+    colorscheme = ""
+  end
   if utils.string_begins_with(colorscheme, "tokyonight") then
     colorscheme = "tokyonight"
   end
