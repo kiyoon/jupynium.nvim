@@ -194,8 +194,7 @@ require("jupynium").setup({
 })
 
 -- You can link highlighting groups.
--- This is a default when it's unknown. (may not be the best for all colour schemes)
--- Tokyonight colour scheme uses Pmenu instead of CursorLine.
+-- This is the default (when colour scheme is unknown)
 vim.cmd [[
 " Try with CursorColumn, Pmenu, Folded etc.
 hi! link JupyniumCodeCellSeparator CursorLine
@@ -205,7 +204,7 @@ hi! link JupyniumMagicCommand Keyword
 ]]
 
 -- Please share your favourite settings on other colour schemes, so I can add defaults.
--- Even better, you can submit a PR to that colour scheme to support Jupynium.
+-- Currently, tokyonight is supported.
 ```
 
 </details>
