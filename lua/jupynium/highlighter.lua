@@ -50,27 +50,22 @@ function M.setup(opts)
     colorscheme = "tokyonight"
   end
   local hlgroup
+  if colorscheme == "tokyonight" then
+    hlgroup = "Pmenu"
+  else
+    hlgroup = "CursorLine"
+  end
   if vim.fn.hlexists "JupyniumCodeCellSeparator" == 0 then
-    if colorscheme == "tokyonight" then
-      hlgroup = "Pmenu"
-    else
-      hlgroup = "Folded"
-    end
     vim.cmd([[hi! link JupyniumCodeCellSeparator ]] .. hlgroup)
   end
   if vim.fn.hlexists "JupyniumMarkdownCellSeparator" == 0 then
-    vim.cmd [[hi! link JupyniumMarkdownCellSeparator Pmenu]]
+    vim.cmd([[hi! link JupyniumMarkdownCellSeparator ]] .. hlgroup)
   end
   --- In most cases you don't want to link Code cell content to anything.
   -- if vim.fn.hlexists "JupyniumCodeCellContent" == 0 then
   --   vim.cmd [[hi! link JupyniumCodeCellContent Normal]]
   -- end
   if vim.fn.hlexists "JupyniumMarkdownCellContent" == 0 then
-    if colorscheme == "tokyonight" then
-      hlgroup = "Pmenu"
-    else
-      hlgroup = "CursorLine"
-    end
     vim.cmd([[hi! link JupyniumMarkdownCellContent ]] .. hlgroup)
   end
   if vim.fn.hlexists "JupyniumMagicCommand" == 0 then

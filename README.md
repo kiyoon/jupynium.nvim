@@ -193,18 +193,18 @@ require("jupynium").setup({
   shortsighted = false,
 })
 
--- You can override highlighting groups.
--- The default is different per colour scheme.
+-- You can link highlighting groups.
 -- This is a default when it's unknown. (may not be the best for all colour schemes)
+-- Tokyonight colour scheme uses Pmenu instead of CursorLine.
 vim.cmd [[
-hi! link JupyniumCodeCellSeparator Folded
-hi! link JupyniumMarkdownCellSeparator Pmenu
+" Try with CursorColumn, Pmenu, Folded etc.
+hi! link JupyniumCodeCellSeparator CursorLine
+hi! link JupyniumMarkdownCellSeparator CursorLine
 hi! link JupyniumMarkdownCellContent CursorLine
 hi! link JupyniumMagicCommand Keyword
 ]]
 
--- Currently only supports default settings for tokyonight.
--- Submit your favourite settings on other colour schemes, and I can add defaults.
+-- Please share your favourite settings on other colour schemes, so I can add defaults.
 -- Even better, you can submit a PR to that colour scheme to support Jupynium.
 ```
 
