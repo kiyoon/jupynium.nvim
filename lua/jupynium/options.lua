@@ -86,15 +86,6 @@ M.default_opts = {
 
   syntax_highlight = {
     enable = true,
-
-    highlight_groups = {
-      -- Set to false to disable each entry
-      code_cell_separator = "Folded",
-      markdown_cell_separator = "Pmenu",
-      code_cell_content = false,
-      markdown_cell_content = "CursorLine",
-      magic_command = "Keyword",
-    },
   },
 
   -- Dim all cells except the current one
