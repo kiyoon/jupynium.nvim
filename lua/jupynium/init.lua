@@ -83,19 +83,7 @@ function M.setup(opts)
     textobj.default_keybindings(augroup)
   end
 
-  highlighter.options.highlight_groups = options.opts.syntax_highlight.highlight_groups
-  if options.opts.syntax_highlight.enable then
-    highlighter.enable()
-  else
-    highlighter.disable()
-  end
-
-  if options.opts.shortsighted then
-    highlighter.shortsighted_enable()
-  else
-    highlighter.shortsighted_disable()
-  end
-  highlighter.add_commands()
+  highlighter.setup(options.opts)
 
   vim.g.__jupynium_setup_completed = true
 end

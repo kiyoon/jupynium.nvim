@@ -186,15 +186,6 @@ require("jupynium").setup({
 
   syntax_highlight = {
     enable = true,
-
-    highlight_groups = {
-      -- Set to false to disable each entry
-      code_cell_separator = "Folded",
-      markdown_cell_separator = "Pmenu",
-      code_cell_content = false,
-      markdown_cell_content = "CursorLine",
-      magic_command = "Keyword",
-    },
   },
 
   -- Dim all cells except the current one
@@ -202,6 +193,19 @@ require("jupynium").setup({
   shortsighted = false,
 })
 
+-- You can override highlighting groups.
+-- The default is different per colour scheme.
+-- This is a default when it's unknown. (may not be the best for all colour schemes)
+vim.cmd [[
+hi! link JupyniumCodeCellSeparator Folded
+hi! link JupyniumMarkdownCellSeparator Pmenu
+hi! link JupyniumMarkdownCellContent CursorLine
+hi! link JupyniumMagicCommand Keyword
+]]
+
+-- Currently only supports default settings for tokyonight.
+-- Submit your favourite settings on other colour schemes, and I can add defaults.
+-- Even better, you can submit a PR to that colour scheme to support Jupynium.
 ```
 
 </details>
