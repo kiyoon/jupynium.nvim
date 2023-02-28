@@ -14,6 +14,12 @@ M.options = {
   },
 }
 
+local function set_hlgroup_if_not_exists(hlgroup, hlgroup_default)
+  if vim.fn.hlexists(hlgroup) == 0 then
+    vim.cmd("hi! link " .. hlgroup .. " " .. hlgroup_default)
+  end
+end
+
 function M.setup(opts)
   if opts.syntax_highlight.highlight_groups then
     -- deprecated, use vim.cmd [[hi! link Jupynium... ...]]
@@ -52,24 +58,21 @@ function M.setup(opts)
   local hlgroup
   if colorscheme == "tokyonight" then
     hlgroup = "Pmenu"
+    set_hlgroup_if_not_exists("JupyniumCodeCellSeparatorString", hlgroup)
+    set_hlgroup_if_not_exists("JupyniumCodeCellSeparator", "Folded")
+    set_hlgroup_if_not_exists("JupyniumMarkdownCellSeparator", hlgroup)
+    set_hlgroup_if_not_exists("JupyniumMarkdownCellContent", hlgroup)
+    set_hlgroup_if_not_exists("JupyniumMagicCommand", "@keyword")
+    set_hlgroup_if_not_exists("JupyniumShortsighted", "LineNr")
   else
     hlgroup = "CursorLine"
-  end
-  if vim.fn.hlexists "JupyniumCodeCellSeparator" == 0 then
-    vim.cmd([[hi! link JupyniumCodeCellSeparator ]] .. hlgroup)
-  end
-  if vim.fn.hlexists "JupyniumMarkdownCellSeparator" == 0 then
-    vim.cmd([[hi! link JupyniumMarkdownCellSeparator ]] .. hlgroup)
-  end
-  --- In most cases you don't want to link Code cell content to anything.
-  -- if vim.fn.hlexists "JupyniumCodeCellContent" == 0 then
-  --   vim.cmd [[hi! link JupyniumCodeCellContent Normal]]
-  -- end
-  if vim.fn.hlexists "JupyniumMarkdownCellContent" == 0 then
-    vim.cmd([[hi! link JupyniumMarkdownCellContent ]] .. hlgroup)
-  end
-  if vim.fn.hlexists "JupyniumMagicCommand" == 0 then
-    vim.cmd [[hi! link JupyniumMagicCommand Keyword]]
+    set_hlgroup_if_not_exists("JupyniumCodeCellSeparator", hlgroup)
+    set_hlgroup_if_not_exists("JupyniumMarkdownCellSeparator", hlgroup)
+    --- In most cases you don't want to link Code cell content to anything.
+    -- set_hlgroup_if_not_exists("JupyniumCodeCellContent", "Normal")
+    set_hlgroup_if_not_exists("JupyniumMarkdownCellContent", hlgroup)
+    set_hlgroup_if_not_exists("JupyniumMagicCommand", "Keyword")
+    set_hlgroup_if_not_exists("JupyniumShortsighted", "Comment")
   end
 
   if opts.syntax_highlight.enable then
@@ -186,18 +189,28 @@ function M.update()
 
   if M.options.enable then
     for i, line_type in ipairs(line_types) do
-      -- priority 10000: above treesitter
+      -- priority 9000: above treesitter, below shortsighted
       -- priority 99: below treesitter (default)
-      if line_type == "cell separator: code" then
-        M.set_line_hlgroup(0, ns_highlight, i - 1, "JupyniumCodeCellSeparator", 10000)
+      if utils.string_begins_with(line_type, "cell separator: code") then
+        M.set_line_hlgroup(0, ns_highlight, i - 1, "JupyniumCodeCellSeparator", 9000)
+        if line_type == "cell separator: code (string)" then
+          -- For closing markdown cell
+          -- %%""" or %%'''
+          M.set_line_hlgroup(0, ns_shortsighted, i - 1, "JupyniumCodeCellSeparatorString", 9001)
+        end
       elseif utils.string_begins_with(line_type, "cell separator: markdown") then
-        M.set_line_hlgroup(0, ns_highlight, i - 1, "JupyniumMarkdownCellSeparator", 10000)
+        M.set_line_hlgroup(0, ns_highlight, i - 1, "JupyniumMarkdownCellSeparator", 9000)
+        if line_type == "cell separator: markdown (string)" then
+          -- For opening markdown cell with string
+          -- """%% or '''%%
+          M.set_line_hlgroup(0, ns_shortsighted, i - 1, "JupyniumMarkdownCellSeparatorString", 9001)
+        end
       elseif utils.string_begins_with(line_type, "cell content: code") then
         M.set_line_hlgroup(0, ns_highlight, i - 1, "JupyniumCodeCellContent")
       elseif utils.string_begins_with(line_type, "cell content: markdown") then
         M.set_line_hlgroup(0, ns_highlight, i - 1, "JupyniumMarkdownCellContent")
       elseif line_type == "magic command" then
-        M.set_line_hlgroup(0, ns_highlight, i - 1, "JupyniumMagicCommand", 10000)
+        M.set_line_hlgroup(0, ns_highlight, i - 1, "JupyniumMagicCommand", 9000)
       end
     end
   end
@@ -215,7 +228,7 @@ function M.update()
       -- Exclude current cell separator
       for i = 1, current_row - 1 do
         if line_types[i] ~= "empty" then
-          M.set_line_hlgroup(0, ns_shortsighted, i - 1, M.options.shortsighted.highlight_groups.dim, 10000)
+          M.set_line_hlgroup(0, ns_shortsighted, i - 1, "JupyniumShortsighted", 10000)
         end
       end
     end
@@ -224,7 +237,7 @@ function M.update()
       -- Dim below cell range
       for j = next_row, end_of_file do
         if not line_types[j] ~= "empty" then
-          M.set_line_hlgroup(0, ns_shortsighted, j - 1, M.options.shortsighted.highlight_groups.dim, 10000)
+          M.set_line_hlgroup(0, ns_shortsighted, j - 1, "JupyniumShortsighted", 10000)
         end
       end
     end
