@@ -222,6 +222,18 @@ def start_if_running_else_clear(args, q: persistqueue.UniqueQ):
     return None
 
 
+def number_of_windows_geq(num_windows: int):
+    """
+    An expectation for the number of windows to be greater than or equal to a certain value.
+    Slightly modified from EC.number_of_windows_to_be(num_windows).
+    """
+
+    def _predicate(driver: webdriver.Firefox):
+        return len(driver.window_handles) >= num_windows
+
+    return _predicate
+
+
 def attach_new_neovim(
     driver,
     new_args,
@@ -458,7 +470,7 @@ def main():
 
             # Wait for the notebook to load
             driver_wait = WebDriverWait(driver, 10)
-            driver_wait.until(EC.number_of_windows_to_be(1))
+            driver_wait.until(number_of_windows_geq(1))
             sele.wait_until_loaded(driver)
 
             home_window = driver.current_window_handle
