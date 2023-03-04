@@ -1,6 +1,7 @@
 -- Code mostly based on koenverburg/peepsight.nvim
 local utils = require "jupynium.utils"
 local cells = require "jupynium.cells"
+local options = require "jupynium.options"
 local M = {}
 
 M.options = {
@@ -96,7 +97,7 @@ end
 function M.set_autocmd()
   local augroup = vim.api.nvim_create_augroup("jupynium-highlighter", {})
   vim.api.nvim_create_autocmd({ "BufWinEnter", "BufWritePost", "CursorMoved", "CursorMovedI", "WinScrolled" }, {
-    pattern = "*.ju.*",
+    pattern = options.opts.jupynium_file_pattern,
     callback = M.run,
     group = augroup,
   })

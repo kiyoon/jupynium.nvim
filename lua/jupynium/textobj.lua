@@ -1,5 +1,6 @@
 local M = {}
 local cells = require "jupynium.cells"
+local options = require "jupynium.options"
 
 local enter_visual_mode = function()
   -- enter visual mode if normal or operator-pending (no) mode
@@ -113,7 +114,7 @@ end
 M.default_keybindings = function(augroup)
   -- Text objects
   vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
-    pattern = "*.ju.*",
+    pattern = options.opts.jupynium_file_pattern,
     callback = function()
       local buf_id = vim.api.nvim_get_current_buf()
       vim.keymap.set(

@@ -7,7 +7,7 @@ local options = require "jupynium.options"
 
 function M.default_keybindings(augroup)
   vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
-    pattern = "*.ju.*",
+    pattern = options.opts.jupynium_file_pattern,
     callback = function()
       local buf_id = vim.api.nvim_get_current_buf()
       vim.keymap.set(
