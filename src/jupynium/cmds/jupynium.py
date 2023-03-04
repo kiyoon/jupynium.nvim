@@ -222,6 +222,18 @@ def start_if_running_else_clear(args, q: persistqueue.UniqueQ):
     return None
 
 
+def number_of_windows_be_list(num_windows: list[int]):
+    """
+    An expectation for the number of windows to be one of the listed values.
+    Slightly modified from EC.number_of_windows_to_be(num_windows).
+    """
+
+    def _predicate(driver: webdriver.Firefox):
+        return len(driver.window_handles) in num_windows
+
+    return _predicate
+
+
 def attach_new_neovim(
     driver,
     new_args,
@@ -440,6 +452,8 @@ def main():
         with webdriver_firefox(
             args.firefox_profiles_ini_path, args.firefox_profile_name
         ) as driver:
+            # Initial number of windows when launching browser
+            ini_num_windows = len(driver.window_handles)
             try:
                 driver.get(args.notebook_URL)
             except WebDriverException:
@@ -458,7 +472,12 @@ def main():
 
             # Wait for the notebook to load
             driver_wait = WebDriverWait(driver, 10)
-            driver_wait.until(EC.number_of_windows_to_be(1))
+            # Acceptable number of windows is either:
+            # - Initial number of windows, for regular case where jupynium handles initally focused tab
+            # - Initial number of windows + 1, if an extension automatically opens a new tab
+            # Ref: https://github.com/kiyoon/jupynium.nvim/issues/59
+            accept_num_windows = [ini_num_windows, ini_num_windows + 1]
+            driver_wait.until(number_of_windows_be_list(accept_num_windows))
             sele.wait_until_loaded(driver)
 
             home_window = driver.current_window_handle
