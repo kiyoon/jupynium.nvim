@@ -18,6 +18,15 @@ def read_ipynb_texts(ipynb):
     return cell_types, texts
 
 
+def ipynb_language(ipynb):
+    if "metadata" in ipynb:
+        if "kernelspec" in ipynb["metadata"]:
+            if "language" in ipynb["metadata"]["kernelspec"]:
+                return ipynb["metadata"]["kernelspec"]["language"]
+
+    return None
+
+
 def cells_to_jupy(cell_types, texts):
     cell_types_previous = ["code"] + cell_types[:-1]
 
@@ -37,11 +46,36 @@ def cells_to_jupy(cell_types, texts):
             else:
                 jupy.append("# %%%")
 
-        jupy.extend(text.split("\n"))
+        for line in text.split("\n"):
+            if line.startswith("%"):
+                line = "# " + line
+            jupy.append(line)
 
     return jupy
 
 
+def cells_to_jupytext(cell_types, texts):
+    jupytext: list[str] = []
+
+    for cell_type, text in zip(cell_types, texts):
+        if cell_type == "code":
+            jupytext.append("# %%")
+            for line in text.split("\n"):
+                if line.startswith("%"):
+                    line = "# " + line
+                jupytext.append(line)
+        else:
+            jupytext.append("# %% [markdown]")
+            for line in text.split("\n"):
+                jupytext.append("# " + line)
+
+    return jupytext
+
+
 def ipynb2jupy(ipynb):
     cell_types, texts = read_ipynb_texts(ipynb)
-    return cells_to_jupy(cell_types, texts)
+    language = ipynb_language(ipynb)
+    if language is None or language == "python":
+        return cells_to_jupy(cell_types, texts)
+    else:
+        return cells_to_jupytext(cell_types, texts)
