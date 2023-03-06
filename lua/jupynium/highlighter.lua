@@ -128,7 +128,7 @@ end
 function M.enable()
   M.options.enable = true
 
-  if string.find(vim.fn.expand "%", ".ju.") then
+  if utils.list_wildcard_match(vim.fn.expand "%", options.opts.jupynium_file_pattern) then
     M.update()
   end
   M.set_autocmd()
@@ -160,7 +160,7 @@ end
 function M.shortsighted_enable()
   M.options.shortsighted.enable = true
 
-  if string.find(vim.fn.expand "%", ".ju.") then
+  if utils.list_wildcard_match(vim.fn.expand "%", options.opts.jupynium_file_pattern) then
     M.update()
   end
   M.set_autocmd()
