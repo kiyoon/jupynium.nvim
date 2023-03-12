@@ -357,7 +357,8 @@ def choose_default_kernel(driver, page_type: str, buf_filetype, conda_env_path, 
         for kernel_name in valid_kernel_names:
             try:
                 kernel_exec_path = kernel_specs[kernel_name]["spec"]["argv"][0]
-                env_exec_path = os.path.join(env_path, "bin", kernel_specs[kernel_name]["spec"]["language"])
+                exec_name = os.path.basename(kernel_exec_path)
+                env_exec_path = os.path.join(env_path, "bin", exec_name)
                 if kernel_exec_path == env_exec_path:
                     return kernel_name
             except KeyError:
