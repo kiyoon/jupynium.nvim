@@ -203,8 +203,7 @@ function Jupynium_start_sync(bufnr, ipynb_filename, ask)
 
   -- Used for choosing the correct kernel
   local buf_filetype = vim.api.nvim_buf_get_option(bufnr, "filetype")
-  local conda_env_path = vim.env.CONDA_PREFIX
-  local virtual_env_path = vim.env.VIRTUAL_ENV
+  local conda_or_venv_path = vim.env.CONDA_PREFIX or vim.env.VIRTUAL_ENV
 
   local response = Jupynium_rpcrequest(
     "start_sync",
@@ -214,8 +213,7 @@ function Jupynium_start_sync(bufnr, ipynb_filename, ask)
     ask,
     content,
     buf_filetype,
-    conda_env_path,
-    virtual_env_path
+    conda_or_venv_path
   )
   if response ~= "OK" then
     Jupynium_notify.info { "Cancelling sync.." }
@@ -274,8 +272,8 @@ function Jupynium_start_sync(bufnr, ipynb_filename, ask)
         local visual_start_row = vim.fn.getpos("v")[2] - 1
         Jupynium_rpcnotify("visual_enter", bufnr, true, cursor_pos_row, visual_start_row)
       elseif
-        (old_mode == "v" or old_mode == "V" or old_mode == "\x16")
-        and (new_mode ~= "v" and new_mode ~= "V" and new_mode ~= "\x16")
+          (old_mode == "v" or old_mode == "V" or old_mode == "\x16")
+          and (new_mode ~= "v" and new_mode ~= "V" and new_mode ~= "\x16")
       then
         local winid = vim.call("bufwinid", bufnr)
         local cursor_pos = vim.api.nvim_win_get_cursor(winid)
@@ -627,11 +625,11 @@ function Jupynium_kernel_hover(bufnr)
     -- 2. %[%d+; is the ANSI escape code for a digit color
     -- and so on
     out = inspect.data["text/plain"]
-      :gsub("\x1b%[%d+;%d+;%d+;%d+;%d+m", "")
-      :gsub("\x1b%[%d+;%d+;%d+;%d+m", "")
-      :gsub("\x1b%[%d+;%d+;%d+m", "")
-      :gsub("\x1b%[%d+;%d+m", "")
-      :gsub("\x1b%[%d+m", "")
+        :gsub("\x1b%[%d+;%d+;%d+;%d+;%d+m", "")
+        :gsub("\x1b%[%d+;%d+;%d+;%d+m", "")
+        :gsub("\x1b%[%d+;%d+;%d+m", "")
+        :gsub("\x1b%[%d+;%d+m", "")
+        :gsub("\x1b%[%d+m", "")
     -- The following regex convert ansi code for tab
     -- out = out:gsub("\x1b%[H", "\t")
   end
