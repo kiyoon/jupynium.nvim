@@ -206,8 +206,17 @@ function Jupynium_start_sync(bufnr, ipynb_filename, ask)
   local conda_env_path = vim.env.CONDA_PREFIX
   local virtual_env_path = vim.env.VIRTUAL_ENV
 
-  local response =
-    Jupynium_rpcrequest("start_sync", bufnr, false, ipynb_filename, ask, content, buf_filetype, conda_env_path, virtual_env_path)
+  local response = Jupynium_rpcrequest(
+    "start_sync",
+    bufnr,
+    false,
+    ipynb_filename,
+    ask,
+    content,
+    buf_filetype,
+    conda_env_path,
+    virtual_env_path
+  )
   if response ~= "OK" then
     Jupynium_notify.info { "Cancelling sync.." }
     return
