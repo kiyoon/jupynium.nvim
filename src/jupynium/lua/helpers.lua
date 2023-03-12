@@ -204,9 +204,10 @@ function Jupynium_start_sync(bufnr, ipynb_filename, ask)
   -- Used for choosing the correct kernel
   local buf_filetype = vim.api.nvim_buf_get_option(bufnr, "filetype")
   local conda_env_path = vim.env.CONDA_PREFIX
+  local virtual_env_path = vim.env.VIRTUAL_ENV
 
   local response =
-    Jupynium_rpcrequest("start_sync", bufnr, false, ipynb_filename, ask, content, buf_filetype, conda_env_path)
+    Jupynium_rpcrequest("start_sync", bufnr, false, ipynb_filename, ask, content, buf_filetype, conda_env_path, virtual_env_path)
   if response ~= "OK" then
     Jupynium_notify.info { "Cancelling sync.." }
     return
