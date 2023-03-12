@@ -326,7 +326,9 @@ def start_sync_with_filename(
         nvim_info.jupbufs[bufnr].full_sync_to_notebook(driver)
 
 
-def choose_default_kernel(driver, page_type: str, buf_filetype, conda_env_path, virtual_env_path):
+def choose_default_kernel(
+    driver, page_type: str, buf_filetype, conda_env_path, virtual_env_path
+):
     """
     Choose kernel based on buffer's filetype and conda env
     """
@@ -424,7 +426,14 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
     event_args = event[2][1:]
 
     if event[1] == "start_sync":
-        ipynb_filename, ask, content, buf_filetype, conda_env_path, virtual_env_path = event_args
+        (
+            ipynb_filename,
+            ask,
+            content,
+            buf_filetype,
+            conda_env_path,
+            virtual_env_path,
+        ) = event_args
         ipynb_filename: str
         ipynb_filename = ipynb_filename.strip()
 
