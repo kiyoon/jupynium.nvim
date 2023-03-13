@@ -266,7 +266,7 @@ For example:
 
 ### Setup a Jupynium file
 
-Jupynium uses a unique file format (see the `Jupynium file format` section below). This `.ju.py` file is what you will primarily be interacting with, rather than the `.ipynb` file directly. The contents of the Jupynium file are synced to the browser notebook where it can be viewed in real-time. If you want to keep a copy of the notebook, it can be downloaded as an `.ipynb` file later.
+Jupynium uses a Jupytext's percent format (see the `Jupynium file format` section below). This Jupytext file named `.ju.py` is what you will primarily be interacting with, rather than the `.ipynb` file directly. The contents of the Jupynium file are synced to the browser notebook where it can be viewed in real-time. If you want to keep a copy of the notebook, it can be downloaded as an `.ipynb` file later.
 
 First, it's recommended to set a password on your notebook (rather than using tokens):
 
@@ -289,8 +289,10 @@ There are currently 2 ways of converting an existing `.ipynb` file to a Jupynium
 **Option 1**: Use an included command line tool:
 
 ```bash
-ipynb2jupy [-h] [--stdout] file.ipynb [file.ju.py]
+ipynb2jupytext [-h] [--stdout] file.ipynb [file.ju.py]
 ```
+
+If you're already familiar with Jupytext, feel free to use it instead.
 
 **Option 2**: This method requires that you have already connected to the Jupynium server:
 
@@ -334,22 +336,43 @@ If you have `auto_attach_to_server = false` during setup, you need to run `:Jupy
 
 ## 📝 Jupynium file format (.ju.py or .ju.\*)
 
-The file format is designed to be LSP friendly even with markdown code injected into it. The markdown cells will be part of a Python string: `"""%%` ... `%%"""`.
+The Jupynium file format follows Jupytext's percent format. In order for Jupynium to detect the files, name them as `*.ju.py` or specify `jupynium_file_pattern` in `require("jupynium").setup()`.
 
-**Code cell separators:**  
-i.e. Any code below this line (and before the next separator) will be a code cell.
+**Code cell:**  
+Any code below this line (and before the next separator) will be the content of a code cell.
 
-- `# %%`: recommended
-- `%%"""`: use when you want to close a markdown cell
-- `%%'''`
+- `# %%`
 
-**Markdown cell separators:**
+**Magic commands**
 
-- `"""%%`: recommended
-- `'''%%`
-- `# %%%`
+- `# %time` becomes `%time` in notebook.
+- If you want to really comment out magic commands, make the line not start with `# %`. For example,
+  - `## %time`
+  - `#%time`
+
+**Markdown cell:**
+Any code below this line will be markdown cell content.  
+
 - `# %% [md]`
 - `# %% [markdown]`
+
+In Python, the recommended way is to wrap the whole cell content as a multi-line string.
+
+```python
+# %% [md]
+"""
+# This is a markdown heading
+This is markdown content
+"""
+```
+
+In other languages like R, you'll need to comment every line.
+
+```r
+# %% [md]
+# # This is a markdown heading
+# This is markdown content
+```
 
 **Explicitly specify the first cell separator to use it like a notebook.**
 
@@ -358,12 +381,6 @@ i.e. Any code below this line (and before the next separator) will be a code cel
 - If there is no cell, it works as a markdown preview mode.
   - It will still open ipynb file but will one have one markdown cell.
 
-**Magic commands**
-
-- `# %time` becomes `%time` in notebook.
-- If you want to really comment out magic commands, make the line not start with `# %`. For example,
-  - `## %time`
-  - `#%time`
 
 ## ⌨️ Keybindings
 

@@ -15,7 +15,7 @@ from selenium.webdriver.common.by import By
 
 from . import selenium_helpers as sele
 from .buffer import JupyniumBuffer
-from .ipynb import cells_to_jupy
+from .ipynb import cells_to_jupytext
 from .nvim import NvimInfo
 from .rpc_messages import len_pending_messages, receive_message
 
@@ -452,8 +452,18 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
             return False, None
         driver.switch_to.window(driver.window_handles[tab_idx - 1])
 
+        kernel_name_and_specs = driver.execute_script(
+            "return [Jupyter.notebook.kernel.name, Jupyter.kernelselector.kernelspecs];"
+        )
+        kernel_name = kernel_name_and_specs[0]
+        kernel_specs = kernel_name_and_specs[1]
+        kernel_language = kernel_specs[kernel_name]["spec"]["language"].lower()
+
+        logger.info(f"Current kernel name: {kernel_name}")
+        logger.info(f"Kernel language: {kernel_language}")
+
         cell_types, texts = driver.execute_script(get_cell_inputs_js_code)
-        jupy = cells_to_jupy(cell_types, texts)
+        jupy = cells_to_jupytext(cell_types, texts, python=kernel_language == "python")
         nvim_info.nvim.buffers[bufnr][:] = jupy
         logger.info(f"Loaded ipynb to the nvim buffer.")
 
