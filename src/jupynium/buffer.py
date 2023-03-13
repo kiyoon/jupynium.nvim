@@ -134,13 +134,21 @@ class JupyniumBuffer:
         In a markdown cell, remove the leading # from the lines or multiline string.
         e.g. '# # Markdown header' -> '# Markdown header'
         """
+
+        if start_cell_idx == 0:
+            start_row_offset = 0
+        else:
+            start_row_offset = 1
+
         texts_per_cell = []
         start_row = self.get_cell_start_row(start_cell_idx)
         texts_per_cell.append(
             self._process_cell_text(
                 self.cell_types[start_cell_idx],
                 self.buf[
-                    start_row + 1 : start_row + self.num_rows_per_cell[start_cell_idx]
+                    start_row
+                    + start_row_offset : start_row
+                    + self.num_rows_per_cell[start_cell_idx]
                 ],
             )
         )
