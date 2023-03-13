@@ -14,6 +14,21 @@ set_cell_text_js_code = (
 )
 
 
+def _process_cell_type(cell_type: str) -> str:
+    if cell_type == "markdown (jupytext)":
+        return "markdown"
+
+    return cell_type
+
+
+def _process_cell_types(cell_types: list[str]) -> list[str]:
+    """
+    Return the cell types, e.g. ["markdown", "code", "header"].
+    markdown (jupytext) is converted to markdown.
+    """
+    return [_process_cell_type(cell_type) for cell_type in cell_types]
+
+
 class JupyniumBuffer:
     """
     This class mainly deals with the Nvim buffer and its cell information.
@@ -27,10 +42,6 @@ class JupyniumBuffer:
     ):
         """
         self.buf is a list of lines of the nvim buffer,
-        with the exception that the commented magic commands are normal magic commands.
-        e.g. '# %time' -> '%time'
-        and jupytext markdown cell content also strips the leading comment.
-        e.g. '# # Markdown header' -> '# Markdown header'
 
         Args:
             header_cell_type (str, optional): Use only when partial update.
@@ -58,9 +69,10 @@ class JupyniumBuffer:
         During the partial update, the header cell will be continuation from the existing cell.
         We don't know if it will be header/cell/markdown.
         So we need to pass the header_cell_type.
+        (This is deprecated, in favour of self.get_cells_text() dealing with content processing.)
 
         Args:
-            header_cell_type (str, optional): Use only when partial update.
+            header_cell_type (str, optional): Used to be used only when partial update. Now deprecated.
         """
         num_rows_this_cell = 0
         num_rows_per_cell = []
@@ -86,32 +98,71 @@ class JupyniumBuffer:
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
                 cell_types.append("code")
-            # elif line.startswith("# %"):
-            #     # Use '# %' for magic commands
-            #     # e.g. '# %matplotlib inline'
-            #     # Remove the comment
-            #     if cell_types[-1] == "code":
-            #         self.buf[row] = self.buf[row][2:]
-            #     num_rows_this_cell += 1
-            # elif line.startswith("# "):
-            #     # Remove the comment for markdown cells
-            #     # Only activated if the cell separator is like Jupytext's
-            #     # Useful for non-python languages like R
-            #     if cell_types[-1] == "markdown (jupytext)":
-            #         self.buf[row] = self.buf[row][2:]
-            #     num_rows_this_cell += 1
-            # elif line == '"""':
-            #     # Remove the comment for markdown cells
-            #     # Only activated if the cell separator is like Jupytext's
-            #     if cell_types[-1] == "markdown (jupytext)":
-            #         self.buf[row] = ""
-            #     num_rows_this_cell += 1
             else:
                 num_rows_this_cell += 1
         num_rows_per_cell.append(num_rows_this_cell)
 
         self.num_rows_per_cell = num_rows_per_cell
         self.cell_types = cell_types
+
+    def _process_cell_text(self, cell_type, lines: list[str]):
+        """
+        Assuming that lines is just one cell's content, process it.
+        """
+        if cell_type == "code":
+            return "\n".join(
+                line[2:] if line.startswith("# %") else line for line in lines
+            )
+        elif cell_type == "markdown (jupytext)":
+            if len(lines) > 0 and lines[0] == '"""':
+                return "\n".join(line for line in lines if not line.startswith('"""'))
+            else:
+                return "\n".join(
+                    line[2:] if line.startswith("# ") else line for line in lines
+                )
+        else:
+            # header, markdown
+            return "\n".join(lines)
+
+    def get_cells_text(
+        self, start_cell_idx: int, end_cell_idx: int, strip: bool = True
+    ) -> list[str]:
+        """
+        Get processed cell text.
+        In a code cell, remove comments for the magic commands.
+        e.g. '# %time' -> '%time'
+        In a markdown cell, remove the leading # from the lines or multiline string.
+        e.g. '# # Markdown header' -> '# Markdown header'
+        """
+        texts_per_cell = []
+        start_row = self.get_cell_start_row(start_cell_idx)
+        texts_per_cell.append(
+            self._process_cell_text(
+                self.cell_types[start_cell_idx],
+                self.buf[
+                    start_row + 1 : start_row + self.num_rows_per_cell[start_cell_idx]
+                ],
+            )
+        )
+
+        for cell_idx in range(start_cell_idx + 1, end_cell_idx + 1):
+            start_row += self.num_rows_per_cell[cell_idx - 1]
+            texts_per_cell.append(
+                self._process_cell_text(
+                    self.cell_types[cell_idx],
+                    self.buf[
+                        start_row + 1 : start_row + self.num_rows_per_cell[cell_idx]
+                    ],
+                )
+            )
+
+        if strip:
+            texts_per_cell = [x.strip() for x in texts_per_cell]
+
+        return texts_per_cell
+
+    def get_cell_text(self, cell_idx: int, strip: bool = True) -> str:
+        return self.get_cells_text(cell_idx, cell_idx, strip=strip)[0]
 
     def process_on_lines(
         self, driver, strip, lines, start_row, old_end_row, new_end_row
@@ -196,23 +247,31 @@ class JupyniumBuffer:
                     (
                         "cell_type",
                         cell_idx + 1,
-                        new_lines_buf.cell_types[
-                            1 : 1 + len(notebook_cell_delete_operations)
-                        ],
+                        _process_cell_types(
+                            new_lines_buf.cell_types[
+                                1 : 1 + len(notebook_cell_delete_operations)
+                            ]
+                        ),
                     )
                 ]
                 notebook_cell_operations.append(
                     (
                         "insert",
                         cell_idx + 1,
-                        new_lines_buf.cell_types[
-                            1 + len(notebook_cell_delete_operations) :
-                        ],
+                        _process_cell_types(
+                            new_lines_buf.cell_types[
+                                1 + len(notebook_cell_delete_operations) :
+                            ]
+                        ),
                     )
                 )
             else:
                 notebook_cell_operations = [
-                    ("cell_type", cell_idx + 1, new_lines_buf.cell_types[1:])
+                    (
+                        "cell_type",
+                        cell_idx + 1,
+                        _process_cell_types(new_lines_buf.cell_types[1:]),
+                    )
                 ]
 
             num_tail_rows = self.num_rows_per_cell[cell_idx] - row_within_cell
@@ -259,7 +318,7 @@ class JupyniumBuffer:
                         f"Cell {nb_cell_idx + i} type change to {cell_type} from Notebook"
                     )
                     # "markdown" or "markdown (jupytext)"
-                    if cell_type.startswith("markdown"):
+                    if cell_type == "markdown":
                         driver.execute_script(
                             "Jupyter.notebook.cells_to_markdown([arguments[0]]);",
                             nb_cell_idx + i,
@@ -318,63 +377,6 @@ class JupyniumBuffer:
             x in ("code", "markdown", "markdown (jupytext)")
             for x in self.cell_types[1:]
         )
-
-    def _process_cell_text(self, cell_type, lines: list[str]):
-        """
-        Assuming that lines is just one cell's content, process it.
-        """
-        if cell_type == "code":
-            return "\n".join(
-                line[2:] if line.startswith("# %") else line for line in lines
-            )
-        elif cell_type == "markdown (jupytext)":
-            if len(lines) > 0 and lines[0] == '"""':
-                return "\n".join(line for line in lines if not line.startswith('"""'))
-            else:
-                return "\n".join(
-                    line[2:] if line.startswith("# ") else line for line in lines
-                )
-        else:
-            # header, markdown
-            return "\n".join(lines)
-
-    def get_cells_text(
-        self, start_cell_idx: int, end_cell_idx: int, strip: bool = True
-    ) -> list[str]:
-        """
-        Get processed cell text.
-        For example, in a code cell, remove comments for the magic commands. (# %time -> %time)
-        In a markdown cell, remove the leading # from the lines or multiline string.
-        """
-        texts_per_cell = []
-        start_row = self.get_cell_start_row(start_cell_idx)
-        texts_per_cell.append(
-            self._process_cell_text(
-                self.cell_types[start_cell_idx],
-                self.buf[
-                    start_row + 1 : start_row + self.num_rows_per_cell[start_cell_idx]
-                ],
-            )
-        )
-
-        for cell_idx in range(start_cell_idx + 1, end_cell_idx + 1):
-            start_row += self.num_rows_per_cell[cell_idx - 1]
-            texts_per_cell.append(
-                self._process_cell_text(
-                    self.cell_types[cell_idx],
-                    self.buf[
-                        start_row + 1 : start_row + self.num_rows_per_cell[cell_idx]
-                    ],
-                )
-            )
-
-        if strip:
-            texts_per_cell = [x.strip() for x in texts_per_cell]
-
-        return texts_per_cell
-
-    def get_cell_text(self, cell_idx: int, strip: bool = True) -> str:
-        return self.get_cells_text(cell_idx, cell_idx, strip=strip)[0]
 
     def _partial_sync_to_notebook(
         self, driver, start_cell_idx, end_cell_idx, strip=True
