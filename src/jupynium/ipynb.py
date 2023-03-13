@@ -54,7 +54,7 @@ def cells_to_jupy(cell_types, texts):
     return jupy
 
 
-def cells_to_jupytext(cell_types, texts):
+def cells_to_jupytext(cell_types, texts, python=True):
     jupytext: list[str] = []
 
     for cell_type, text in zip(cell_types, texts):
@@ -64,18 +64,43 @@ def cells_to_jupytext(cell_types, texts):
                 if line.startswith("%"):
                     line = "# " + line
                 jupytext.append(line)
+
+            jupytext.append("")
         else:
             jupytext.append("# %% [markdown]")
-            for line in text.split("\n"):
-                jupytext.append("# " + line)
+
+            if python:
+                jupytext.append('"""')
+                for line in text.split("\n"):
+                    jupytext.append(line)
+                jupytext.append('"""')
+            else:
+                for line in text.split("\n"):
+                    jupytext.append("# " + line)
+
+            jupytext.append("")
 
     return jupytext
 
 
 def ipynb2jupy(ipynb):
+    """
+    Deprecated. Use ipynb2jupytext instead.
+    """
     cell_types, texts = read_ipynb_texts(ipynb)
     language = ipynb_language(ipynb)
     if language is None or language == "python":
         return cells_to_jupy(cell_types, texts)
     else:
         return cells_to_jupytext(cell_types, texts)
+
+
+def ipynb2jupytext(ipynb):
+    cell_types, texts = read_ipynb_texts(ipynb)
+    language = ipynb_language(ipynb)
+    if language is None or language == "python":
+        python = True
+    else:
+        python = False
+
+    return cells_to_jupytext(cell_types, texts, python)

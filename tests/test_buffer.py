@@ -15,11 +15,8 @@ def test_magic_command_1():
     """
     lines = ["a", "b", "c", "# %%", "# %time", "e", "f"]
     buffer = JupyniumBuffer(lines)
-    assert buffer.buf[4] == "%time"
-    for i, line in enumerate(lines):
-        if i == 4:
-            continue
-        assert buffer.buf[i] == line
+    code_cell_content = buffer.get_cell_text(1)
+    assert code_cell_content == "%time\ne\nf"
 
 
 def test_buffer_markdown():
@@ -37,7 +34,8 @@ def test_buffer_markdown_jupytext():
     buffer = JupyniumBuffer(["a", "b", "c", "# %% [md]", "d", "# %%", "f"])
     assert buffer.num_rows_per_cell == [3, 2, 2]
     assert buffer.cell_types == ["header", "markdown (jupytext)", "code"]
-    assert buffer.buf[4] == "d"
+    md_cell_content = buffer.get_cell_text(1)
+    assert md_cell_content == "d"
 
 
 def test_buffer_markdown_jupytext_2():
@@ -57,13 +55,35 @@ def test_buffer_markdown_jupytext_2():
     assert buffer.num_rows_per_cell == [3, 4, 2]
     assert buffer.cell_types == ["header", "markdown (jupytext)", "code"]
 
-    assert buffer.buf[0] == "a"
-    assert buffer.buf[1] == "# b"
-    assert buffer.buf[2] == "# # c"
+    header_cell_content = buffer.get_cell_text(0)
+    md_cell_content = buffer.get_cell_text(1)
+    assert header_cell_content == "a\n# b\n# # c"
+    assert md_cell_content == "# header\ncontent\nnoescape"
 
-    assert buffer.buf[4] == "# header"
-    assert buffer.buf[5] == "content"
-    assert buffer.buf[6] == "noescape"
+
+def test_buffer_markdown_jupytext_3():
+    buffer = JupyniumBuffer(
+        [
+            "a",
+            "# b",
+            "# # c",
+            "# %% [markdown]",
+            '"""',
+            "# # header",
+            "# content",
+            "noescape",
+            '"""',
+            "# %%",
+            "f",
+        ]
+    )
+    assert buffer.num_rows_per_cell == [3, 6, 2]
+    assert buffer.cell_types == ["header", "markdown (jupytext)", "code"]
+
+    header_cell_content = buffer.get_cell_text(0)
+    md_cell_content = buffer.get_cell_text(1, strip=True)
+    assert header_cell_content == "a\n# b\n# # c"
+    assert md_cell_content == "# # header\n# content\nnoescape"
 
 
 def test_buffer_markdown_jupytext_inject():
@@ -84,13 +104,10 @@ def test_buffer_markdown_jupytext_inject():
     assert buffer.num_rows_per_cell == [3, 4, 2]
     assert buffer.cell_types == ["markdown (jupytext)", "markdown (jupytext)", "code"]
 
-    assert buffer.buf[0] == "a"
-    assert buffer.buf[1] == "b"
-    assert buffer.buf[2] == "# c"
-
-    assert buffer.buf[4] == "# header"
-    assert buffer.buf[5] == "content"
-    assert buffer.buf[6] == "noescape"
+    header_cell_content = buffer.get_cell_text(0)
+    md_cell_content = buffer.get_cell_text(1)
+    assert header_cell_content == "a\nb\n# c"
+    assert md_cell_content == "# header\ncontent\nnoescape"
 
 
 def test_buffer_markdown_jupytext_inject_2():
@@ -111,13 +128,10 @@ def test_buffer_markdown_jupytext_inject_2():
     assert buffer.num_rows_per_cell == [3, 4, 2]
     assert buffer.cell_types == ["markdown", "markdown (jupytext)", "code"]
 
-    assert buffer.buf[0] == "a"
-    assert buffer.buf[1] == "# b"
-    assert buffer.buf[2] == "# # c"
-
-    assert buffer.buf[4] == "# header"
-    assert buffer.buf[5] == "content"
-    assert buffer.buf[6] == "noescape"
+    header_cell_content = buffer.get_cell_text(0)
+    md_cell_content = buffer.get_cell_text(1)
+    assert header_cell_content == "a\n# b\n# # c"
+    assert md_cell_content == "# header\ncontent\nnoescape"
 
 
 def test_buffer_markdown_jupytext_inject_3():
@@ -138,13 +152,10 @@ def test_buffer_markdown_jupytext_inject_3():
     assert buffer.num_rows_per_cell == [3, 4, 2]
     assert buffer.cell_types == ["code", "markdown (jupytext)", "code"]
 
-    assert buffer.buf[0] == "a"
-    assert buffer.buf[1] == "# b"
-    assert buffer.buf[2] == "# # c"
-
-    assert buffer.buf[4] == "# header"
-    assert buffer.buf[5] == "content"
-    assert buffer.buf[6] == "noescape"
+    header_cell_content = buffer.get_cell_text(0)
+    md_cell_content = buffer.get_cell_text(1)
+    assert header_cell_content == "a\n# b\n# # c"
+    assert md_cell_content == "# header\ncontent\nnoescape"
 
 
 def test_get_cell_start_row(jupbuf1):

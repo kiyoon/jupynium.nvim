@@ -4,12 +4,12 @@ from __future__ import annotations
 import argparse
 import os
 
-from ..ipynb import ipynb2jupy, load_ipynb
+from ..ipynb import ipynb2jupytext, load_ipynb
 
 
 def get_parser():
     parser = argparse.ArgumentParser(
-        description="Convert ipynb to a jupynium file (.ju.py). Deprecated: use ipynb2jupytext instead.",
+        description="Convert ipynb to a jupytext percent format (.ju.py).",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("ipynb_path", help="Path to ipynb file")
@@ -39,7 +39,7 @@ def main():
     check_args(args, parser)
 
     ipynb = load_ipynb(args.ipynb_path)
-    jupy = ipynb2jupy(ipynb)
+    jupy = ipynb2jupytext(ipynb)
 
     if args.stdout:
         for line in jupy:
