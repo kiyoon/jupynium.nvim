@@ -77,7 +77,7 @@ def test_buffer_markdown_jupytext_3():
             "f",
         ]
     )
-    assert buffer.num_rows_per_cell == [3, 4, 2]
+    assert buffer.num_rows_per_cell == [3, 6, 2]
     assert buffer.cell_types == ["header", "markdown (jupytext)", "code"]
 
     header_cell_content = buffer.get_cell_text(0)
