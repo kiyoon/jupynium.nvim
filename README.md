@@ -208,7 +208,6 @@ hi! link JupyniumMarkdownCellContent CursorLine
 hi! link JupyniumMagicCommand Keyword
 ]]
 
--- Use JupyniumCodeCellSeparatorString for %%""" and %%''' (if not set, it will use JupyniumCodeCellSeparator)
 -- Please share your favourite settings on other colour schemes, so I can add defaults.
 -- Currently, tokyonight is supported.
 ```
