@@ -225,7 +225,7 @@ def start_sync_with_filename(
     ask: bool,
     content: list[str],
     buf_filetype: str,
-    conda_env_path: str | None,
+    conda_or_venv_path: str | None,
     nvim_info: NvimInfo,
     driver,
 ):
@@ -295,7 +295,7 @@ def start_sync_with_filename(
         new_btn = driver.find_element(By.ID, "new-buttons")
         driver.execute_script("arguments[0].scrollIntoView(true);", new_btn)
         kernel_name = choose_default_kernel(
-            driver, "main", buf_filetype, conda_env_path
+            driver, "main", buf_filetype, conda_or_venv_path
         )
         if kernel_name is None:
             kernel_name = "python3"
@@ -325,7 +325,7 @@ def start_sync_with_filename(
         nvim_info.jupbufs[bufnr].full_sync_to_notebook(driver)
 
 
-def choose_default_kernel(driver, page_type: str, buf_filetype, conda_env_path):
+def choose_default_kernel(driver, page_type: str, buf_filetype, conda_or_venv_path):
     """
     Choose kernel based on buffer's filetype and conda env
     """
@@ -344,41 +344,62 @@ def choose_default_kernel(driver, page_type: str, buf_filetype, conda_env_path):
         if kern["spec"]["language"].lower() == buf_filetype.lower():
             valid_kernel_names.append(kernel_name)
 
+    def match_with_path(env_path: str) -> str:
+        """Match kernel executable path with conda/virtual environment bin directory
+
+        Args:
+            env_path (str): Path ot the conda/virtual environment directory
+
+        Returns:
+            str: Name of the kernel matching the environment, returns None if no match
+        """
+        for kernel_name in valid_kernel_names:
+            try:
+                kernel_exec_path = kernel_specs[kernel_name]["spec"]["argv"][0]
+                exec_name = os.path.basename(kernel_exec_path)
+                env_exec_path = os.path.join(env_path, "bin", exec_name)
+                if kernel_exec_path == env_exec_path:
+                    return kernel_name
+            except KeyError:
+                pass
+        return
+
     if len(valid_kernel_names) == 0:
         return
     elif len(valid_kernel_names) == 1:
         return valid_kernel_names[0]
-    else:
-        # Filter by conda env
-        if conda_env_path is None or conda_env_path == "":
-            # Remove conda kernels
-            valid_kernel_names_old = valid_kernel_names
-            valid_kernel_names = []
-            for valid_kernel_name in valid_kernel_names_old:
+    elif conda_or_venv_path is not None and conda_or_venv_path != "":
+        # Search for kernel register with current conda environment's name
+        for valid_kernel_name in valid_kernel_names:
+            try:
                 if (
-                    "conda_env_path"
-                    not in kernel_specs[valid_kernel_name]["spec"]["metadata"].keys()
+                    kernel_specs[valid_kernel_name]["spec"]["metadata"][
+                        "conda_env_path"
+                    ]
+                    == conda_or_venv_path
                 ):
-                    valid_kernel_names.append(valid_kernel_name)
-            if len(valid_kernel_names) == 0:
-                return
-            else:
-                return valid_kernel_names[0]
+                    return valid_kernel_name
+            except KeyError:
+                pass
+        # If no match based on conda_env_path metadata, try matching with executable path
+        path_match = match_with_path(conda_or_venv_path)
+        if path_match is not None:
+            return path_match
+    else:
+        # Conda env path was not defined, so remove conda kernels
+        valid_kernel_names_old = valid_kernel_names
+        valid_kernel_names = []
+        for valid_kernel_name in valid_kernel_names_old:
+            if (
+                "conda_env_path"
+                not in kernel_specs[valid_kernel_name]["spec"]["metadata"].keys()
+            ):
+                valid_kernel_names.append(valid_kernel_name)
 
+        if len(valid_kernel_names) == 0:
+            return
         else:
-            for valid_kernel_name in valid_kernel_names:
-                try:
-                    if (
-                        kernel_specs[valid_kernel_name]["spec"]["metadata"][
-                            "conda_env_path"
-                        ]
-                        == conda_env_path
-                    ):
-                        return valid_kernel_name
-                except KeyError:
-                    pass
-            else:
-                return valid_kernel_names[0]
+            return valid_kernel_names[0]
 
     return
 
@@ -397,7 +418,7 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
     event_args = event[2][1:]
 
     if event[1] == "start_sync":
-        ipynb_filename, ask, content, buf_filetype, conda_env_path = event_args
+        ipynb_filename, ask, content, buf_filetype, conda_or_venv_path = event_args
         ipynb_filename: str
         ipynb_filename = ipynb_filename.strip()
 
@@ -411,7 +432,7 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
                 ask,
                 content,
                 buf_filetype,
-                conda_env_path,
+                conda_or_venv_path,
                 nvim_info,
                 driver,
             )
@@ -432,7 +453,7 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
                 ## In the future we could activate by doing the following
                 #
                 # kernel_name = choose_default_kernel(
-                #     driver, "notebook", buf_filetype, conda_env_path
+                #     driver, "notebook", buf_filetype, conda_or_venv_path
                 # )
                 # if kernel_name is not None:
                 #     driver.execute_script(
