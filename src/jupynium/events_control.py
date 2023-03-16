@@ -344,11 +344,11 @@ def choose_default_kernel(driver, page_type: str, buf_filetype, conda_or_venv_pa
         if kern["spec"]["language"].lower() == buf_filetype.lower():
             valid_kernel_names.append(kernel_name)
 
-    def match_with_path(env_path: str) -> str:
+    def match_with_path(env_path: str) -> str | None:
         """Match kernel executable path with conda/virtual environment bin directory
 
         Args:
-            env_path (str): Path ot the conda/virtual environment directory
+            env_path (str): Path of the conda/virtual environment directory
 
         Returns:
             str: Name of the kernel matching the environment, returns None if no match
@@ -360,7 +360,7 @@ def choose_default_kernel(driver, page_type: str, buf_filetype, conda_or_venv_pa
                 env_exec_path = os.path.join(env_path, "bin", exec_name)
                 if kernel_exec_path == env_exec_path:
                     return kernel_name
-            except KeyError:
+            except (KeyError, IndexError):
                 pass
         return
 
