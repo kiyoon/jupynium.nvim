@@ -9,10 +9,13 @@ def load_ipynb(ipynb_path):
     return ipynb
 
 
-def read_ipynb_texts(ipynb):
+def read_ipynb_texts(ipynb, code_only=False):
     texts = []
     cell_types = []
     for cell in ipynb["cells"]:
+        if code_only:
+            if cell["cell_type"] != "code":
+                continue
         cell_types.append(cell["cell_type"])
         texts.append("".join(cell["source"]))
     return cell_types, texts
@@ -95,8 +98,8 @@ def ipynb2jupy(ipynb):
         return cells_to_jupytext(cell_types, texts)
 
 
-def ipynb2jupytext(ipynb):
-    cell_types, texts = read_ipynb_texts(ipynb)
+def ipynb2jupytext(ipynb, code_only=False):
+    cell_types, texts = read_ipynb_texts(ipynb, code_only=code_only)
     language = ipynb_language(ipynb)
     if language is None or language == "python":
         python = True
