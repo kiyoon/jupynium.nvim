@@ -21,6 +21,9 @@ def get_parser():
     parser.add_argument(
         "-y", "--yes", action="store_true", help="Do not ask for confirmation"
     )
+    parser.add_argument(
+        "-c", "--code_only", action="store_true", help="Only convert code cells"
+    )
     parser.add_argument("-s", "--stdout", action="store_true", help="Print to stdout")
     return parser
 
@@ -39,7 +42,7 @@ def main():
     check_args(args, parser)
 
     ipynb = load_ipynb(args.ipynb_path)
-    jupy = ipynb2jupytext(ipynb)
+    jupy = ipynb2jupytext(ipynb, code_only=args.code_only)
 
     if args.stdout:
         for line in jupy:
