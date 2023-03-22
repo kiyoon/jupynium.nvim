@@ -288,7 +288,7 @@ There are currently 2 ways of converting an existing `.ipynb` file to a Jupynium
 **Option 1**: Use an included command line tool:
 
 ```bash
-ipynb2jupytext [-h] [--stdout] file.ipynb [file.ju.py]
+ipynb2jupytext [-h] [--stdout] [--code_only] file.ipynb [file.ju.py]
 ```
 
 If you're already familiar with Jupytext, feel free to use it instead.
