@@ -96,6 +96,13 @@ M.default_opts = {
   -- Dim all cells except the current one
   -- Related command :JupyniumShortsightedToggle
   shortsighted = false,
+
+  -- Configure floating window options
+  floating_win_opts = {
+    hover = {
+      border = "none",
+    },
+  },
 }
 
 return M

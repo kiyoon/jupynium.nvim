@@ -196,6 +196,13 @@ require("jupynium").setup({
   -- Dim all cells except the current one
   -- Related command :JupyniumShortsightedToggle
   shortsighted = false,
+
+  -- Configure floating window options
+  floating_win_opts = {
+    hover = {
+      border = "none",
+    }
+  }
 })
 
 -- You can link highlighting groups.
@@ -350,7 +357,7 @@ Any code below this line (and before the next separator) will be the content of 
   - `#%time`
 
 **Markdown cell:**
-Any code below this line will be markdown cell content.  
+Any code below this line will be markdown cell content.
 
 - `# %% [md]`
 - `# %% [markdown]`
@@ -379,7 +386,6 @@ In other languages like R, you'll need to comment every line.
   - Contents before the first cell are ignored, so use it as a heading (shebang etc.)
 - If there is no cell, it works as a markdown preview mode.
   - It will still open ipynb file but will one have one markdown cell.
-
 
 ## ⌨️ Keybindings
 
