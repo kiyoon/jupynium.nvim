@@ -102,7 +102,7 @@ M.default_opts = {
   kernel_hover = {
     floating_win_opts = {
       max_width = 84,
-      border = "rounded",
+      border = "none",
     },
   },
 }
