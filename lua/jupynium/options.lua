@@ -96,6 +96,15 @@ M.default_opts = {
   -- Dim all cells except the current one
   -- Related command :JupyniumShortsightedToggle
   shortsighted = false,
+
+  -- Configure floating window options
+  -- Related command :JupyniumKernelHover
+  kernel_hover = {
+    floating_win_opts = {
+      max_width = 84,
+      border = "none",
+    },
+  },
 }
 
 return M
