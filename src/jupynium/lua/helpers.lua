@@ -611,27 +611,42 @@ function Jupynium_kernel_hover(bufnr)
   elseif inspect.found == false then
     out = "No information from kernel"
   elseif inspect.found == true then
-    -- Strip ANSI Escape code: https://stackoverflow.com/a/55324681
-    -- The above regexes do the following:
-    -- 1. \x1b is the escape character
-    -- 2. %[%d+; is the ANSI escape code for a digit color
-    -- and so on
-    out = inspect.data["text/plain"]
-      :gsub("\x1b%[%d+;%d+;%d+;%d+;%d+m", "")
-      :gsub("\x1b%[%d+;%d+;%d+;%d+m", "")
-      :gsub("\x1b%[%d+;%d+;%d+m", "")
-      :gsub("\x1b%[%d+;%d+m", "")
-      :gsub("\x1b%[%d+m", "")
-    -- The following regex convert ansi code for tab
-    -- out = out:gsub("\x1b%[H", "\t")
+    local sections = vim.split(inspect.data["text/plain"], "\x1b%[0;31m")
+    for _, section in ipairs(sections) do
+      section = section
+        -- Strip ANSI Escape code: https://stackoverflow.com/a/55324681
+        -- \x1b is the escape character
+        -- %[%d+; is the ANSI escape code for a digit color
+        :gsub(
+          "\x1b%[%d+;%d+;%d+;%d+;%d+m",
+          ""
+        )
+        :gsub("\x1b%[%d+;%d+;%d+;%d+m", "")
+        :gsub("\x1b%[%d+;%d+;%d+m", "")
+        :gsub("\x1b%[%d+;%d+m", "")
+        :gsub("\x1b%[%d+m", "")
+        :gsub("\x1b%[H", "\t")
+        -- Groups: name, 0 or more new line, content till end
+        -- TODO: Fix for non-python kernel
+        :gsub(
+          "^(Init signature:)(\n*)(.-)$",
+          "%1\n```python\n%3```"
+        )
+        :gsub("^(Signature:)(\n*)(.-)$", "%1\n```python\n%3```")
+        :gsub("^(String form:)(\n*)(.-)$", "%1\n```python\n%3```")
+        :gsub("^(Docstring:)(\n*)(.-)$", "%1\n```rst   \n%3```")
+        :gsub("^(Class docstring:)(\n*)(.-)$", "%1\n```rst   \n%3```")
+        :gsub("^(.-):", "_%1_:") -- Surround header with "_" to italicize
+      if section:match "%S" ~= nil and section:match "%S" ~= "" then
+        -- Only add non-empty section
+        out = out .. section
+      end
+    end
   end
 
-  local lines = {}
-  for line in vim.gsplit(out, "\n") do
-    table.insert(lines, line)
-  end
-
-  vim.lsp.util.open_floating_preview(lines, "markdown", {
+  local markdown_lines = vim.lsp.util.convert_input_to_markdown_lines(out)
+  markdown_lines = vim.lsp.util.trim_empty_lines(markdown_lines)
+  vim.lsp.util.open_floating_preview(markdown_lines, "markdown", {
     max_width = 84,
   })
 end
