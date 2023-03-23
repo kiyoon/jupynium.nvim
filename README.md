@@ -199,8 +199,9 @@ require("jupynium").setup({
 
   -- Configure floating window options
   -- Related command :JupyniumKernelHover
-  floating_win_opts = {
-    hover = {
+  kernel_hover = {
+    floating_win_opts = {
+      max_width = 84,
       border = "none",
     }
   }

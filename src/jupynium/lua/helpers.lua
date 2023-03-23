@@ -650,7 +650,7 @@ function Jupynium_kernel_hover(bufnr)
   local opts = { max_width = 84 }
   local ok, options = pcall(require, "jupynium.options")
   if ok then
-    opts = vim.tbl_extend("force", opts, options.opts.floating_win_opts.hover)
+    opts = vim.tbl_extend("force", opts, options.opts.kernel_hover.floating_win_opts)
   end
 
   vim.lsp.util.open_floating_preview(markdown_lines, "markdown", opts)
