@@ -203,8 +203,8 @@ require("jupynium").setup({
     floating_win_opts = {
       max_width = 84,
       border = "none",
-    }
-  }
+    },
+  },
 })
 
 -- You can link highlighting groups.
