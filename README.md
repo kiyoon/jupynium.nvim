@@ -198,6 +198,7 @@ require("jupynium").setup({
   shortsighted = false,
 
   -- Configure floating window options
+  -- Related command :JupyniumKernelHover
   floating_win_opts = {
     hover = {
       border = "none",
