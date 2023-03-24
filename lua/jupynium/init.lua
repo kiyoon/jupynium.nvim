@@ -52,6 +52,11 @@ function M.default_keybindings(augroup)
 end
 
 function M.setup(opts)
+  -- NOTE: This may be called twice if you lazy load the plugin
+  -- The first time will be with the default opts.
+  -- You shouldn't assume that the setup is final. Write it so that it is reversible and can be called multiple times.
+  -- e.g. when you set keymaps / autocmds, make sure to clear them.
+
   options.opts = vim.tbl_deep_extend("force", {}, options.default_opts, opts)
 
   server.add_commands()
@@ -64,18 +69,6 @@ function M.setup(opts)
     or options.opts.auto_start_sync.enable
   then
     server.register_autostart_autocmds(augroup, options.opts)
-  end
-
-  -- Check if we need to set up keymaps in case plugin is lazy loaded like event = "BufEnter *.ju.*"
-  local filename = vim.fn.expand "%"
-  local buf_id = vim.api.nvim_get_current_buf()
-  if utils.list_wildcard_match(filename, options.opts.jupynium_file_pattern) then
-    if options.opts.use_default_keybindings then
-      M.set_default_keymaps(buf_id)
-    end
-    if options.opts.textobjects.use_default_keybindings then
-      textobj.set_default_keymaps(buf_id)
-    end
   end
 
   if options.opts.use_default_keybindings then
