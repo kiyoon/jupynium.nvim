@@ -4,49 +4,48 @@ local textobj = require "jupynium.textobj"
 local highlighter = require "jupynium.highlighter"
 local server = require "jupynium.server"
 local options = require "jupynium.options"
+local utils = require "jupynium.utils"
+
+function M.set_default_keymaps(buf_id)
+  vim.keymap.set(
+    { "n", "x" },
+    "<space>x",
+    "<cmd>JupyniumExecuteSelectedCells<CR>",
+    { buffer = buf_id, desc = "Jupynium execute selected cells" }
+  )
+  vim.keymap.set(
+    { "n", "x" },
+    "<space>c",
+    "<cmd>JupyniumClearSelectedCellsOutputs<CR>",
+    { buffer = buf_id, desc = "Jupynium clear selected cells" }
+  )
+  vim.keymap.set(
+    { "n" },
+    "<space>K",
+    "<cmd>JupyniumKernelHover<cr>",
+    { buffer = buf_id, desc = "Jupynium hover (inspect a variable)" }
+  )
+  vim.keymap.set(
+    { "n", "x" },
+    "<space>js",
+    "<cmd>JupyniumScrollToCell<cr>",
+    { buffer = buf_id, desc = "Jupynium scroll to cell" }
+  )
+  vim.keymap.set(
+    { "n", "x" },
+    "<space>jo",
+    "<cmd>JupyniumToggleSelectedCellsOutputsScroll<cr>",
+    { buffer = buf_id, desc = "Jupynium toggle selected cell output scroll" }
+  )
+  vim.keymap.set("", "<PageUp>", "<cmd>JupyniumScrollUp<cr>", { buffer = buf_id, desc = "Jupynium scroll up" })
+  vim.keymap.set("", "<PageDown>", "<cmd>JupyniumScrollDown<cr>", { buffer = buf_id, desc = "Jupynium scroll down" })
+end
 
 function M.default_keybindings(augroup)
   vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
     pattern = options.opts.jupynium_file_pattern,
-    callback = function()
-      local buf_id = vim.api.nvim_get_current_buf()
-      vim.keymap.set(
-        { "n", "x" },
-        "<space>x",
-        "<cmd>JupyniumExecuteSelectedCells<CR>",
-        { buffer = buf_id, desc = "Jupynium execute selected cells" }
-      )
-      vim.keymap.set(
-        { "n", "x" },
-        "<space>c",
-        "<cmd>JupyniumClearSelectedCellsOutputs<CR>",
-        { buffer = buf_id, desc = "Jupynium clear selected cells" }
-      )
-      vim.keymap.set(
-        { "n" },
-        "<space>K",
-        "<cmd>JupyniumKernelHover<cr>",
-        { buffer = buf_id, desc = "Jupynium hover (inspect a variable)" }
-      )
-      vim.keymap.set(
-        { "n", "x" },
-        "<space>js",
-        "<cmd>JupyniumScrollToCell<cr>",
-        { buffer = buf_id, desc = "Jupynium scroll to cell" }
-      )
-      vim.keymap.set(
-        { "n", "x" },
-        "<space>jo",
-        "<cmd>JupyniumToggleSelectedCellsOutputsScroll<cr>",
-        { buffer = buf_id, desc = "Jupynium toggle selected cell output scroll" }
-      )
-      vim.keymap.set("", "<PageUp>", "<cmd>JupyniumScrollUp<cr>", { buffer = buf_id, desc = "Jupynium scroll up" })
-      vim.keymap.set(
-        "",
-        "<PageDown>",
-        "<cmd>JupyniumScrollDown<cr>",
-        { buffer = buf_id, desc = "Jupynium scroll down" }
-      )
+    callback = function(event)
+      M.set_default_keymaps(event.buf)
     end,
     group = augroup,
   })
@@ -65,6 +64,18 @@ function M.setup(opts)
     or options.opts.auto_start_sync.enable
   then
     server.register_autostart_autocmds(augroup, options.opts)
+  end
+
+  -- Check if we need to set up keymaps in case plugin is lazy loaded like event = "BufWinEnter *.ju.*"
+  local filename = vim.fn.expand "%"
+  local buf_id = vim.api.nvim_get_current_buf()
+  if utils.list_wildcard_match(filename, options.opts.jupynium_file_pattern) then
+    if options.opts.use_default_keybindings then
+      M.set_default_keymaps(buf_id)
+    end
+    if options.opts.textobjects.use_default_keybindings then
+      textobj.set_default_keymaps(buf_id)
+    end
   end
 
   if options.opts.use_default_keybindings then
