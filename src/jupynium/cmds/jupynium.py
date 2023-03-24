@@ -453,7 +453,7 @@ def main():
             args.firefox_profiles_ini_path, args.firefox_profile_name
         ) as driver:
             # Initial number of windows when launching browser
-            ini_num_windows = len(driver.window_handles)
+            init_num_windows = len(driver.window_handles)
             try:
                 driver.get(args.notebook_URL)
             except WebDriverException:
@@ -476,7 +476,7 @@ def main():
             # - Initial number of windows, for regular case where jupynium handles initally focused tab
             # - Initial number of windows + 1, if an extension automatically opens a new tab
             # Ref: https://github.com/kiyoon/jupynium.nvim/issues/59
-            accept_num_windows = [ini_num_windows, ini_num_windows + 1]
+            accept_num_windows = [init_num_windows, init_num_windows + 1]
             driver_wait.until(number_of_windows_be_list(accept_num_windows))
             sele.wait_until_loaded(driver)
 

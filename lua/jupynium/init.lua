@@ -66,7 +66,7 @@ function M.setup(opts)
     server.register_autostart_autocmds(augroup, options.opts)
   end
 
-  -- Check if we need to set up keymaps in case plugin is lazy loaded like event = "BufWinEnter *.ju.*"
+  -- Check if we need to set up keymaps in case plugin is lazy loaded like event = "BufEnter *.ju.*"
   local filename = vim.fn.expand "%"
   local buf_id = vim.api.nvim_get_current_buf()
   if utils.list_wildcard_match(filename, options.opts.jupynium_file_pattern) then
@@ -79,6 +79,7 @@ function M.setup(opts)
   end
 
   if options.opts.use_default_keybindings then
+    -- Register autocmd for setting up keymaps
     M.default_keybindings(augroup)
   end
 
@@ -91,6 +92,7 @@ function M.setup(opts)
   vim.g.jupynium_autoscroll_cell_top_margin_percent = options.opts.autoscroll.cell.top_margin_percent
 
   if options.opts.textobjects.use_default_keybindings then
+    -- Register autocmd for setting up keymaps
     textobj.default_keybindings(augroup)
   end
 
