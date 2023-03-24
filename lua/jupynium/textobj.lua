@@ -111,54 +111,57 @@ M.select_cell = function(include_current_separator, include_next_separator)
   select_current_cell(nil, include_current_separator, include_next_separator)
 end
 
+M.set_default_keymaps = function(buf_id)
+  vim.keymap.set(
+    { "n", "x", "o" },
+    "[j",
+    "<cmd>lua require'jupynium.textobj'.goto_previous_cell_separator()<cr>",
+    { buffer = buf_id, desc = "Go to previous Jupynium cell" }
+  )
+  vim.keymap.set(
+    { "n", "x", "o" },
+    "]j",
+    "<cmd>lua require'jupynium.textobj'.goto_next_cell_separator()<cr>",
+    { buffer = buf_id, desc = "Go to next Jupynium cell" }
+  )
+  vim.keymap.set(
+    { "n", "x", "o" },
+    "<space>jj",
+    "<cmd>lua require'jupynium.textobj'.goto_current_cell_separator()<cr>",
+    { buffer = buf_id, desc = "Go to current Jupynium cell" }
+  )
+  vim.keymap.set(
+    { "x", "o" },
+    "aj",
+    "<cmd>lua require'jupynium.textobj'.select_cell(true, false)<cr>",
+    { buffer = buf_id, desc = "Select around Jupynium cell" }
+  )
+  vim.keymap.set(
+    { "x", "o" },
+    "ij",
+    "<cmd>lua require'jupynium.textobj'.select_cell(false, false)<cr>",
+    { buffer = buf_id, desc = "Select inside Jupynium cell" }
+  )
+  vim.keymap.set(
+    { "x", "o" },
+    "aJ",
+    "<cmd>lua require'jupynium.textobj'.select_cell(true, true)<cr>",
+    { buffer = buf_id, desc = "Select around Jupynium cell (include next cell separator)" }
+  )
+  vim.keymap.set(
+    { "x", "o" },
+    "iJ",
+    "<cmd>lua require'jupynium.textobj'.select_cell(false, true)<cr>",
+    { buffer = buf_id, desc = "Select inside Jupynium cell (include next cell separator)" }
+  )
+end
+
 M.default_keybindings = function(augroup)
   -- Text objects
   vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
     pattern = options.opts.jupynium_file_pattern,
-    callback = function()
-      local buf_id = vim.api.nvim_get_current_buf()
-      vim.keymap.set(
-        { "n", "x", "o" },
-        "[j",
-        "<cmd>lua require'jupynium.textobj'.goto_previous_cell_separator()<cr>",
-        { buffer = buf_id, desc = "Go to previous Jupynium cell" }
-      )
-      vim.keymap.set(
-        { "n", "x", "o" },
-        "]j",
-        "<cmd>lua require'jupynium.textobj'.goto_next_cell_separator()<cr>",
-        { buffer = buf_id, desc = "Go to next Jupynium cell" }
-      )
-      vim.keymap.set(
-        { "n", "x", "o" },
-        "<space>jj",
-        "<cmd>lua require'jupynium.textobj'.goto_current_cell_separator()<cr>",
-        { buffer = buf_id, desc = "Go to current Jupynium cell" }
-      )
-      vim.keymap.set(
-        { "x", "o" },
-        "aj",
-        "<cmd>lua require'jupynium.textobj'.select_cell(true, false)<cr>",
-        { buffer = buf_id, desc = "Select around Jupynium cell" }
-      )
-      vim.keymap.set(
-        { "x", "o" },
-        "ij",
-        "<cmd>lua require'jupynium.textobj'.select_cell(false, false)<cr>",
-        { buffer = buf_id, desc = "Select inside Jupynium cell" }
-      )
-      vim.keymap.set(
-        { "x", "o" },
-        "aJ",
-        "<cmd>lua require'jupynium.textobj'.select_cell(true, true)<cr>",
-        { buffer = buf_id, desc = "Select around Jupynium cell (include next cell separator)" }
-      )
-      vim.keymap.set(
-        { "x", "o" },
-        "iJ",
-        "<cmd>lua require'jupynium.textobj'.select_cell(false, true)<cr>",
-        { buffer = buf_id, desc = "Select inside Jupynium cell (include next cell separator)" }
-      )
+    callback = function(event)
+      M.set_default_keymaps(event.buf)
     end,
     group = augroup,
   })
