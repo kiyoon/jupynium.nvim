@@ -36,7 +36,8 @@ The Jupynium server will receive events from Neovim, keep the copy of the buffer
   - May already be installed with Firefox. Check `geckodriver -V`
 - 🐍 Python >= 3.7
   - Supported Python installation methods include system-level and [Conda](https://docs.conda.io/en/latest/miniconda.html)
-- 📔 Jupyter Notebook >= 6.2
+- 📔 Jupyter Notebook >= 6.2, < 7
+  - `pip install "notebook>=6.4,<7"`
   - Jupyter Lab is not supported
 
 ### Install Python
