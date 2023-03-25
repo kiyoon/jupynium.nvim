@@ -544,3 +544,6 @@ You probably would have accidentally modified directly from the notebook.
 ## 📰 Fun Facts
 
 - I spent my whole Christmas and New Year holidays (and more) just making this plugin.
+- This is the star history chart with relevant plugins. Thank you for helping it grow!
+
+[![Star History Chart](https://api.star-history.com/svg?repos=kiyoon/jupynium.nvim,untitled-ai/jupyter_ascending,untitled-ai/jupyter_ascending.vim,dccsillag/magma-nvim,luk400/vim-jukit&type=Date)](https://star-history.com/#kiyoon/jupynium.nvim&untitled-ai/jupyter_ascending&untitled-ai/jupyter_ascending.vim&dccsillag/magma-nvim&luk400/vim-jukit&Date)
