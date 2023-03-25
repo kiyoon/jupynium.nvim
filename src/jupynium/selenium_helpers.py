@@ -18,6 +18,26 @@ def wait_until_notebook_loaded(driver, timeout=10):
         logger.exception("Timed out waiting for page to load")
         driver.quit()
 
+    try:
+        WebDriverWait(driver, timeout).until(
+            # Sometimes if kernel is null, it will hang, so we check that.
+            lambda d: d.execute_script("return Jupyter.notebook.kernel == null")
+            is False
+        )
+    except TimeoutException:
+        logger.exception("Timed out waiting for kernel to load (null)")
+        driver.quit()
+
+    try:
+        WebDriverWait(driver, timeout).until(
+            # Sometimes if kernel is null, it will hang, so we check that.
+            lambda d: d.execute_script("return Jupyter.notebook.kernel.is_connected()")
+            is True
+        )
+    except TimeoutException:
+        logger.exception("Timed out waiting for kernel to load")
+        driver.quit()
+
 
 def wait_until_notebook_list_loaded(driver, timeout=10):
     """Wait until the Jupyter Notebook home page (list of files) is loaded."""
