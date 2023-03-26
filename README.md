@@ -354,9 +354,7 @@ Any code below this line (and before the next separator) will be the content of 
 **Magic commands**
 
 - `# %time` becomes `%time` in notebook.
-- If you want to really comment out magic commands, make the line not start with `# %`. For example,
-  - `## %time`
-  - `#%time`
+- If you want to really comment out magic commands, comment it two times like `## %time`.
 
 **Markdown cell:**
 Any code below this line will be markdown cell content.
