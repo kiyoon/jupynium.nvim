@@ -688,3 +688,36 @@ function Jupynium_kernel_complete_async(bufnr, code_line, col, callback)
 
   Jupynium_rpcnotify("kernel_complete_async", bufnr, true, code_line, col, callback_id)
 end
+
+function Jupynium_connect_kernel(bufnr, hostname)
+  if bufnr == nil or bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
+  if Jupynium_syncing_bufs[bufnr] == nil then
+    Jupynium_notify.error { [[Cannot get kernel list without synchronising.]], [[Run `:JupyniumStartSync`]] }
+    return
+  end
+  local kernel_id = Jupynium_rpcrequest("kernel_connect_info", bufnr, true)
+  local cmd = "jupyter console --existing " .. kernel_id
+  if hostname ~= "" then
+    cmd = "ssh " .. hostname .. " -t " .. cmd
+  end
+  local _ipython = nil
+  if not _ipython then
+    _ipython = require("toggleterm.terminal").Terminal:new {
+      cmd = cmd,
+      direction = "horizontal",
+      close_on_exit = true,
+      hidden = true,
+    }
+  end
+  _ipython:toggle()
+  Jupynium_notify.info { "Connect to kernel " .. kernel_id }
+  print(kernel_id)
+end
+
+function Jupynium_connect_kernel_cmd(args)
+  local hostname = args.args
+  local buf = vim.api.nvim_get_current_buf()
+  Jupynium_connect_kernel(buf, hostname)
+end
