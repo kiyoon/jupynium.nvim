@@ -693,31 +693,37 @@ function Jupynium_connect_kernel(bufnr, hostname)
   if bufnr == nil or bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()
   end
-  if Jupynium_syncing_bufs[bufnr] == nil then
-    Jupynium_notify.error { [[Cannot get kernel list without synchronising.]], [[Run `:JupyniumStartSync`]] }
-    return
+
+  local kernel_id = nil
+  if Jupynium_syncing_bufs[bufnr] ~= nil then
+    kernel_id = Jupynium_rpcrequest("kernel_connect_info", bufnr, true)
   end
-  local kernel_id = Jupynium_rpcrequest("kernel_connect_info", bufnr, true)
-  local cmd = "jupyter console --existing " .. kernel_id
+  if kernel_id == nil then
+    kernel_id = ""
+  end
+  local jupyter_command = "jupyter"
+  local ok, options = pcall(require, "jupynium.options")
+  if ok then
+    if type(options.opts.jupyter_command) == "string" then
+      jupyter_command = options.opts.jupyter_command
+    elseif type(options.opts.jupyter_command) == "table" then
+      jupyter_command = table.concat(options.opts.jupyter_command, " ")
+    else
+      Jupynium_notify.error { "Invalid jupyter_command type." }
+    end
+  end
   if hostname ~= "" then
-    cmd = "ssh " .. hostname .. " -t " .. cmd
+    jupyter_command = "ssh " .. hostname .. " -t " .. jupyter_command
   end
-  local _ipython = nil
-  if not _ipython then
-    _ipython = require("toggleterm.terminal").Terminal:new {
-      cmd = cmd,
-      direction = "horizontal",
-      close_on_exit = true,
-      hidden = true,
-    }
-  end
-  _ipython:toggle()
-  Jupynium_notify.info { "Connect to kernel " .. kernel_id }
-  print(kernel_id)
+  Jupynium_notify.info { "Connecting to kernel " .. kernel_id }
+  local cmd = jupyter_command .. " console --existing " .. kernel_id
+  return cmd
 end
 
 function Jupynium_connect_kernel_cmd(args)
   local hostname = args.args
   local buf = vim.api.nvim_get_current_buf()
-  Jupynium_connect_kernel(buf, hostname)
+  local cmd = Jupynium_connect_kernel(buf, hostname)
+  vim.cmd([[split | terminal ]] .. cmd)
+  vim.cmd [[normal! G]]
 end
