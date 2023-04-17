@@ -689,7 +689,7 @@ function Jupynium_kernel_complete_async(bufnr, code_line, col, callback)
   Jupynium_rpcnotify("kernel_complete_async", bufnr, true, code_line, col, callback_id)
 end
 
-function Jupynium_connect_kernel(bufnr, hostname)
+function Jupynium_get_kernel_connect_shcmd(bufnr, hostname)
   if bufnr == nil or bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()
   end
@@ -720,10 +720,10 @@ function Jupynium_connect_kernel(bufnr, hostname)
   return cmd
 end
 
-function Jupynium_connect_kernel_cmd(args)
+function Jupynium_kernel_connect_cmd(args)
   local hostname = args.args
   local buf = vim.api.nvim_get_current_buf()
-  local cmd = Jupynium_connect_kernel(buf, hostname)
+  local cmd = Jupynium_get_kernel_connect_shcmd(buf, hostname)
   vim.cmd([[split | terminal ]] .. cmd)
   vim.cmd [[normal! G]]
 end
