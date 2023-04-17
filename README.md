@@ -38,6 +38,11 @@ The Jupynium server will receive events from Neovim, keep the copy of the buffer
   - Supported Python installation methods include system-level and [Conda](https://docs.conda.io/en/latest/miniconda.html)
 - 📔 Jupyter Notebook >= 6.2
   - Jupyter Lab is not supported
+  - 
+    ```sh
+    # jupyter-console is optional and used for `:JupyniumKernelOpenInTerminal`
+    pip install notebook jupyter-console
+    ```
 
 ### Install Python
 
@@ -442,6 +447,7 @@ If you want custom keymaps, add `textobjects = { use_default_keybindings = false
 :JupyniumKernelInterrupt
 :JupyniumKernelSelect
 :JupyniumKernelHover      " See value like LSP hover
+:JupyniumKernelOpenInTerminal [hostname] " Connect to kernel of synchronized notebook
 
 " Highlight
 :JupyniumShortsightedToggle
