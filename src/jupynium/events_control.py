@@ -522,6 +522,12 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
         event[3].send(ret_obj)
         return True, None
 
+    elif event[1] == "kernel_connect_info":
+        driver.switch_to.window(nvim_info.window_handles[bufnr])
+        kernel_id = driver.execute_script("return Jupyter.notebook.kernel.id")
+        event[3].send(kernel_id)
+        return True, None
+
     if event[3] is not None:
         event[3].send("OK")
 
