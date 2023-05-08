@@ -617,10 +617,7 @@ function Jupynium_kernel_hover(bufnr)
         -- Strip ANSI Escape code: https://stackoverflow.com/a/55324681
         -- \x1b is the escape character
         -- %[%d+; is the ANSI escape code for a digit color
-        :gsub(
-          "\x1b%[%d+;%d+;%d+;%d+;%d+m",
-          ""
-        )
+        :gsub("\x1b%[%d+;%d+;%d+;%d+;%d+m", "")
         :gsub("\x1b%[%d+;%d+;%d+;%d+m", "")
         :gsub("\x1b%[%d+;%d+;%d+m", "")
         :gsub("\x1b%[%d+;%d+m", "")
@@ -628,15 +625,16 @@ function Jupynium_kernel_hover(bufnr)
         :gsub("\x1b%[H", "\t")
         -- Groups: name, 0 or more new line, content till end
         -- TODO: Fix for non-python kernel
-        :gsub(
-          "^(Init signature:)(\n*)(.-)$",
-          "%1\n```python\n%3```"
-        )
-        :gsub("^(Signature:)(\n*)(.-)$", "%1\n```python\n%3```")
-        :gsub("^(String form:)(\n*)(.-)$", "%1\n```python\n%3```")
-        :gsub("^(Docstring:)(\n*)(.-)$", "%1\n```rst   \n%3```")
-        :gsub("^(Class docstring:)(\n*)(.-)$", "%1\n```rst   \n%3```")
-        :gsub("^(.-):", "_%1_:") -- Surround header with "_" to italicize
+        :gsub("^(Call signature):(%s*)(.-)\n$", "```python\n%3 # %1\n```")
+        :gsub("^(Init signature):(%s*)(.-)\n$", "```python\n%3 # %1\n```")
+        :gsub("^(Signature):(%s*)(.-)\n$",      "```python\n%3 # %1\n```")
+        :gsub("^(String form):(%s*)(.-)\n$",    "```python\n%3 # %1\n```")
+        :gsub("^(Docstring):(%s*)(.-)$",        "\n---\n```rst\n%3\n```")
+        :gsub("^(Class docstring):(%s*)(.-)$",  "\n---\n```rst\n%3\n```")
+        :gsub("^(File):(%s*)(.-)\n$",           "*%1*: `%3`\n")
+        :gsub("^(Type):(%s*)(.-)\n$",           "*%1*: %3\n")
+        :gsub("^(Length):(%s*)(.-)\n$",         "*%1*: %3\n")
+        :gsub("^(Subclasses):(%s*)(.-)\n$",     "*%1*: %3\n")
       if section:match "%S" ~= nil and section:match "%S" ~= "" then
         -- Only add non-empty section
         out = out .. section
