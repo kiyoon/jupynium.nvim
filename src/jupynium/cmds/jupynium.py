@@ -24,6 +24,8 @@ from git.exc import InvalidGitRepositoryError, NoSuchPathError
 from persistqueue.exceptions import Empty
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
@@ -89,11 +91,14 @@ def webdriver_firefox(
 
     logger.info(f"Using firefox profile: {profile_path}")
 
-    profile = webdriver.FirefoxProfile(profile_path)
-    profile.set_preference("browser.link.open_newwindow", 3)
-    profile.set_preference("browser.link.open_newwindow.restriction", 0)
+    options = Options()
+    options.profile = webdriver.FirefoxProfile(profile_path)
+    options.set_preference("browser.link.open_newwindow", 3)
+    options.set_preference("browser.link.open_newwindow.restriction", 0)
     # profile.setAlwaysLoadNoFocusLib(True);
-    return webdriver.Firefox(profile, service_log_path=os.path.devnull)
+
+    service = Service(log_path=os.path.devnull)
+    return webdriver.Firefox(options=options, service=service)
 
 
 # def webdriver_safari():
