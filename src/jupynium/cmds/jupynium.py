@@ -12,6 +12,7 @@ import sys
 import tempfile
 import time
 import traceback
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -415,9 +416,33 @@ def fallback_open_notebook_server(
 
 # flake8: noqa: C901
 def main():
-    coloredlogs.install(
-        fmt="%(name)s: %(lineno)4d - %(levelname)s - %(message)s", level=logging.INFO
+    # Initialise with NOTSET level and null device, and add stream handler separately.
+    # This way, the root logging level is NOTSET (log all), and we can customise each handler's behaviour.
+    # If we set the level during the initialisation, it will affect to ALL streams, so the file stream cannot be more verbose (lower level) than the console stream.
+    coloredlogs.install(fmt="", level=logging.NOTSET, stream=open(os.devnull, "w"))
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_format = coloredlogs.ColoredFormatter(
+        "%(name)s: %(lineno)4d - %(levelname)s - %(message)s"
     )
+    console_handler.setFormatter(console_format)
+
+    tmp_log_dir = os.path.join(tempfile.gettempdir(), "jupynium", "logs")
+    os.makedirs(tmp_log_dir, exist_ok=True)
+    log_path = os.path.join(tmp_log_dir, f"{datetime.now():%Y-%m-%d_%H-%M-%S}.log")
+
+    f_handler = logging.FileHandler(log_path)
+    f_handler.setLevel(logging.DEBUG)
+    f_format = logging.Formatter(
+        "%(asctime)s - %(name)s: %(lineno)4d - %(levelname)s - %(message)s"
+    )
+    f_handler.setFormatter(f_format)
+
+    # Add handlers to the logger
+    root_logger = logging.getLogger()
+    root_logger.addHandler(console_handler)
+    root_logger.addHandler(f_handler)
 
     parser = get_parser()
     args = parser.parse_args()
