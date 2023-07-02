@@ -16,7 +16,7 @@ function M.line_type(line)
     return "cell separator: markdown (string)"
   elseif utils.string_begins_with(line, "# %% [md]") or utils.string_begins_with(line, "# %% [markdown]") then
     return "cell separator: markdown (jupytext)"
-  elseif utils.string_begins_with(line, "# %%") then
+  elseif vim.fn.trim(line) == "# %%" then
     return "cell separator: code"
   elseif utils.string_begins_with(line, '%%"""') or utils.string_begins_with(line, "%%'''") then
     return "cell separator: code (string)"

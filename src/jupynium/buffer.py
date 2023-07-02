@@ -91,7 +91,7 @@ class JupyniumBuffer:
                 num_rows_this_cell = 1
                 cell_types.append("markdown (jupytext)")
             elif (
-                line.startswith("# %%")
+                line.strip() == "# %%"
                 or line.startswith('%%"""')
                 or line.startswith("%%'''")
             ):
