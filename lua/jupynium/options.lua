@@ -6,7 +6,7 @@ M.default_opts = {
   -- python_host = { "conda", "run", "--no-capture-output", "-n", "jupynium", "python" },
   python_host = vim.g.python3_host_prog or "python3",
 
-  default_notebook_URL = "localhost:8888",
+  default_notebook_URL = "localhost:8888/nbclassic",
 
   -- Write jupyter command but without "notebook"
   -- When you call :JupyniumStartAndAttachToServer and no notebook is open,
@@ -18,7 +18,7 @@ M.default_opts = {
 
   -- Used when notebook is launched by using jupyter_command.
   -- If nil or "", it will open at the git directory of the current buffer,
-  -- but still navigate to the directory of the current buffer. (e.g. localhost:8888/tree/path/to/buffer)
+  -- but still navigate to the directory of the current buffer. (e.g. localhost:8888/nbclassic/tree/path/to/buffer)
   notebook_dir = nil,
 
   -- Used to remember the last session (password etc.).
