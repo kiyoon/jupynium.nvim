@@ -41,8 +41,14 @@ The Jupynium server will receive events from Neovim, keep the copy of the buffer
   - 
     ```sh
     # jupyter-console is optional and used for `:JupyniumKernelOpenInTerminal`
-    pip install notebook jupyter-console
+    pip install notebook nbclassic jupyter-console
     ```
+
+#### Important note about Notebook 7 (breaking change!)
+Jupynium does not support Notebook 7 yet. In the meantime, you can change the `default_notebook_URL = "localhost:8888/nbclassic"` in `require("jupynium").setup({ ... })` to use the classic (Notebook 6) interface with Jupynium. This is the new default setting from now on.
+
+Don't forget to upgrade your notebook and install nbclassic (`pip install --upgrade notebook nbclassic`) when you set this.
+
 
 ### Install Python
 
@@ -111,7 +117,7 @@ require("jupynium").setup({
   -- python_host = { "conda", "run", "--no-capture-output", "-n", "jupynium", "python" },
   python_host = vim.g.python3_host_prog or "python3",
 
-  default_notebook_URL = "localhost:8888",
+  default_notebook_URL = "localhost:8888/nbclassic",
 
   -- Write jupyter command but without "notebook"
   -- When you call :JupyniumStartAndAttachToServer and no notebook is open,
@@ -123,7 +129,7 @@ require("jupynium").setup({
 
   -- Used when notebook is launched by using jupyter_command.
   -- If nil or "", it will open at the git directory of the current buffer,
-  -- but still navigate to the directory of the current buffer. (e.g. localhost:8888/tree/path/to/buffer)
+  -- but still navigate to the directory of the current buffer. (e.g. localhost:8888/nbclassic/tree/path/to/buffer)
   notebook_dir = nil,
 
   -- Used to remember the last session (password etc.).
@@ -510,7 +516,7 @@ jupynium --nvim_listen_addr localhost:18898
 
 Note that you can attach to remote neovim by changing `localhost` to `servername.com` or using SSH port forwarding.
 
-This will open Firefox with Selenium, defaulting to `http://localhost:8888`.
+This will open Firefox with Selenium, defaulting to `http://localhost:8888/nbclassic`.
 
 Additionally,
 

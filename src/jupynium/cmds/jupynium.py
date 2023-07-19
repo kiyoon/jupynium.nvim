@@ -123,7 +123,7 @@ def get_parser():
     )
     parser.add_argument(
         "--notebook_URL",
-        default="localhost:8888",
+        default="localhost:8888/nbclassic",
         help="Jupyter Notebook URL to open from the Selenium browser",
     )
     parser.add_argument(
@@ -180,7 +180,7 @@ def get_parser():
         type=str,
         help="When jupyter notebook has started using --jupyter_command, the root dir will be this.\n"
         "If None, open at a git dir of nvim's buffer path and still navigate to the buffer dir.\n"
-        "(e.g. localhost:8888/tree/path/to/buffer)",
+        "(e.g. localhost:8888/nbclassic/tree/path/to/buffer)",
     )
     parser.add_argument(
         "--no_auto_close_tab",
@@ -342,8 +342,12 @@ def kill_notebook_proc(notebook_proc):
 
 
 def fallback_open_notebook_server(
-    notebook_port, jupyter_command, notebook_dir, nvim, driver
+    notebook_port, notebook_url_path, jupyter_command, notebook_dir, nvim, driver
 ):
+    """
+    Args:
+        notebook_url_path (str): e.g. "/nbclassic"
+    """
     # Fallback: if the URL is localhost and if selenium can't connect,
     # open the Jupyter Notebook server and even start syncing.
     rel_dir = ""
@@ -391,26 +395,28 @@ def fallback_open_notebook_server(
         )
     except FileNotFoundError:
         # Command doesn't exist
-        exception_no_notebook(f"localhost:{notebook_port}", nvim)
+        exception_no_notebook(f"localhost:{notebook_port}{notebook_url_path}", nvim)
 
     time.sleep(1)
     for _ in range(20):
         try:
             driver.get(
-                f"localhost:{notebook_port}/tree/{rel_dir}?token={notebook_token}"
+                f"localhost:{notebook_port}{notebook_url_path}/tree/{rel_dir}?token={notebook_token}"
             )
             break
         except WebDriverException:
             poll = notebook_proc.poll()
             if poll is not None:
                 # Process finished
-                exception_no_notebook(f"localhost:{notebook_port}", nvim)
+                exception_no_notebook(
+                    f"localhost:{notebook_port}{notebook_url_path}", nvim
+                )
 
         time.sleep(0.3)
     else:
         # Process still running but timeout for connecting to notebook. Maybe wrong command?
         kill_notebook_proc(notebook_proc)
-        exception_no_notebook(f"localhost:{notebook_port}", nvim)
+        exception_no_notebook(f"localhost:{notebook_port}{notebook_url_path}", nvim)
     return notebook_proc
 
 
@@ -493,7 +499,12 @@ def main():
                 url = urlparse(notebook_URL)
                 if url.port is not None and url.hostname in ["localhost", "127.0.0.1"]:
                     notebook_proc = fallback_open_notebook_server(
-                        url.port, args.jupyter_command, args.notebook_dir, nvim, driver
+                        url.port,
+                        url.path,
+                        args.jupyter_command,
+                        args.notebook_dir,
+                        nvim,
+                        driver,
                     )
 
                 else:
