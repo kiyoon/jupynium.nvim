@@ -29,13 +29,22 @@ function M.line_type(line)
   return "others" -- code
 end
 
+local line_types_changedtick_per_buf = {}
+local line_types_per_buf = {}
+
 --- Get the line types of the entire buffer
 --- Similar to `line_type` but returns a table of line types, and it returns more types
+--- It also caches the results so repeated calls are fast
 --- i.e. cell content: code, cell content: markdown, cell content: header
 --- Useful for highlighting
 ---@return table
 function M.line_types_entire_buf(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
+  local changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
+  if line_types_changedtick_per_buf[bufnr] == changedtick then
+    return line_types_per_buf[bufnr]
+  end
+
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
   local current_cell_type = "header"
@@ -60,6 +69,8 @@ function M.line_types_entire_buf(bufnr)
     end
   end
 
+  line_types_changedtick_per_buf[bufnr] = changedtick
+  line_types_per_buf[bufnr] = line_types
   return line_types
 end
 
