@@ -13,13 +13,30 @@ function M.get_folds()
   end
   local res = {}
   local fold = {}
+  local metadata = {}
 
   local line_types = cells.line_types_entire_buf()
 
   for i, line_type in ipairs(line_types) do
+    if utils.string_begins_with(line_type, "metadata") then
+      -- make sure metadata is before cells
+      if vim.tbl_isempty(fold) then
+        if vim.tbl_isempty(metadata) then
+          metadata.startLine = i - 1
+        else
+          metadata.endLine = i - 1
+          table.insert(res, metadata)
+        end
+      end
+    end
     if utils.string_begins_with(line_type, "cell separator") then
       if vim.tbl_isempty(fold) then
         fold.startLine = i - 1
+        -- close metadata
+        if not vim.tbl_isempty(metadata) and metadata.endLine == nil then
+          metadata.endLine = i - 2
+          table.insert(res, metadata)
+        end
       else
         fold.endLine = i - 2
         table.insert(res, fold)
@@ -32,6 +49,7 @@ function M.get_folds()
   if fold.startLine ~= nil and fold.startLine ~= fold.endLine then
     table.insert(res, fold)
   end
+  print(vim.inspect(res))
   return res
 end
 function M.set_default_keymaps(buf_id)
