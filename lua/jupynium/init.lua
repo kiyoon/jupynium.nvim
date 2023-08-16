@@ -5,7 +5,52 @@ local highlighter = require "jupynium.highlighter"
 local server = require "jupynium.server"
 local options = require "jupynium.options"
 local utils = require "jupynium.utils"
+local cells = require "jupynium.cells"
 
+function M.get_folds()
+  if not utils.list_wildcard_match(vim.fn.expand "%", options.opts.jupynium_file_pattern) then
+    return {}
+  end
+  local res = {}
+  local fold = {}
+  local metadata = {}
+
+  local line_types = cells.line_types_entire_buf()
+
+  for i, line_type in ipairs(line_types) do
+    if utils.string_begins_with(line_type, "metadata") then
+      -- make sure metadata is before cells
+      if vim.tbl_isempty(fold) then
+        if vim.tbl_isempty(metadata) then
+          metadata.startLine = i - 1
+        else
+          metadata.endLine = i - 1
+          table.insert(res, metadata)
+        end
+      end
+    end
+    if utils.string_begins_with(line_type, "cell separator") then
+      if vim.tbl_isempty(fold) then
+        fold.startLine = i - 1
+        -- close metadata
+        if not vim.tbl_isempty(metadata) and metadata.endLine == nil then
+          metadata.endLine = i - 2
+          table.insert(res, metadata)
+        end
+      else
+        fold.endLine = i - 2
+        table.insert(res, fold)
+        fold = { startLine = i - 1 }
+      end
+    end
+  end
+  fold.endLine = #line_types - 1
+  -- In case there is no cell
+  if fold.startLine ~= nil and fold.startLine ~= fold.endLine then
+    table.insert(res, fold)
+  end
+  return res
+end
 function M.set_default_keymaps(buf_id)
   vim.keymap.set(
     { "n", "x" },
