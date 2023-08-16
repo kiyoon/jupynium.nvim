@@ -76,6 +76,7 @@ Plug 'kiyoon/jupynium.nvim', { 'do': 'pip3 install --user .' }
 Plug 'hrsh7th/nvim-cmp'       " optional, for completion
 Plug 'rcarriga/nvim-notify'   " optional
 Plug 'stevearc/dressing.nvim' " optional, UI for :JupyniumKernelSelect
+Plug 'kevinhwang91/nvim-ufo'  " optional, folds for :lua require("jupynium").get_folds()
 ```
 
 With packer.nvim:
@@ -86,6 +87,7 @@ use { "kiyoon/jupynium.nvim", run = "pip3 install --user ." }
 use { "hrsh7th/nvim-cmp" }       -- optional, for completion
 use { "rcarriga/nvim-notify" }   -- optional
 use { "stevearc/dressing.nvim" } -- optional, UI for :JupyniumKernelSelect
+use { "kevinhwang91/nvim-ufo" }  -- optional, folds for :lua require("jupynium").get_folds()
 ```
 
 With 💤lazy.nvim:
@@ -100,6 +102,7 @@ With 💤lazy.nvim:
   "hrsh7th/nvim-cmp",       -- optional, for completion
   "rcarriga/nvim-notify",   -- optional
   "stevearc/dressing.nvim", -- optional, UI for :JupyniumKernelSelect
+  "kevinhwang91/nvim-ufo",  -- optional, folds for :lua require("jupynium").get_folds()
 ```
 
 #### Configure Jupynium
@@ -485,6 +488,13 @@ if status_ok then
 end
 ```
 
+There is also an API serving as a folds provider(see [#88](https://github.com/kiyoon/jupynium.nvim/pull/88) for more detail), which will return a table with format `{startLine=#num, endLine=#num}`.
+
+```lua
+require("jupynium").get_folds()
+```
+
+You should use it with a fold plugin like [nvim-ufo](https://github.com/kevinhwang91/nvim-ufo), an example is [example config](https://github.com/fecet/nvim/blob/6d8606987b73d03a7c7dc802065303b9ed09dcdb/lua/modules/configs/editor/ufo.lua).
 ## 👨‍💻️ Command-Line Usage (attach to remote Neovim)
 
 **You don't need to install the vim plugin to use Jupynium.** The plugin is responsible of adding `:JupyniumStartAndAttachToServer` etc. that just calls the command line program, plus it has textobjects and shortsighted support.

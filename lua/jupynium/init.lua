@@ -49,7 +49,6 @@ function M.get_folds()
   if fold.startLine ~= nil and fold.startLine ~= fold.endLine then
     table.insert(res, fold)
   end
-  print(vim.inspect(res))
   return res
 end
 function M.set_default_keymaps(buf_id)
