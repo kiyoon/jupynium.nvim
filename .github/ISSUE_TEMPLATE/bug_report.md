@@ -20,8 +20,9 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**Output when using `jupynium` command**
-If you launch Jupynium server using the command line program, it gives you more helpful logs.
+**Logs in `/tmp/jupynium/logs/`**
+The tmp directory path can be different in a different OS.  
+Alternatively, run `:JupyniumStartAndAttachToServerInTerminal` to see the output directly in neovim.
 
 <details>
 <code>
