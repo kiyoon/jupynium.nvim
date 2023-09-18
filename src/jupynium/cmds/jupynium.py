@@ -439,7 +439,7 @@ def main():
     log_path = os.path.join(tmp_log_dir, f"{datetime.now():%Y-%m-%d_%H-%M-%S}.log")
 
     f_handler = logging.FileHandler(log_path)
-    f_handler.setLevel(logging.DEBUG)
+    f_handler.setLevel(logging.INFO)
     f_format = logging.Formatter(
         "%(asctime)s - %(name)s: %(lineno)4d - %(levelname)s - %(message)s"
     )
