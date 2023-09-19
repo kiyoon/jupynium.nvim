@@ -1,5 +1,5 @@
 black==22.12.0
-flake8==3.9.2
+ruff==0.0.290
 tox==3.24.3
 pytest==6.2.5
 pytest-cov==2.12.1
