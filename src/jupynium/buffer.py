@@ -49,9 +49,10 @@ class JupyniumBuffer:
         """
         self.buf = buf
         if self.buf == [""]:
-            self.num_rows_per_cell: list[int] = [
-                1
-            ]  # each cell's row length. 0-th cell is not a cell, but it's the header. You can put anything above and it won't be synced to Jupyter Notebook.
+            # each cell's row length. 0-th cell is not a cell, but it's the header.
+            # You can put anything above and it won't be synced to Jupyter Notebook.
+            self.num_rows_per_cell: list[int] = [1]
+
             self.cell_types = ["header"]  # 0-th cell is not a cell.
         else:
             self.full_analyse_buf(header_cell_type)
@@ -66,13 +67,16 @@ class JupyniumBuffer:
             - cell creation/deletion
             - cell type change
 
-        During the partial update, the header cell will be continuation from the existing cell.
+        During the partial update, the header cell will be continuation from
+        the existing cell.
         We don't know if it will be header/cell/markdown.
         So we need to pass the header_cell_type.
-        (This is deprecated, in favour of self.get_cells_text() dealing with content processing.)
+        (This is deprecated, in favour of self.get_cells_text() dealing with
+        content processing.)
 
         Args:
-            header_cell_type (str, optional): Used to be used only when partial update. Now deprecated.
+            header_cell_type (str, optional): Used to be used only when partial update.
+                                              Now deprecated.
         """
         num_rows_this_cell = 0
         num_rows_per_cell = []
@@ -207,7 +211,8 @@ class JupyniumBuffer:
             cell_idx, _, row_within_cell = self.get_cell_index_from_row(start_row)
 
             if row_within_cell == 0 and cell_idx > 0:
-                # If the row is the first row of a cell, and it's not the first cell, then it's a cell separator.
+                # If the row is the first row of a cell, and it's not the first cell,
+                # then it's a cell separator.
                 row_within_cell = self.num_rows_per_cell[cell_idx - 1]
                 cell_idx -= 1
         except IndexError:
@@ -295,8 +300,10 @@ class JupyniumBuffer:
         modified_cell_idx_end = modified_cell_idx_start + new_lines_buf.num_cells - 1
 
         # Now actually replace the lines
-        # Optimisation: if the number of lines is not changed, which is most of the cases,
-        # then we can just replace the the strings in the list instead of modifying list itself.
+        # Optimisation: if the number of lines is not changed,
+        # which is most of the cases,
+        # then we can just replace the the strings in the list
+        # instead of modifying list itself.
         if old_end_row == new_end_row:
             for i, line in enumerate(lines):
                 self.buf[start_row + i] = line
@@ -323,7 +330,8 @@ class JupyniumBuffer:
             elif operation == "cell_type":
                 for i, cell_type in enumerate(cell_types):
                     logger.info(
-                        f"Cell {nb_cell_idx + i} type change to {cell_type} from Notebook"
+                        f"Cell {nb_cell_idx + i} type change to {cell_type} "
+                        "from Notebook"
                     )
                     # "markdown" or "markdown (jupytext)"
                     if cell_type == "markdown":
@@ -360,7 +368,7 @@ class JupyniumBuffer:
             int: cell index
             int: cell start row
             int: row index within the cell
-        """
+        """  # noqa: E501
         if num_rows_per_cell is None:
             num_rows_per_cell = self.num_rows_per_cell
 

@@ -74,8 +74,6 @@ def wait_until_new_window(driver, current_handles, timeout=10):
 
 def is_browser_disconnected(driver):
     """Check if the browser is disconnected."""
-    # get_log is not supported by Firefox
-    # return driver.get_log("driver")[-1]["message"] == DISCONNECTED_MSG    # not supported by Firefox
     try:
         _ = driver.window_handles
         return False

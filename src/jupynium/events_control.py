@@ -169,7 +169,8 @@ def process_events(nvim_info: NvimInfo, driver):
 
     Returns:
         bool status: False if nvim needs to be cleared up.
-        rpcrequest event: Notify nvim after cleared up. None if status==True or no need to notify
+        rpcrequest event: Notify nvim after cleared up. None if status==True or
+                          no need to notify
     """
     # Check if the browser is still alive
     if nvim_info.home_window not in driver.window_handles:
@@ -184,7 +185,8 @@ def process_events(nvim_info: NvimInfo, driver):
 
     # Receive message from this nvim
     # vim.g.jupynium_num_pending_msgs is not reliable
-    # but so far it seems to be always smaller than the actual number of pending messages
+    # but so far it seems to be always smaller than
+    # the actual number of pending messages
 
     prev_lazy_args_per_buf = PrevLazyArgsPerBuf()
     while (
@@ -273,7 +275,7 @@ def start_sync_with_filename(
 
         if ask:
             sync_input = nvim_info.nvim.eval(
-                """input("Press 'v' to sync from n[v]im, 'i' to load from [i]pynb and sync. (v/i/[c]ancel): ")"""
+                """input("Press 'v' to sync from n[v]im, 'i' to load from [i]pynb and sync. (v/i/[c]ancel): ")"""  # noqa: E501
             )
             sync_input = str(sync_input).strip()
         else:
@@ -287,7 +289,7 @@ def start_sync_with_filename(
         elif sync_input in ["i", "I"]:
             # load from ipynb tab and start sync
             cell_types, texts = driver.execute_script(get_cell_inputs_js_code)
-            jupy = cells_to_jupy(cell_types, texts)
+            jupy = cells_to_jupytext(cell_types, texts)
             nvim_info.nvim.buffers[bufnr][:] = jupy
 
             nvim_info.attach_buffer(bufnr, jupy, new_window)
@@ -381,7 +383,8 @@ def choose_default_kernel(driver, page_type: str, buf_filetype, conda_or_venv_pa
                     return valid_kernel_name
             except KeyError:
                 pass
-        # If no match based on conda_env_path metadata, try matching with executable path
+        # If no match based on conda_env_path metadata,
+        # try matching with executable path
         path_match = match_with_path(conda_or_venv_path)
         if path_match is not None:
             return path_match
@@ -408,7 +411,8 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
     """
     Returns:
         status (bool)
-        request_event (rpcrequest event) to notify nvim after cleared up. None if no need to notify
+        request_event (rpcrequest event): to notify nvim after cleared up.
+                                          None if no need to notify
     """
     assert event[0] == "request"
     # Request from nvim
@@ -444,7 +448,8 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
             continue_input = "y"
             if ask:
                 continue_input = nvim_info.nvim.eval(
-                    "input('This will remove all content from the Notebook. Continue? (y/n): ')"
+                    "input('This will remove all content from the Notebook. "
+                    "Continue? (y/n): ')"
                 )
             if continue_input in ["y", "Y"]:
                 nvim_info.attach_buffer(bufnr, content, driver.current_window_handle)
@@ -486,7 +491,7 @@ def process_request_event(nvim_info: NvimInfo, driver, event):
         cell_types, texts = driver.execute_script(get_cell_inputs_js_code)
         jupy = cells_to_jupytext(cell_types, texts, python=kernel_language == "python")
         nvim_info.nvim.buffers[bufnr][:] = jupy
-        logger.info(f"Loaded ipynb to the nvim buffer.")
+        logger.info("Loaded ipynb to the nvim buffer.")
 
     elif event[1] == "VimLeavePre":
         # For non-Windows, use rpcrequest
@@ -562,7 +567,8 @@ def lazy_on_lines_event(
     Often, completion plugins like coc.nvim and nvim-cmp spams on_lines events.
     But they will have the same (bufnr, start_row, old_end_row, new_end_row) values.
     If the series of line changes are chainable, we can just process the last one.
-    In order to do that, process the previous on_lines only if current on_lines is not chainable.
+    In order to do that, process the previous on_lines only if current on_lines is
+    not chainable.
     After the loop you need to process the last one as well.
     """
     if previous_on_lines is None:
@@ -622,7 +628,8 @@ def process_notification_event(
         current_args = UpdateSelectionArgs(*event_args)
 
         if prev_lazy_args_per_buf is not None:
-            # Lazy. Process at the end of event loop cycle or if needed for the next event.
+            # Lazy. Process at the end of event loop cycle or if needed for
+            # the next event.
             prev_lazy_args_per_buf.overwrite_update_selection(bufnr, current_args)
         else:
             update_cell_selection(nvim_info, driver, bufnr, current_args)
@@ -636,7 +643,7 @@ def process_notification_event(
             driver.switch_to.window(nvim_info.window_handles[bufnr])
 
             driver.execute_script(
-                "Jupyter.notebook.scroll_manager.animation_speed = 0; Jupyter.notebook.scroll_manager.scroll_some(arguments[0]);",
+                "Jupyter.notebook.scroll_manager.animation_speed = 0; Jupyter.notebook.scroll_manager.scroll_some(arguments[0]);",  # noqa: E501
                 scroll,
             )
         elif event[1] == "save_ipynb":
@@ -713,7 +720,7 @@ def process_notification_event(
                 nvim_info.nvim.vars["jupynium_kernel_complete_async_callback_id"]
                 != callback_id
             ):
-                logger.info(f"Ignoring outdated kernel_complete_async request")
+                logger.info("Ignoring outdated kernel_complete_async request")
                 return True
             driver.switch_to.window(nvim_info.window_handles[bufnr])
             reply = driver.execute_async_script(kernel_complete_js_code, line, col)
@@ -765,7 +772,7 @@ def process_notification_event(
                 nvim_info.nvim.vars["jupynium_kernel_complete_async_callback_id"]
                 != callback_id
             ):
-                logger.info(f"Ignoring outdated kernel_complete_async request")
+                logger.info("Ignoring outdated kernel_complete_async request")
                 return True
 
             nvim_info.nvim.lua.Jupynium_kernel_complete_async_callback(matches)
@@ -842,7 +849,8 @@ def update_cell_selection(
         )
 
         # select the cell
-        # 0-th cell is not a cell, but it's the header. You can put anything above and it won't be synced to Jupyter Notebook.
+        # 0-th cell is not a cell, but it's the header.
+        # You can put anything above and it won't be synced to Jupyter Notebook.
         cell_index = max(cell_index - 1, 0)
         cell_index_visual = max(cell_index_visual - 1, 0)
 
@@ -865,7 +873,7 @@ def update_cell_selection(
                     do_scroll = True
                 else:
                     do_scroll = not driver.execute_script(
-                        "return Jupyter.notebook.scroll_manager.is_cell_visible(Jupyter.notebook.get_cell(arguments[0]));",
+                        "return Jupyter.notebook.scroll_manager.is_cell_visible(Jupyter.notebook.get_cell(arguments[0]));",  # noqa: E501
                         cell_index,
                     )
 
@@ -875,7 +883,7 @@ def update_cell_selection(
                         "jupynium_autoscroll_cell_top_margin_percent", 0
                     )
                     driver.execute_script(
-                        "Jupyter.notebook.scroll_cell_percent(arguments[0], arguments[1], 0);",
+                        "Jupyter.notebook.scroll_cell_percent(arguments[0], arguments[1], 0);",  # noqa: E501
                         cell_index,
                         top_margin_percent,
                     )

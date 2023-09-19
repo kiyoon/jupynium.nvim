@@ -16,7 +16,8 @@ def get_parser():
     parser.add_argument(
         "output_jupy_path",
         nargs="?",
-        help="Path to output jupynium file. If not specified, use file name of ipynb file or print to stdout (--stdout)",
+        help="Path to output jupynium file. "
+        "If not specified, use file name of ipynb file or print to stdout (--stdout)",
     )
     parser.add_argument(
         "-y", "--yes", action="store_true", help="Do not ask for confirmation"

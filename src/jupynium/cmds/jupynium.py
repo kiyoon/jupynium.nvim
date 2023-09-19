@@ -157,7 +157,7 @@ def get_parser():
     )
     parser.add_argument(
         "--firefox_profiles_ini_path",
-        help="Path to firefox profiles.ini which will be used to remember the last session (password, etc.)\n"
+        help="Path to firefox profiles.ini which will be used to remember the last session (password, etc.)\n"  # noqa: E501
         "Example path:\n"
         "~/.mozilla/firefox/profiles.ini\n"
         "~/snap/firefox/common/.mozilla/firefox/profiles.ini",
@@ -172,14 +172,14 @@ def get_parser():
         nargs="+",
         default=["jupyter"],
         help="Command to start Jupyter Notebook (but without notebook).\n"
-        "To use conda env, use `--jupyter_command conda run ' --no-capture-output' ' -n' base jupyter`. Notice the space before the dash.\n"
+        "To use conda env, use `--jupyter_command conda run ' --no-capture-output' ' -n' base jupyter`. Notice the space before the dash.\n"  # noqa: E501
         "It is used only when the --notebook_URL is localhost, and is not running.",
     )
     parser.add_argument(
         "--notebook_dir",
         type=str,
-        help="When jupyter notebook has started using --jupyter_command, the root dir will be this.\n"
-        "If None, open at a git dir of nvim's buffer path and still navigate to the buffer dir.\n"
+        help="When jupyter notebook has started using --jupyter_command, the root dir will be this.\n"  # noqa: E501
+        "If None, open at a git dir of nvim's buffer path and still navigate to the buffer dir.\n"  # noqa: E501
         "(e.g. localhost:8888/nbclassic/tree/path/to/buffer)",
     )
     parser.add_argument(
@@ -214,7 +214,8 @@ def start_if_running_else_clear(args, q: persistqueue.UniqueQ):
     else:
         if args.attach_only:
             logger.error(
-                "Jupynium is not running. Remove --attach_only option to start a new instance."
+                "Jupynium is not running. "
+                "Remove --attach_only option to start a new instance."
             )
             return 1
 
@@ -292,7 +293,9 @@ def generate_notebook_token():
 
 def exception_no_notebook(notebook_URL, nvim):
     logger.exception(
-        f"Exception occurred. Are you sure you're running Jupyter Notebook at {notebook_URL}? Use --jupyter_command to specify the command to start Jupyter Notebook."
+        "Exception occurred. "
+        f"Are you sure you're running Jupyter Notebook at {notebook_URL}? "
+        "Use --jupyter_command to specify the command to start Jupyter Notebook."
     )
     if nvim is not None:
         nvim.lua.Jupynium_notify.error(
@@ -321,14 +324,16 @@ def kill_child_processes(parent_pid, sig=signal.SIGTERM):
 def kill_notebook_proc(notebook_proc):
     """
     Kill the notebook process.
-    Used if we opened a Jupyter Notebook server using the --jupyter_command and when no server is running.
+    Used if we opened a Jupyter Notebook server using the --jupyter_command
+    and when no server is running.
     """
     if notebook_proc is not None:
         if os.name == "nt":
             # Windows
             os.kill(notebook_proc.pid, signal.CTRL_C_EVENT)
         else:
-            # Need to kill children if the notebook server is started using `conda run` like
+            # Need to kill children if the notebook server is started using
+            # `conda run` like
             # conda run --no-capture-output -n base jupyter notebook
             kill_child_processes(notebook_proc.pid, signal.SIGKILL)
 
@@ -373,7 +378,7 @@ def fallback_open_notebook_server(
         "--port",
         str(notebook_port),
         "--no-browser",
-        f"--NotebookApp.token",
+        "--NotebookApp.token",
         notebook_token,
     ]
 
@@ -414,7 +419,8 @@ def fallback_open_notebook_server(
 
         time.sleep(0.3)
     else:
-        # Process still running but timeout for connecting to notebook. Maybe wrong command?
+        # Process still running but timeout for connecting to notebook.
+        # Maybe wrong command?
         kill_notebook_proc(notebook_proc)
         exception_no_notebook(f"localhost:{notebook_port}{notebook_url_path}", nvim)
     return notebook_proc
@@ -423,8 +429,10 @@ def fallback_open_notebook_server(
 # flake8: noqa: C901
 def main():
     # Initialise with NOTSET level and null device, and add stream handler separately.
-    # This way, the root logging level is NOTSET (log all), and we can customise each handler's behaviour.
-    # If we set the level during the initialisation, it will affect to ALL streams, so the file stream cannot be more verbose (lower level) than the console stream.
+    # This way, the root logging level is NOTSET (log all),
+    # and we can customise each handler's behaviour.
+    # If we set the level during the initialisation, it will affect to ALL streams,
+    # so the file stream cannot be more verbose (lower level) than the console stream.
     coloredlogs.install(fmt="", level=logging.NOTSET, stream=open(os.devnull, "w"))
 
     console_handler = logging.StreamHandler()
@@ -514,8 +522,10 @@ def main():
             # Wait for the notebook to load
             driver_wait = WebDriverWait(driver, 10)
             # Acceptable number of windows is either:
-            # - Initial number of windows, for regular case where jupynium handles initally focused tab
-            # - Initial number of windows + 1, if an extension automatically opens a new tab
+            # - Initial number of windows, for regular case where jupynium handles
+            # initally focused tab
+            # - Initial number of windows + 1, if an extension automatically opens
+            # a new tab
             # Ref: https://github.com/kiyoon/jupynium.nvim/issues/59
             accept_num_windows = [init_num_windows, init_num_windows + 1]
             driver_wait.until(number_of_windows_be_list(accept_num_windows))
@@ -532,7 +542,9 @@ def main():
                 }
             else:
                 logger.info(
-                    "No nvim attached. Waiting for nvim to attach. Run jupynium --nvim_listen_addr /tmp/example (use `:echo v:servername` of nvim)"
+                    "No nvim attached. Waiting for nvim to attach. "
+                    "Run jupynium --nvim_listen_addr /tmp/example "
+                    "(use `:echo v:servername` of nvim)"
                 )
 
             while not sele.is_browser_disconnected(driver):
@@ -546,7 +558,8 @@ def main():
                             del_list.append((nvim_listen_addr, None))
                         except Exception:
                             logger.exception(
-                                "Uncaught exception occurred while processing events. Detaching nvim."
+                                "Uncaught exception occurred while processing events. "
+                                "Detaching nvim."
                             )
                             del_list.append((nvim_listen_addr, None))
 

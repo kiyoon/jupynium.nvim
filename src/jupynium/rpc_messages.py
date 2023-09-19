@@ -13,7 +13,9 @@ def receive_message(nvim: Nvim):
     event = nvim.next_message()
 
     # This value is not strictly accurate.
-    # It is correct most of the time, but when you send too many messages at once (e.g. change visual selection using mouse) it can be wrong (smaller than the actual number)
+    # It is correct most of the time, but when you send too many messages at once
+    # (e.g. change visual selection using mouse) it can be wrong
+    # (smaller than the actual number)
     # It is only here to detect bloated state (too many messages)
     nvim.vars["jupynium_num_pending_msgs"] = max(
         nvim.vars.get("jupynium_num_pending_msgs", 0) - 1, 0
@@ -24,7 +26,8 @@ def receive_message(nvim: Nvim):
 
 def receive_all_pending_messages(nvim: Nvim):
     """
-    It doesn't guarantee to grab all messages that are previously sent. Maybe the last one or two may still be in process.
+    It doesn't guarantee to grab all messages that are previously sent.
+    Maybe the last one or two may still be in process.
     """
     events = []
     while len_pending_messages(nvim) > 0:
@@ -44,7 +47,8 @@ def event_to_dict(event):
     if event[0] == "request":
         event_dict["request"] = event[3]
 
-    # on_bytes / on_bytes_remove, CursorMoved, CursorMovedI, visual_enter, visual_leave, grab_entire_buf, VimLeave
+    # on_bytes / on_bytes_remove, CursorMoved, CursorMovedI, visual_enter,
+    # visual_leave, grab_entire_buf, VimLeave
     event_dict["name"] = event[1]
     event_args = {}
 
