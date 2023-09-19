@@ -71,3 +71,5 @@ testpaths = [
   "tests",
 ]
 
+[tool.ruff]
+target-version = "py37"
