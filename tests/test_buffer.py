@@ -11,7 +11,8 @@ def test_buffer_1():
 
 def test_magic_command_1():
     """
-    Everything else except magic commands should be preserved after __init__() or fully_analysed_buf()
+    Everything else except magic commands should be preserved after __init__()
+    or fully_analysed_buf()
     """
     lines = ["a", "b", "c", "# %%", "# %time", "e", "f"]
     buffer = JupyniumBuffer(lines)

@@ -5,7 +5,8 @@ logger = logging.getLogger(__name__)
 
 def insert_cell_at(driver, cell_type, cell_idx):
     """
-    Instead of insert_cell_below or insert_cell_above, it will select based on the given index.
+    Instead of insert_cell_below or insert_cell_above,
+    it will select based on the given index.
     If cell_idx == 0, insert above, otherwise insert below.
     """
     assert cell_type in ["code", "markdown"]

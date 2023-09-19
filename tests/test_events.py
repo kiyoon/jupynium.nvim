@@ -55,9 +55,9 @@ def test_event_start_sync(nvim_1: Nvim):
         if event[0] == "notification" and event[1] == "CursorMovedI":
             count_cursormoved_i += 1
 
-    assert (
-        count_cursormoved_i > 0
-    )  # CursorMovedI should be triggered. I think it gets triggered only once after the feedkeys call
+    # CursorMovedI should be triggered.
+    # I think it gets triggered only once after the feedkeys call
+    assert count_cursormoved_i > 0
 
 
 def test_event_stop_sync(nvim_1: Nvim):

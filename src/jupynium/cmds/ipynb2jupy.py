@@ -9,14 +9,16 @@ from ..ipynb import ipynb2jupy, load_ipynb
 
 def get_parser():
     parser = argparse.ArgumentParser(
-        description="Convert ipynb to a jupynium file (.ju.py). Deprecated: use ipynb2jupytext instead.",
+        description="Convert ipynb to a jupynium file (.ju.py)."
+        "Deprecated: use ipynb2jupytext instead.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("ipynb_path", help="Path to ipynb file")
     parser.add_argument(
         "output_jupy_path",
         nargs="?",
-        help="Path to output jupynium file. If not specified, use file name of ipynb file or print to stdout (--stdout)",
+        help="Path to output jupynium file. "
+        "If not specified, use file name of ipynb file or print to stdout (--stdout)",
     )
     parser.add_argument(
         "-y", "--yes", action="store_true", help="Do not ask for confirmation"
