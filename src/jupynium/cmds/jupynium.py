@@ -396,7 +396,9 @@ def fallback_open_notebook_server(
         jupyter_stdout = tempfile.NamedTemporaryFile()
         logger.info(f"Writing Jupyter Notebook server log to: {jupyter_stdout.name}")
         notebook_proc = subprocess.Popen(
-            jupyter_command + notebook_args, stdout=jupyter_stdout
+            jupyter_command + notebook_args,
+            stdout=jupyter_stdout,
+            stderr=subprocess.STDOUT,
         )
     except FileNotFoundError:
         # Command doesn't exist
