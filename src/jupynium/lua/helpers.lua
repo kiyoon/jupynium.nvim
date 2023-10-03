@@ -17,6 +17,7 @@ if Jupynium_syncing_bufs ~= nil then
 end
 
 Jupynium_syncing_bufs = {} -- key = bufnr, value = 1
+Jupynium_bufs_attached = {} -- key = bufnr, value = 1
 
 function Jupynium_reset_channel()
   vim.g.jupynium_channel_id = -1
@@ -294,16 +295,25 @@ function Jupynium_start_sync(bufnr, ipynb_filename, ask)
     group = augroup,
   })
 
+  if Jupynium_bufs_attached[bufnr] ~= nil then
+    -- on_lines event handler already attached for this buffer
+    return
+  end
+
   vim.api.nvim_buf_attach(bufnr, false, {
     on_lines = function(_, _, _, start_row, old_end_row, new_end_row, _)
       if Jupynium_syncing_bufs[bufnr] == nil then
-        return
+        -- Detach on_lines event handler
+        Jupynium_bufs_attached[bufnr] = nil
+        return true
       end
 
       local lines = vim.api.nvim_buf_get_lines(bufnr, start_row, new_end_row, false)
       Jupynium_rpcnotify("on_lines", bufnr, true, lines, start_row, old_end_row, new_end_row)
     end,
   })
+
+  Jupynium_bufs_attached[bufnr] = 1
 end
 
 function Jupynium_stop_sync(bufnr)
