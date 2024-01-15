@@ -1,0 +1,65 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch of the tag
+        run: |
+          # checkout from GitHub CI without using actions/checkout
+          git clone https://oauth2:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git .
+          git fetch origin ${{ github.ref_name }}
+
+          # check if git tag is the last commit of some branch
+          TAG=${{ github.ref_name }}
+          git branch -a --contains $TAG
+          BRANCH=$(git branch -a --contains $TAG | grep -v HEAD | head -n 1 | sed 's/^* //' | sed 's/^  //')
+          echo "branch: $BRANCH"
+          LAST_COMMIT=$(git rev-parse $BRANCH)
+          echo "last commit hash: $LAST_COMMIT"
+          TAG_COMMIT=$(git rev-list -n 1 $TAG)
+          echo "tag commit hash: $TAG_COMMIT"
+
+          if [[ "$LAST_COMMIT" != "$TAG_COMMIT" ]]; then
+            echo "ERROR: Tag $TAG is NOT the last commit of branch $BRANCH. Exiting.."
+            exit 1
+          fi
+
+          git checkout "$BRANCH"
+
+      - name: Update CHANGELOG
+        id: changelog
+        uses: requarks/changelog-action@v1
+        with:
+          includeInvalidCommits: true
+          excludeTypes: build,docs,style
+          token: ${{ github.token }}
+          tag: ${{ github.ref_name }}
+
+      - name: Commit CHANGELOG.md
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag -d ${{ github.ref_name }}
+          git push origin --delete ${{ github.ref_name }}
+          git add CHANGELOG.md
+          git commit -m "docs: update CHANGELOG.md for ${{ github.ref_name }} [skip ci]"
+          git tag -a ${{ github.ref_name }} -m ${{ github.ref_name }}
+          git push
+          git push --tags
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          allowUpdates: true
+          draft: false
+          makeLatest: true
+          name: ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changes }}
+          token: ${{ github.token }}
