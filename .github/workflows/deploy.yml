@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: deploy
 
     steps:
       - name: Checkout to the branch of the tag
@@ -63,3 +64,14 @@ jobs:
           name: ${{ github.ref_name }}
           body: ${{ steps.changelog.outputs.changes }}
           token: ${{ github.token }}
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Build and upload to PyPI
+        run: |
+          python -m pip install --upgrade pip
+          pip3 install build twine
+          python -m build . --sdist
+          python3 -m twine upload dist/* -u __token__ -p ${{ secrets.PYPI_TOKEN }} --non-interactive
