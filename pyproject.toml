@@ -74,3 +74,13 @@ testpaths = [
 
 [tool.ruff]
 target-version = "py37"
+src = ["src"]  # for ruff isort
+extend-exclude = [
+  "src/jupynium/_version.py",  # CHANGE
+]
+
+[tool.ruff.lint.isort]
+## Uncomment this if you want to use Python < 3.10
+required-imports = [
+  "from __future__ import annotations",
+]
