@@ -7,9 +7,63 @@ jobs:
     name: ruff
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Lint with ruff 
-        uses: chartboost/ruff-action@v1
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          src: "."
-          version: 0.0.290
+          python-version-file: pyproject.toml
+      - name: Install ruff and requirements
+        run: |
+          pip3 install -r <(cat requirements_dev.txt | grep '^ruff==')
+      - name: Run ruff
+        run: |
+          set +e  # Do not exit shell on ruff failure
+
+          nonzero_exit=0
+          files=$(find . -type f -name "*.py" | sort)
+          while read file; do
+            out=$(ruff check --force-exclude "$file" 2> ruff_stderr.txt)
+            exit_code=$?
+            err=$(<ruff_stderr.txt)
+
+            if [[ $exit_code -ne 0 ]]; then
+              nonzero_exit=$exit_code
+            fi
+
+            if [[ -n "$out" ]]; then
+              # Display the raw output in the step
+              echo "${out}"
+              # Display the Markdown output in the job summary
+              echo "\`\`\`python" >> $GITHUB_STEP_SUMMARY
+              echo "${out}" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [[ -n "$err" ]]; then
+              echo "${err}"
+              echo "\`\`\`python" >> $GITHUB_STEP_SUMMARY
+              echo "${err}" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            out=$(ruff check --diff --force-exclude "$file" 2> ruff_stderr.txt)
+            err=$(<ruff_stderr.txt)
+
+            if [[ -n "$out" ]]; then
+              # Display the raw output in the step
+              echo "${out}"
+              # Display the Markdown output in the job summary
+              echo "\`\`\`diff" >> $GITHUB_STEP_SUMMARY
+              echo "${out}" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [[ -n "$err" ]]; then
+              echo "${err}"
+              echo "\`\`\`python" >> $GITHUB_STEP_SUMMARY
+              echo "${err}" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            fi
+          done <<< "$files"
+
+          # Exit with the first non-zero exit-code returned by ruff
+          # or just zero if all passed
+          exit ${nonzero_exit}

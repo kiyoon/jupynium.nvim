@@ -15,14 +15,66 @@ jobs:
           version: latest
           args: --check .
 
-  black:
-    name: Black
+  ruff-format:
+    name: ruff-format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Check black
-        uses: psf/black@stable
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          options: '--check --verbose'
-          src: '.'
-          version: '~= 22.12.0'
+          python-version-file: pyproject.toml
+      - name: Install ruff
+        run: |
+          pip3 install -r <(cat requirements_dev.txt | grep '^ruff==')
+      - name: Run ruff format
+        run: |
+          set +e  # Do not exit shell on black failure
+          out=$(ruff format --check --diff . 2> app_stderr.txt)
+          exit_code=$?
+          err=$(<app_stderr.txt)
+
+          # Display the raw output in the step
+          echo "${out}"
+          echo "${err}"
+
+          # Display the Markdown output in the job summary
+          echo "\`\`\`diff" >> $GITHUB_STEP_SUMMARY
+          echo "${out}" >> $GITHUB_STEP_SUMMARY
+          echo "${err}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+          # Exit with the exit-code returned by ruff
+          exit ${exit_code}
+
+  ruff-isort:
+    name: ruff-isort
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: pyproject.toml
+      - name: Install ruff
+        run: |
+          pip3 install -r <(cat requirements_dev.txt | grep '^ruff==')
+      - name: Run ruff isort
+        run: |
+          set +e  # Do not exit shell on app failure
+          out=$(ruff --select I --diff . 2> app_stderr.txt)
+          exit_code=$?
+          err=$(<app_stderr.txt)
+
+          # Display the raw output in the step
+          echo "${out}"
+          echo "${err}"
+
+          # Display the Markdown output in the job summary
+          echo "\`\`\`diff" >> $GITHUB_STEP_SUMMARY
+          echo "${out}" >> $GITHUB_STEP_SUMMARY
+          echo "${err}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+          # Exit with the exit-code returned by ruff
+          exit ${exit_code}

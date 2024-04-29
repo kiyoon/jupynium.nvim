@@ -672,7 +672,8 @@ def process_notification_event(
                 except OSError as e:
                     logger.warning(
                         f"Failed to auto-download ipynb with error: {e}.\n"
-                        f"Maybe a remote nvim is used and the path {output_ipynb_path} is not accessible on the local machine."
+                        "Maybe a remote nvim is used and the path "
+                        f"{output_ipynb_path} is not accessible on the local machine."
                     )
         elif event[1] == "download_ipynb":
             (buf_filepath, filename) = event_args
@@ -702,7 +703,8 @@ def process_notification_event(
                 )
                 logger.error(
                     f"Failed to download ipynb with error: {e}.\n"
-                    f"Maybe the path {output_ipynb_path} is not accessible on the local machine."
+                    f"Maybe the path {output_ipynb_path} is not accessible "
+                    "on the local machine."
                 )
 
         elif event[1] == "toggle_selected_cells_outputs_scroll":
