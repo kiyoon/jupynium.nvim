@@ -347,10 +347,11 @@ def choose_default_kernel(driver, page_type: str, buf_filetype, conda_or_venv_pa
             valid_kernel_names.append(kernel_name)
 
     def match_with_path(env_path: str) -> str | None:
-        """Match kernel executable path with conda/virtual environment bin directory
+        """
+        Match kernel executable path with conda/virtual environment bin directory.
 
         Args:
-            env_path (str): Path of the conda/virtual environment directory
+            env_path: Path of the conda/virtual environment directory
 
         Returns:
             str: Name of the kernel matching the environment, returns None if no match
@@ -666,7 +667,13 @@ def process_notification_event(
                 output_ipynb_path = os.path.splitext(output_ipynb_path)[0]
                 output_ipynb_path += ".ipynb"
 
-                download_ipynb(driver, nvim_info, bufnr, output_ipynb_path)
+                try:
+                    download_ipynb(driver, nvim_info, bufnr, output_ipynb_path)
+                except OSError as e:
+                    logger.warning(
+                        f"Failed to auto-download ipynb with error: {e}.\n"
+                        f"Maybe a remote nvim is used and the path {output_ipynb_path} is not accessible on the local machine."
+                    )
         elif event[1] == "download_ipynb":
             (buf_filepath, filename) = event_args
             assert buf_filepath != ""
@@ -686,7 +693,17 @@ def process_notification_event(
                 output_ipynb_path = os.path.splitext(output_ipynb_path)[0]
                 output_ipynb_path += ".ipynb"
 
-            download_ipynb(driver, nvim_info, bufnr, output_ipynb_path)
+            try:
+                download_ipynb(driver, nvim_info, bufnr, output_ipynb_path)
+            except OSError as e:
+                nvim_info.nvim.lua.Jupynium_notify.error(
+                    ["Failed to download ipynb file to", output_ipynb_path],
+                    async_=True,
+                )
+                logger.error(
+                    f"Failed to download ipynb with error: {e}.\n"
+                    f"Maybe the path {output_ipynb_path} is not accessible on the local machine."
+                )
 
         elif event[1] == "toggle_selected_cells_outputs_scroll":
             driver.switch_to.window(nvim_info.window_handles[bufnr])
