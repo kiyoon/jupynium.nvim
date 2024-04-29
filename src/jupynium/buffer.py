@@ -150,8 +150,7 @@ class JupyniumBuffer:
             self._process_cell_text(
                 self.cell_types[start_cell_idx],
                 self.buf[
-                    start_row
-                    + start_row_offset : start_row
+                    start_row + start_row_offset : start_row
                     + self.num_rows_per_cell[start_cell_idx]
                 ],
             )
@@ -292,9 +291,9 @@ class JupyniumBuffer:
                 row_within_cell + new_lines_buf.num_rows_per_cell[0]
             )
             new_lines_buf.num_rows_per_cell[-1] += num_tail_rows
-            self.num_rows_per_cell[
-                cell_idx + 1 : cell_idx + 1
-            ] = new_lines_buf.num_rows_per_cell[1:]
+            self.num_rows_per_cell[cell_idx + 1 : cell_idx + 1] = (
+                new_lines_buf.num_rows_per_cell[1:]
+            )
             self.cell_types[cell_idx + 1 : cell_idx + 1] = new_lines_buf.cell_types[1:]
 
         modified_cell_idx_end = modified_cell_idx_start + new_lines_buf.num_cells - 1
