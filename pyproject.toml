@@ -41,13 +41,12 @@ extra = [
   "notebook >= 6.4.5",
 ]
 dev = [
-  "black >= 22.1.0",
+  "ruff >= 0.4.2",
   "pre-commit >= 2.21.0",
 ]
 test = [
   "pytest >= 6.0",
   "pytest-cov >= 2.0",
-  "flake8 >= 3.9",
   "importlib-metadata < 5.0.0; python_version < '3.8'", # flake8 dependency
   "tox >= 3.24",
 ]
