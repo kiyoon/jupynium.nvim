@@ -1,4 +1,6 @@
 # https://stackoverflow.com/questions/36799192/check-if-python-script-is-already-running
+from __future__ import annotations
+
 from os import getpid
 from os.path import exists
 

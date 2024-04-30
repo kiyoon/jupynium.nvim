@@ -1,6 +1,5 @@
 # Jupynium: Control Jupyter Notebook on Neovim with ZERO Compromise
 
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 <a href="https://github.com/kiyoon/jupynium.nvim/actions/workflows/tests.yml">
 <img src="https://github.com/kiyoon/jupynium.nvim/workflows/Tests/badge.svg?style=flat" />
 </a>
@@ -570,4 +569,4 @@ You probably would have accidentally modified directly from the notebook.
 - I spent my whole Christmas and New Year holidays (and more) just making this plugin.
 - This is the star history chart with relevant plugins. Thank you for helping it grow!
 
-[![Star History Chart](https://api.star-history.com/svg?repos=kiyoon/jupynium.nvim,untitled-ai/jupyter_ascending,untitled-ai/jupyter_ascending.vim,dccsillag/magma-nvim,luk400/vim-jukit&type=Date)](https://star-history.com/#kiyoon/jupynium.nvim&untitled-ai/jupyter_ascending&untitled-ai/jupyter_ascending.vim&dccsillag/magma-nvim&luk400/vim-jukit&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=kiyoon/jupynium.nvim,imbue-ai/jupyter_ascending,imbue-ai/jupyter_ascending.vim,dccsillag/magma-nvim,luk400/vim-jukit&type=Date)](https://star-history.com/#kiyoon/jupynium.nvim&imbue-ai/jupyter_ascending&imbue-ai/jupyter_ascending.vim&dccsillag/magma-nvim&luk400/vim-jukit&Date)
