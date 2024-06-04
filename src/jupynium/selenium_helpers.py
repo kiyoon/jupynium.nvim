@@ -4,13 +4,14 @@ import logging
 
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 logger = logging.getLogger(__name__)
 
 
-def wait_until_notebook_loaded(driver, timeout=30):
+def wait_until_notebook_loaded(driver: WebDriver, timeout: int = 30):
     """Wait until the Jupyter Notebook is loaded."""
     try:
         WebDriverWait(driver, timeout).until(
@@ -41,7 +42,7 @@ def wait_until_notebook_loaded(driver, timeout=30):
         driver.quit()
 
 
-def wait_until_notebook_list_loaded(driver, timeout=10):
+def wait_until_notebook_list_loaded(driver: WebDriver, timeout: int = 10):
     """Wait until the Jupyter Notebook home page (list of files) is loaded."""
     try:
         WebDriverWait(driver, timeout).until(
@@ -54,7 +55,7 @@ def wait_until_notebook_list_loaded(driver, timeout=10):
         driver.quit()
 
 
-def wait_until_loaded(driver, timeout=10):
+def wait_until_loaded(driver: WebDriver, timeout: int = 10):
     """Wait until the page is ready."""
     try:
         WebDriverWait(driver, timeout).until(
@@ -65,7 +66,9 @@ def wait_until_loaded(driver, timeout=10):
         driver.quit()
 
 
-def wait_until_new_window(driver, current_handles, timeout=10):
+def wait_until_new_window(
+    driver: WebDriver, current_handles: list[str], timeout: int = 10
+):
     """Wait until the page is ready."""
     try:
         WebDriverWait(driver, timeout).until(EC.new_window_is_opened(current_handles))
@@ -74,7 +77,7 @@ def wait_until_new_window(driver, current_handles, timeout=10):
         driver.quit()
 
 
-def is_browser_disconnected(driver):
+def is_browser_disconnected(driver: WebDriver):
     """Check if the browser is disconnected."""
     try:
         _ = driver.window_handles

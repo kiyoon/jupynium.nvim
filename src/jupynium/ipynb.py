@@ -1,36 +1,39 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
+from os import PathLike
 
 
-def load_ipynb(ipynb_path):
-    with open(ipynb_path, "r") as f:
+def load_ipynb(ipynb_path: str | PathLike):
+    with open(ipynb_path) as f:
         ipynb = json.load(f)
     return ipynb
 
 
-def read_ipynb_texts(ipynb, code_only=False):
+def read_ipynb_texts(ipynb, code_only: bool = False):
     texts = []
     cell_types = []
     for cell in ipynb["cells"]:
-        if code_only:
-            if cell["cell_type"] != "code":
-                continue
+        if code_only and cell["cell_type"] != "code":
+            continue
         cell_types.append(cell["cell_type"])
         texts.append("".join(cell["source"]))
     return cell_types, texts
 
 
 def ipynb_language(ipynb):
-    if "metadata" in ipynb:
-        if "kernelspec" in ipynb["metadata"]:
-            if "language" in ipynb["metadata"]["kernelspec"]:
-                return ipynb["metadata"]["kernelspec"]["language"]
+    if (
+        "metadata" in ipynb
+        and "kernelspec" in ipynb["metadata"]
+        and "language" in ipynb["metadata"]["kernelspec"]
+    ):
+        return ipynb["metadata"]["kernelspec"]["language"]
 
     return None
 
 
-def cells_to_jupy(cell_types, texts):
+def cells_to_jupy(cell_types: list[str], texts: list[str]):
     cell_types_previous = ["code"] + cell_types[:-1]
 
     jupy: list[str] = []
@@ -57,7 +60,9 @@ def cells_to_jupy(cell_types, texts):
     return jupy
 
 
-def cells_to_jupytext(cell_types, texts, python=True):
+def cells_to_jupytext(
+    cell_types: Sequence[str], texts: Sequence[str], python: bool = True
+):
     jupytext: list[str] = []
 
     for cell_type, text in zip(cell_types, texts):

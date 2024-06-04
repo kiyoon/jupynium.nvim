@@ -1,4 +1,5 @@
 #!/use/bin/env python3
+# ruff: noqa: T201
 from __future__ import annotations
 
 import argparse
@@ -54,7 +55,7 @@ def main():
         os.makedirs(os.path.dirname(os.path.realpath(output_jupy_path)), exist_ok=True)
 
         if os.path.isfile(output_jupy_path) and not args.yes:
-            print("Do you want to overwrite {}?".format(output_jupy_path))
+            print(f"Do you want to overwrite {output_jupy_path}?")
             answer = input("y/n: ")
             if answer != "y":
                 print("Aborted")
@@ -65,7 +66,7 @@ def main():
                 f.write(line)
                 f.write("\n")
 
-        print('Converted "{}" to "{}"'.format(args.ipynb_path, output_jupy_path))
+        print(f'Converted "{args.ipynb_path}" to "{output_jupy_path}"')
 
 
 if __name__ == "__main__":

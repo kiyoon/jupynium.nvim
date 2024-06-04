@@ -9,7 +9,7 @@ from pkg_resources import resource_stream
 logger = logging.getLogger(__name__)
 
 
-def attach_and_init(nvim_listen_addr):
+def attach_and_init(nvim_listen_addr: str):
     logger.info("nvim addr: %s", nvim_listen_addr)
     for _ in range(30):
         try:

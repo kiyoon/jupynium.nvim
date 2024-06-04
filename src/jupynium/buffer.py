@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 
 from pkg_resources import resource_stream
+from selenium.webdriver.remote.webdriver import WebDriver
 
 from .jupyter_notebook_selenium import insert_cell_at
 
@@ -24,6 +25,7 @@ def _process_cell_type(cell_type: str) -> str:
 def _process_cell_types(cell_types: list[str]) -> list[str]:
     """
     Return the cell types, e.g. ["markdown", "code", "header"].
+
     markdown (jupytext) is converted to markdown.
     """
     return [_process_cell_type(cell_type) for cell_type in cell_types]
@@ -31,21 +33,21 @@ def _process_cell_types(cell_types: list[str]) -> list[str]:
 
 class JupyniumBuffer:
     """
-    This class mainly deals with the Nvim buffer and its cell information.
+    Deal with the Nvim buffer and its cell information.
+
     This does have a functionality to sync with the Notebook.
     """
 
     def __init__(
         self,
         buf: list[str] = [""],
-        header_cell_type="header",
+        header_cell_type: str = "header",
     ):
         """
-        self.buf is a list of lines of the nvim buffer,
+        self.buf is a list of lines of the nvim buffer.
 
         Args:
-            header_cell_type (str, optional): Use only when partial update.
-            header_cell_separator (str, optional): Use only when partial update.
+            header_cell_type: Use only when partial update.
         """
         self.buf = buf
         if self.buf == [""]:
@@ -57,9 +59,10 @@ class JupyniumBuffer:
         else:
             self.full_analyse_buf(header_cell_type)
 
-    def full_analyse_buf(self, header_cell_type="header"):
+    def full_analyse_buf(self, header_cell_type: str = "header"):
         """
         Main parser for the jupynium format (*.ju.*).
+
         This function needs to support partial update.
 
         E.g. by looking at 1 line of change, it should be able to understand if:
@@ -82,23 +85,15 @@ class JupyniumBuffer:
         num_rows_per_cell = []
         cell_types = [header_cell_type]
         for row, line in enumerate(self.buf):
-            if (
-                line.startswith("# %%%")
-                or line.startswith('"""%%')
-                or line.startswith("'''%%")
-            ):
+            if line.startswith(("# %%%", '"""%%', "'''%%")):
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
                 cell_types.append("markdown")
-            elif line.startswith("# %% [md]") or line.startswith("# %% [markdown]"):
+            elif line.startswith(("# %% [md]", "# %% [markdown]")):
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
                 cell_types.append("markdown (jupytext)")
-            elif (
-                line.strip() == "# %%"
-                or line.startswith('%%"""')
-                or line.startswith("%%'''")
-            ):
+            elif line.strip() == "# %%" or line.startswith(('%%"""', "%%'''")):
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
                 cell_types.append("code")
@@ -109,7 +104,7 @@ class JupyniumBuffer:
         self.num_rows_per_cell = num_rows_per_cell
         self.cell_types = cell_types
 
-    def _process_cell_text(self, cell_type, lines: list[str]):
+    def _process_cell_text(self, cell_type: str, lines: list[str]):
         """
         Assuming that lines is just one cell's content, process it.
         """
@@ -133,12 +128,12 @@ class JupyniumBuffer:
     ) -> list[str]:
         """
         Get processed cell text.
+
         In a code cell, remove comments for the magic commands.
         e.g. '# %time' -> '%time'
         In a markdown cell, remove the leading # from the lines or multiline string.
         e.g. '# # Markdown header' -> '# Markdown header'
         """
-
         if start_cell_idx == 0:
             start_row_offset = 0
         else:
@@ -176,7 +171,13 @@ class JupyniumBuffer:
         return self.get_cells_text(cell_idx, cell_idx, strip=strip)[0]
 
     def process_on_lines(
-        self, driver, strip, lines, start_row, old_end_row, new_end_row
+        self,
+        driver: WebDriver,
+        strip: bool,
+        lines: list[str],
+        start_row: int,
+        old_end_row: int,
+        new_end_row: int,
     ):
         (
             notebook_cell_operations,
@@ -198,10 +199,7 @@ class JupyniumBuffer:
             )
 
     def _on_lines_update_buf(self, lines, start_row, old_end_row, new_end_row):
-        """
-        Replace start_row:old_end_row to lines from self.buf
-        """
-
+        """Replace start_row:old_end_row to lines from self.buf."""
         # Analyse how many cells are removed
         notebook_cell_delete_operations = []
         notebook_cell_operations = []
@@ -313,7 +311,11 @@ class JupyniumBuffer:
 
         return notebook_cell_operations, modified_cell_idx_start, modified_cell_idx_end
 
-    def _apply_cell_operations(self, driver, notebook_cell_operations):
+    def _apply_cell_operations(
+        self,
+        driver: WebDriver,
+        notebook_cell_operations: list[tuple[str, int, list[str]]],
+    ):
         # Remove / create cells in Notebook
         for operation, cell_idx, cell_types in notebook_cell_operations:
             nb_cell_idx = cell_idx - 1
@@ -346,7 +348,7 @@ class JupyniumBuffer:
                     else:
                         raise ValueError(f"Unknown cell type {cell_type}")
 
-    def get_cell_start_row(self, cell_idx):
+    def get_cell_start_row(self, cell_idx: int):
         return sum(self.num_rows_per_cell[:cell_idx])
 
     def get_cell_index_from_row(
@@ -397,8 +399,11 @@ class JupyniumBuffer:
         self, driver, start_cell_idx, end_cell_idx, strip=True
     ):
         """
-        Cell 1 in JupyniumBuffer is cell 0 in Notebook
-        Args are inclusive range in ju.py JupyniumBuffer
+        Given the range of cells to update, sync the JupyniumBuffer with the notebook.
+
+        Note:
+            Cell 1 in JupyniumBuffer is cell 0 in Notebook.
+            Args are inclusive range in ju.py JupyniumBuffer
         """
         assert start_cell_idx <= end_cell_idx < self.num_cells
 
@@ -483,6 +488,8 @@ class JupyniumBuffer:
     @property
     def num_cells_in_notebook(self):
         """
+        Get the number of cells in the notebook.
+
         If the buffer has 1 cell (no separator), it will be treated as markdown file.
         If the buffer has more than 1 cell, it will be treated as notebook.
 
