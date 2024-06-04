@@ -15,22 +15,6 @@ set_cell_text_js_code = (
 )
 
 
-def _process_cell_type(cell_type: str) -> str:
-    if cell_type == "markdown (jupytext)":
-        return "markdown"
-
-    return cell_type
-
-
-def _process_cell_types(cell_types: list[str]) -> list[str]:
-    """
-    Return the cell types, e.g. ["markdown", "code", "header"].
-
-    markdown (jupytext) is converted to markdown.
-    """
-    return [_process_cell_type(cell_type) for cell_type in cell_types]
-
-
 class JupyniumBuffer:
     """
     Deal with the Nvim buffer and its cell information.
@@ -85,15 +69,11 @@ class JupyniumBuffer:
         num_rows_per_cell = []
         cell_types = [header_cell_type]
         for row, line in enumerate(self.buf):
-            if line.startswith(("# %%%", '"""%%', "'''%%")):
+            if line.startswith(("# %% [md]", "# %% [markdown]")):
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
                 cell_types.append("markdown")
-            elif line.startswith(("# %% [md]", "# %% [markdown]")):
-                num_rows_per_cell.append(num_rows_this_cell)
-                num_rows_this_cell = 1
-                cell_types.append("markdown (jupytext)")
-            elif line.strip() == "# %%" or line.startswith(('%%"""', "%%'''")):
+            elif line.strip() == "# %%":
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
                 cell_types.append("code")
@@ -112,7 +92,7 @@ class JupyniumBuffer:
             return "\n".join(
                 line[2:] if line.startswith("# %") else line for line in lines
             )
-        elif cell_type == "markdown (jupytext)":
+        elif cell_type == "markdown":
             if len(lines) > 0 and lines[0] == '"""':
                 return "\n".join(line for line in lines if not line.startswith('"""'))
             else:
@@ -120,7 +100,7 @@ class JupyniumBuffer:
                     line[2:] if line.startswith("# ") else line for line in lines
                 )
         else:
-            # header, markdown
+            # header
             return "\n".join(lines)
 
     def get_cells_text(
@@ -257,22 +237,18 @@ class JupyniumBuffer:
                     (
                         "cell_type",
                         cell_idx + 1,
-                        _process_cell_types(
-                            new_lines_buf.cell_types[
-                                1 : 1 + len(notebook_cell_delete_operations)
-                            ]
-                        ),
+                        new_lines_buf.cell_types[
+                            1 : 1 + len(notebook_cell_delete_operations)
+                        ],
                     )
                 ]
                 notebook_cell_operations.append(
                     (
                         "insert",
                         cell_idx + 1,
-                        _process_cell_types(
-                            new_lines_buf.cell_types[
-                                1 + len(notebook_cell_delete_operations) :
-                            ]
-                        ),
+                        new_lines_buf.cell_types[
+                            1 + len(notebook_cell_delete_operations) :
+                        ],
                     )
                 )
             else:
@@ -280,7 +256,7 @@ class JupyniumBuffer:
                     (
                         "cell_type",
                         cell_idx + 1,
-                        _process_cell_types(new_lines_buf.cell_types[1:]),
+                        new_lines_buf.cell_types[1:],
                     )
                 ]
 
@@ -334,7 +310,7 @@ class JupyniumBuffer:
                         f"Cell {nb_cell_idx + i} type change to {cell_type} "
                         "from Notebook"
                     )
-                    # "markdown" or "markdown (jupytext)"
+                    # "markdown"
                     if cell_type == "markdown":
                         driver.execute_script(
                             "Jupyter.notebook.cells_to_markdown([arguments[0]]);",
@@ -369,7 +345,7 @@ class JupyniumBuffer:
             int: cell index
             int: cell start row
             int: row index within the cell
-        """  # noqa: E501
+        """
         if num_rows_per_cell is None:
             num_rows_per_cell = self.num_rows_per_cell
 
@@ -390,10 +366,7 @@ class JupyniumBuffer:
         assert len(self.buf) == sum(self.num_rows_per_cell)
         assert len(self.cell_types) == len(self.num_rows_per_cell)
         assert self.cell_types[0] == "header"
-        assert all(
-            x in ("code", "markdown", "markdown (jupytext)")
-            for x in self.cell_types[1:]
-        )
+        assert all(x in ("code", "markdown") for x in self.cell_types[1:])
 
     def _partial_sync_to_notebook(
         self, driver, start_cell_idx, end_cell_idx, strip=True
@@ -439,8 +412,7 @@ class JupyniumBuffer:
                 for i, cell_type in enumerate(
                     self.cell_types[start_cell_idx : end_cell_idx + 1]
                 )
-                if cell_type.startswith("markdown")
-                # "markdown" or "markdown (jupytext)"
+                if cell_type == "markdown"
             ]
 
             if len(code_cell_indices) > 0:

@@ -35,7 +35,6 @@ where = ["src"]
 
 [project.scripts]
 jupynium = "jupynium.cmds.jupynium:main"
-ipynb2jupy = "jupynium.cmds.ipynb2jupy:main"
 ipynb2jupytext = "jupynium.cmds.ipynb2jupytext:main"
 
 [tool.setuptools_scm]
