@@ -81,12 +81,12 @@ class OnLinesArgs:
     new_end_row: int
 
     # Optimisations
-    def is_chainable(self, other: "OnLinesArgs") -> bool:
+    def is_chainable(self, other: OnLinesArgs) -> bool:
         return (
             self.start_row == other.start_row and self.new_end_row == other.old_end_row
         )
 
-    def chain(self, other: "OnLinesArgs") -> "OnLinesArgs":
+    def chain(self, other: OnLinesArgs) -> OnLinesArgs:
         assert self.is_chainable(other)
         return OnLinesArgs(
             other.lines,
@@ -111,7 +111,9 @@ class PrevLazyArgs:
     on_lines_args: OnLinesArgs | None = None
     update_selection_args: UpdateSelectionArgs | None = None
 
-    def process(self, nvim_info: NvimInfo, driver, bufnr) -> None:
+    def process(
+        self, nvim_info: NvimInfo, driver: selenium.webdriver, bufnr: int
+    ) -> None:
         if self.on_lines_args is not None:
             process_on_lines_event(nvim_info, driver, bufnr, self.on_lines_args)
             self.on_lines_args = None
