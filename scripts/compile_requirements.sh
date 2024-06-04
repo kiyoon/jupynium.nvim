@@ -5,6 +5,9 @@
 # Plus, it checks if the requirements.in file has changed since the last time it was compiled
 # If not, it skips the file rather than recompiling it (which may change version unnecessarily often)
 
+TARGET_PLATFORMS=(x86_64-unknown-linux-gnu aarch64-apple-darwin x86_64-apple-darwin x86_64-pc-windows-msvc)
+PYTHON_VERSION=3.8
+
 if ! command -v uv &> /dev/null; then
 	echo "uv is not installed. Please run 'pip3 install --user uv'" >&2
 	exit 1
@@ -22,7 +25,6 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # To simplify the directory (using relative paths), we change the working directory.
 cd "$SCRIPT_DIR/../deps" || { echo "Failure"; exit 1; }
 
-TARGET_PLATFORMS=(x86_64-unknown-linux-gnu aarch64-apple-darwin x86_64-apple-darwin x86_64-pc-windows-msvc)
 for platform in "${TARGET_PLATFORMS[@]}"; do
     mkdir -p "$platform"
 done
@@ -116,7 +118,7 @@ for file in "${files_changed[@]}"; do
         lockfile=$(get_lockfile "$file" "$target_platform")
         shafile=$(get_shafile "$file" "$target_platform")
         echo "🔒 Generating lockfile $lockfile from $file"
-        uv pip compile "$file" -o "$lockfile" --python-platform "$target_platform" > /dev/null
+        uv pip compile "$file" -o "$lockfile" --python-platform "$target_platform" --python-version "$PYTHON_VERSION" > /dev/null
         sha256sum "$file" > "$shafile"  # update hash
     done
 done
