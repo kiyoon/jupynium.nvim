@@ -11,11 +11,10 @@ authors = [
 ]
 readme = "README.md"
 license = { file="LICENSE" }
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
@@ -55,7 +54,7 @@ omit = [
 ]
 
 [tool.ruff]
-target-version = "py37"
+target-version = "py38"
 src = ["src"]  # for ruff isort
 extend-exclude = [
   "src/jupynium/_version.py",  # CHANGE
@@ -141,5 +140,5 @@ reportUnusedVariable = false
 # reportUnusedFunction = "warning"
 reportUndefinedVariable = false  # ruff handles this with F821
 
-pythonVersion = "3.7"
+pythonVersion = "3.8"
 pythonPlatform = "Linux"
