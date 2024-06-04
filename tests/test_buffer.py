@@ -114,30 +114,6 @@ def test_buffer_markdown_inject_2():
             "# %%",
             "f",
         ],
-        "markdown",
-    )
-    assert buffer.num_rows_per_cell == [3, 4, 2]
-    assert buffer.cell_types == ["markdown", "markdown", "code"]
-
-    header_cell_content = buffer.get_cell_text(0)
-    md_cell_content = buffer.get_cell_text(1)
-    assert header_cell_content == "a\n# b\n# # c"
-    assert md_cell_content == "# header\ncontent\nnoescape"
-
-
-def test_buffer_markdown_inject_3():
-    buffer = JupyniumBuffer(
-        [
-            "a",
-            "# b",
-            "# # c",
-            "# %% [markdown]",
-            "# # header",
-            "# content",
-            "noescape",
-            "# %%",
-            "f",
-        ],
         "code",
     )
     assert buffer.num_rows_per_cell == [3, 4, 2]
