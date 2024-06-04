@@ -147,7 +147,7 @@ def test_check_validity(jupbuf1):
 
 @pytest.mark.xfail(raises=Exception)
 def test_check_invalid():
-    buffer = JupyniumBuffer(["a", "b", "c", "'''%%%", "d", "%%'''", "f"])
+    buffer = JupyniumBuffer(["a", "b", "c", "# %% [markdown]", "d", "# %%", "f"])
     # manually modify the buffer
     buffer.buf.append("g")
     buffer._check_validity()
@@ -167,8 +167,8 @@ def test_num_cells_2():
 @pytest.mark.parametrize(
     "content,lines,start_row,old_end_row,new_end_row",
     [
-        (["a", "b", "c", "# %%", "d", "e", "f"], ["# %%%", "g"], 3, 4, 5),
-        (["b", "c", "# %%", "d", "e", "f"], ["# %%%", "g"], 3, 4, 5),
+        (["a", "b", "c", "# %%", "d", "e", "f"], ["# %% [md]", "g"], 3, 4, 5),
+        (["b", "c", "# %%", "d", "e", "f"], ["# %% [markdown]", "g"], 3, 4, 5),
         (["b", "# %%", "d", "f", "f", "f", "f"], ["# %%"], 3, 4, 4),
         (["b", "# %%", "d", "f", "f", "f", "f"], ["# %%"], 3, 3, 4),
         (["b", "# %%", "d", "# %%", "f", "f", "f"], [""], 1, 4, 2),
@@ -191,19 +191,19 @@ def test_on_lines_cellinfo(content, lines, start_row, old_end_row, new_end_row):
     [
         (
             ["a", "b", "c", "# %%", "d", "e", "f"],
-            ["# %%%", "g"],
+            ["# %% [md]", "g"],
             3,
             4,
             5,
-            ["a", "b", "c", "# %%%", "g", "d", "e", "f"],
+            ["a", "b", "c", "# %% [md]", "g", "d", "e", "f"],
         ),
         (
             ["b", "c", "# %%", "d", "e", "f"],
-            ["# %%%", "g"],
+            ["# %% [markdown]", "g"],
             3,
             4,
             5,
-            ["b", "c", "# %%", "# %%%", "g", "e", "f"],
+            ["b", "c", "# %%", "# %% [markdown]", "g", "e", "f"],
         ),
         (
             ["b", "# %%", "d", "f", "f", "f", "f"],

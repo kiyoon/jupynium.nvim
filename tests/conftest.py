@@ -12,7 +12,7 @@ from jupynium.buffer import JupyniumBuffer
 
 @pytest.fixture(scope="session")
 def jupbuf1():
-    return JupyniumBuffer(["a", "b", "c", "'''%%%", "d", "%%'''", "f"])
+    return JupyniumBuffer(["a", "b", "c", "# %% [markdown]", "# d", "# %%", "f"])
 
 
 @pytest.fixture(scope="session")
