@@ -4,6 +4,7 @@ Get minimum python version from pyproject.toml.
 Note:
     It only works if the format is like this: ">=3.11", ">=3.11,<3.12"
 """
+
 from __future__ import annotations
 
 from pathlib import Path
