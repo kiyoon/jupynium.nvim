@@ -1,4 +1,5 @@
 #!/use/bin/env python3
+# ruff: noqa: T201
 from __future__ import annotations
 
 import argparse
@@ -12,7 +13,8 @@ import sys
 import tempfile
 import time
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone
+from os import PathLike
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -23,10 +25,12 @@ import psutil
 import verboselogs
 from git.exc import InvalidGitRepositoryError, NoSuchPathError
 from persistqueue.exceptions import Empty
+from pynvim import Nvim
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
@@ -40,14 +44,16 @@ from ..pynvim_helpers import attach_and_init
 
 logger = verboselogs.VerboseLogger(__name__)
 
-SOURCE_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
-
 
 def webdriver_firefox(
-    profiles_ini_path="~/.mozilla/firefox/profiles.ini", profile_name=None
+    profiles_ini_path: str | PathLike | None = "~/.mozilla/firefox/profiles.ini",
+    profile_name=None,
 ):
     """
+    Get a Firefox webdriver with a specific profile.
+
     profiles.ini path is used to remember the last session (password, etc.)
+
     Args:
         profiles_ini_path: Path to profiles.ini
         profile_name: Profile name in profiles.ini. If None, use the default profile.
@@ -157,7 +163,7 @@ def get_parser():
     )
     parser.add_argument(
         "--firefox_profiles_ini_path",
-        help="Path to firefox profiles.ini which will be used to remember the last session (password, etc.)\n"  # noqa: E501
+        help="Path to firefox profiles.ini which will be used to remember the last session (password, etc.)\n"
         "Example path:\n"
         "~/.mozilla/firefox/profiles.ini\n"
         "~/snap/firefox/common/.mozilla/firefox/profiles.ini",
@@ -178,8 +184,8 @@ def get_parser():
     parser.add_argument(
         "--notebook_dir",
         type=str,
-        help="When jupyter notebook has started using --jupyter_command, the root dir will be this.\n"  # noqa: E501
-        "If None, open at a git dir of nvim's buffer path and still navigate to the buffer dir.\n"  # noqa: E501
+        help="When jupyter notebook has started using --jupyter_command, the root dir will be this.\n"
+        "If None, open at a git dir of nvim's buffer path and still navigate to the buffer dir.\n"
         "(e.g. localhost:8888/nbclassic/tree/path/to/buffer)",
     )
     parser.add_argument(
@@ -232,6 +238,7 @@ def start_if_running_else_clear(args, q: persistqueue.UniqueQ):
 def number_of_windows_be_list(num_windows: list[int]):
     """
     An expectation for the number of windows to be one of the listed values.
+
     Slightly modified from EC.number_of_windows_to_be(num_windows).
     """
 
@@ -245,7 +252,7 @@ def attach_new_neovim(
     driver,
     new_args,
     nvims: dict[str, NvimInfo],
-    URL_to_home_windows: dict[str, str],
+    url_to_home_windows: dict[str, str],
 ):
     logger.info(f"New nvim wants to attach: {new_args}")
     if new_args.nvim_listen_addr in nvims:
@@ -253,8 +260,8 @@ def attach_new_neovim(
     else:
         try:
             nvim = attach_and_init(new_args.nvim_listen_addr)
-            if new_args.notebook_URL in URL_to_home_windows.keys():
-                home_window = URL_to_home_windows[new_args.notebook_URL]
+            if new_args.notebook_URL in url_to_home_windows:
+                home_window = url_to_home_windows[new_args.notebook_URL]
             else:
                 prev_num_windows = len(driver.window_handles)
                 driver.switch_to.new_window("tab")
@@ -266,7 +273,7 @@ def attach_new_neovim(
                 sele.wait_until_loaded(driver)
 
                 home_window = driver.current_window_handle
-                URL_to_home_windows[new_args.notebook_URL] = home_window
+                url_to_home_windows[new_args.notebook_URL] = home_window
 
             nvim_info = NvimInfo(
                 nvim, home_window, auto_close_tab=not new_args.no_auto_close_tab
@@ -291,17 +298,17 @@ def generate_notebook_token():
     return secrets.token_urlsafe(16)
 
 
-def exception_no_notebook(notebook_URL, nvim):
+def exception_no_notebook(notebook_url: str, nvim: Nvim | None):
     logger.exception(
         "Exception occurred. "
-        f"Are you sure you're running Jupyter Notebook at {notebook_URL}? "
+        f"Are you sure you're running Jupyter Notebook at {notebook_url}? "
         "Use --jupyter_command to specify the command to start Jupyter Notebook."
     )
     if nvim is not None:
         nvim.lua.Jupynium_notify.error(
             [
                 "Can't connect to Jupyter Notebook.",
-                f"Are you sure you're running Jupyter Notebook at {notebook_URL}?",
+                f"Are you sure you're running Jupyter Notebook at {notebook_url}?",
                 "Use jupyter_command to specify the command to start Jupyter Notebook.",
             ],
         )
@@ -321,9 +328,10 @@ def kill_child_processes(parent_pid, sig=signal.SIGTERM):
     psutil.wait_procs(children, timeout=3)
 
 
-def kill_notebook_proc(notebook_proc):
+def kill_notebook_proc(notebook_proc: subprocess.Popen | None):
     """
     Kill the notebook process.
+
     Used if we opened a Jupyter Notebook server using the --jupyter_command
     and when no server is running.
     """
@@ -347,11 +355,21 @@ def kill_notebook_proc(notebook_proc):
 
 
 def fallback_open_notebook_server(
-    notebook_port, notebook_url_path, jupyter_command, notebook_dir, nvim, driver
+    notebook_port: int,
+    notebook_url_path: str,
+    jupyter_command,
+    notebook_dir: str | PathLike | None,
+    nvim: Nvim | None,
+    driver: WebDriver,
 ):
     """
+    After firefox failing to try to connect to Notebook, open the Notebook server and try again.
+
     Args:
-        notebook_url_path (str): e.g. "/nbclassic"
+        notebook_url_path: e.g. "/nbclassic"
+
+    Returns:
+        notebook_proc: subprocess.Popen object
     """
     # Fallback: if the URL is localhost and if selenium can't connect,
     # open the Jupyter Notebook server and even start syncing.
@@ -362,7 +380,7 @@ def fallback_open_notebook_server(
         if nvim is not None:
             # Root dir of the notebook is either the buffer's dir or the git dir.
             buffer_path = str(nvim.eval("expand('%:p')"))
-            buffer_dir = os.path.dirname(buffer_path)
+            buffer_dir = Path(buffer_path).parent
             try:
                 repo = git.Repo(buffer_dir, search_parent_directories=True)
                 notebook_dir = repo.working_tree_dir
@@ -387,6 +405,7 @@ def fallback_open_notebook_server(
         # notebook_args += [f"--ServerApp.root_dir={root_dir}"]
         notebook_args += ["--NotebookApp.notebook_dir", notebook_dir]
 
+    notebook_proc = None
     try:
         # strip commands because we need to escape args with dashes.
         # e.g. --jupyter_command conda run ' --no-capture-output' ' -n' env_name jupyter
@@ -404,6 +423,8 @@ def fallback_open_notebook_server(
     except FileNotFoundError:
         # Command doesn't exist
         exception_no_notebook(f"localhost:{notebook_port}{notebook_url_path}", nvim)
+
+    assert notebook_proc is not None
 
     time.sleep(1)
     for _ in range(20):
@@ -429,14 +450,13 @@ def fallback_open_notebook_server(
     return notebook_proc
 
 
-# flake8: noqa: C901
 def main():
     # Initialise with NOTSET level and null device, and add stream handler separately.
     # This way, the root logging level is NOTSET (log all),
     # and we can customise each handler's behaviour.
     # If we set the level during the initialisation, it will affect to ALL streams,
     # so the file stream cannot be more verbose (lower level) than the console stream.
-    coloredlogs.install(fmt="", level=logging.NOTSET, stream=open(os.devnull, "w"))
+    coloredlogs.install(fmt="", level=logging.NOTSET, stream=open(os.devnull, "w"))  # noqa: SIM115
 
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
@@ -445,9 +465,9 @@ def main():
     )
     console_handler.setFormatter(console_format)
 
-    tmp_log_dir = os.path.join(tempfile.gettempdir(), "jupynium", "logs")
-    os.makedirs(tmp_log_dir, exist_ok=True)
-    log_path = os.path.join(tmp_log_dir, f"{datetime.now():%Y-%m-%d_%H-%M-%S}.log")
+    tmp_log_dir = Path(tempfile.gettempdir()) / "jupynium" / "logs"
+    tmp_log_dir.mkdir(parents=True, exist_ok=True)
+    log_path = tmp_log_dir / f"{datetime.now(tz=timezone.utc):%Y-%m-%d_%H-%M-%S}.log"
 
     f_handler = logging.FileHandler(log_path)
     f_handler.setLevel(logging.INFO)
@@ -504,10 +524,10 @@ def main():
             try:
                 driver.get(args.notebook_URL)
             except WebDriverException:
-                notebook_URL = args.notebook_URL
+                notebook_url = args.notebook_URL
                 if "://" not in args.notebook_URL:
-                    notebook_URL = "http://" + notebook_URL
-                url = urlparse(notebook_URL)
+                    notebook_url = "http://" + notebook_url
+                url = urlparse(notebook_url)
                 if url.port is not None and url.hostname in ["localhost", "127.0.0.1"]:
                     notebook_proc = fallback_open_notebook_server(
                         url.port,
@@ -536,7 +556,7 @@ def main():
 
             home_window = driver.current_window_handle
 
-            URL_to_home_windows = {args.notebook_URL: home_window}
+            url_to_home_windows = {args.notebook_URL: home_window}
             if args.nvim_listen_addr is not None and nvim is not None:
                 nvims = {
                     args.nvim_listen_addr: NvimInfo(
@@ -584,7 +604,7 @@ def main():
                     except Empty:
                         pass
                     else:
-                        attach_new_neovim(driver, new_args, nvims, URL_to_home_windows)
+                        attach_new_neovim(driver, new_args, nvims, url_to_home_windows)
 
                     time.sleep(args.sleep_time_idle)
                 except WebDriverException:
