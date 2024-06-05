@@ -380,6 +380,7 @@ def fallback_open_notebook_server(
         "--no-browser",
         "--NotebookApp.token",
         notebook_token,
+        "--NotebookApp.show_banner=False",
     ]
 
     if notebook_dir is not None:

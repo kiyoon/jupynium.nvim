@@ -52,6 +52,30 @@ omit = [
   # OPTIONALLY ADD MORE LATER
 ]
 
+[tool.tox]
+legacy_tox_ini = """
+    [tox]
+    minversion = 3.24.0
+    envlist = python3.8, python3.9, python3.10, python3.11, python3.12
+    isolated_build = true
+
+    [gh-actions]
+    python =
+        3.8: python3.8
+        3.9: python3.9
+        3.10: python3.10
+        3.11: python3.11
+        3.11: python3.12
+
+    [testenv]
+    setenv =
+        PYTHONPATH = {toxinidir}
+    deps =
+        -r{toxinidir}/deps/x86_64-unknown-linux-gnu/requirements_dev.txt
+    commands =
+        pytest --basetemp={envtmpdir}
+"""
+
 [tool.ruff]
 target-version = "py38"
 src = ["src"]  # for ruff isort
@@ -140,4 +164,4 @@ reportUnusedVariable = false
 reportUndefinedVariable = false  # ruff handles this with F821
 
 pythonVersion = "3.8"
-pythonPlatform = "Linux"
+# pythonPlatform = "Linux"
