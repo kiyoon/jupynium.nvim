@@ -13,6 +13,7 @@ import sys
 import tempfile
 import time
 import traceback
+from collections.abc import Sequence
 from datetime import datetime, timezone
 from os import PathLike
 from pathlib import Path
@@ -47,7 +48,7 @@ logger = verboselogs.VerboseLogger(__name__)
 
 def webdriver_firefox(
     profiles_ini_path: str | PathLike | None = "~/.mozilla/firefox/profiles.ini",
-    profile_name=None,
+    profile_name: str | None = None,
 ):
     """
     Get a Firefox webdriver with a specific profile.
@@ -178,7 +179,8 @@ def get_parser():
         nargs="+",
         default=["jupyter"],
         help="Command to start Jupyter Notebook (but without notebook).\n"
-        "To use conda env, use `--jupyter_command conda run ' --no-capture-output' ' -n' base jupyter`. Notice the space before the dash.\n"  # noqa: E501
+        "To use conda env, use `--jupyter_command conda run ' --no-capture-output' ' -n' base jupyter`. "
+        "Notice the space before the dash.\n"
         "It is used only when the --notebook_URL is localhost, and is not running.",
     )
     parser.add_argument(
@@ -249,8 +251,8 @@ def number_of_windows_be_list(num_windows: list[int]):
 
 
 def attach_new_neovim(
-    driver,
-    new_args,
+    driver: WebDriver,
+    new_args: argparse.Namespace,
     nvims: dict[str, NvimInfo],
     url_to_home_windows: dict[str, str],
 ):
@@ -357,7 +359,7 @@ def kill_notebook_proc(notebook_proc: subprocess.Popen | None):
 def fallback_open_notebook_server(
     notebook_port: int,
     notebook_url_path: str,
-    jupyter_command,
+    jupyter_command: Sequence[str],
     notebook_dir: str | PathLike | None,
     nvim: Nvim | None,
     driver: WebDriver,
@@ -600,7 +602,7 @@ def main():
 
                     # Check if a new newvim instance wants to attach to this server.
                     try:
-                        new_args = q.get(block=False)
+                        new_args: argparse.Namespace = q.get(block=False)  # type: ignore
                     except Empty:
                         pass
                     else:
