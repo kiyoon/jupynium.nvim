@@ -6,7 +6,6 @@
 # If not, it skips the file rather than recompiling it (which may change version unnecessarily often)
 
 TARGET_PLATFORMS=(x86_64-unknown-linux-gnu aarch64-apple-darwin x86_64-apple-darwin x86_64-pc-windows-msvc)
-PYTHON_VERSION=3.8
 
 if ! command -v uv &> /dev/null; then
 	echo "uv is not installed. Please run 'pip3 install --user uv'" >&2
@@ -24,6 +23,8 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # NOTE: sha256sum will put the file path in the hash file.
 # To simplify the directory (using relative paths), we change the working directory.
 cd "$SCRIPT_DIR/../deps" || { echo "Failure"; exit 1; }
+
+PYTHON_VERSION=$(python3 "$SCRIPT_DIR/get_python_version.py")
 
 for platform in "${TARGET_PLATFORMS[@]}"; do
     mkdir -p "$platform"
