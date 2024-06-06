@@ -6,6 +6,8 @@ import logging
 import os
 from dataclasses import dataclass
 from os import PathLike
+from pathlib import Path
+from typing import Any
 
 from pkg_resources import resource_stream
 from selenium.common.exceptions import (
@@ -130,7 +132,7 @@ class PrevLazyArgsPerBuf:
 
     data: dict[int, PrevLazyArgs] = dataclasses.field(default_factory=dict)
 
-    def process(self, bufnr: int, nvim_info: NvimInfo, driver) -> None:
+    def process(self, bufnr: int, nvim_info: NvimInfo, driver: WebDriver) -> None:
         if bufnr in self.data:
             self.data[bufnr].process(nvim_info, driver, bufnr)
 
@@ -140,7 +142,11 @@ class PrevLazyArgsPerBuf:
         self.data.clear()
 
     def lazy_on_lines_event(
-        self, nvim_info: NvimInfo, driver, bufnr: int, on_lines_args: OnLinesArgs
+        self,
+        nvim_info: NvimInfo,
+        driver: WebDriver,
+        bufnr: int,
+        on_lines_args: OnLinesArgs,
     ) -> None:
         if bufnr not in self.data:
             self.data[bufnr] = PrevLazyArgs()
@@ -163,7 +169,7 @@ class PrevLazyArgsPerBuf:
         self.data[bufnr].update_selection_args = update_selection_args
 
 
-def process_events(nvim_info: NvimInfo, driver):
+def process_events(nvim_info: NvimInfo, driver: WebDriver):
     """
     Controls events for a single nvim, and a single cycle of events.
 
@@ -241,6 +247,7 @@ def start_sync_with_filename(
     driver.switch_to.window(nvim_info.home_window)
     sele.wait_until_notebook_list_loaded(driver)
 
+    prev_windows = None
     if ipynb_filename == "":
         file_found = False
     else:
@@ -265,8 +272,10 @@ def start_sync_with_filename(
                 driver.execute_script("arguments[0].scrollIntoView();", notebook_elem)
                 notebook_elem.click()
                 file_found = True
-                sele.wait_until_new_window(driver, prev_windows)
+                sele.wait_until_new_window(driver, list(prev_windows))
                 break
+
+    assert prev_windows is not None
 
     if file_found:
         new_window = set(driver.window_handles) - set(prev_windows)
@@ -313,7 +322,7 @@ def start_sync_with_filename(
             new_btn.click()
             kernel_btn.click()
 
-        sele.wait_until_new_window(driver, prev_windows)
+        sele.wait_until_new_window(driver, list(prev_windows))
         new_window = set(driver.window_handles) - prev_windows
         assert len(new_window) == 1
         new_window = new_window.pop()
@@ -333,9 +342,7 @@ def start_sync_with_filename(
 def choose_default_kernel(
     driver: WebDriver, page_type: str, buf_filetype: str, conda_or_venv_path: str | None
 ):
-    """
-    Choose kernel based on buffer's filetype and conda env
-    """
+    """Choose kernel based on buffer's filetype and conda env."""
     if page_type == "notebook":
         kernel_specs = driver.execute_script(
             "return Jupyter.kernelselector.kernelspecs;"
@@ -363,9 +370,9 @@ def choose_default_kernel(
         """
         for kernel_name in valid_kernel_names:
             try:
-                kernel_exec_path = kernel_specs[kernel_name]["spec"]["argv"][0]
-                exec_name = os.path.basename(kernel_exec_path)
-                env_exec_path = os.path.join(env_path, "bin", exec_name)
+                kernel_exec_path = Path(kernel_specs[kernel_name]["spec"]["argv"][0])
+                exec_name = kernel_exec_path.name
+                env_exec_path = Path(env_path) / "bin" / exec_name
                 if kernel_exec_path == env_exec_path:
                     return kernel_name
             except (KeyError, IndexError):
@@ -413,8 +420,13 @@ def choose_default_kernel(
     return None
 
 
-def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event):
+def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event: list[Any]):
     """
+    Process a request event, where an event can be request or notification.
+
+    Request event requires a response.
+    Notification event doesn't require a response.
+
     Returns:
         status (bool)
         request_event (rpcrequest event): to notify nvim after cleared up.
@@ -667,9 +679,9 @@ def process_notification_event(
                 ".ju." in buf_filepath
                 and nvim_info.nvim.vars["jupynium_auto_download_ipynb"]
             ):
-                output_ipynb_path = os.path.splitext(buf_filepath)[0]
-                output_ipynb_path = os.path.splitext(output_ipynb_path)[0]
-                output_ipynb_path += ".ipynb"
+                # .ju.py -> .ipynb
+                output_ipynb_path = os.path.splitext(buf_filepath)[0]  # noqa: PTH122
+                output_ipynb_path = Path(output_ipynb_path).with_suffix(".ipynb")
 
                 try:
                     download_ipynb(driver, nvim_info, bufnr, output_ipynb_path)
@@ -683,20 +695,21 @@ def process_notification_event(
             (buf_filepath, filename) = event_args
             assert buf_filepath != ""
 
+            buf_filepath = Path(buf_filepath)
+            filename = Path(filename)
+
             if filename is not None and filename != "":
-                if os.path.isabs(filename):
+                if filename.is_absolute():
                     output_ipynb_path = filename
                 else:
-                    output_ipynb_path = os.path.join(
-                        os.path.dirname(buf_filepath), filename
-                    )
+                    output_ipynb_path = buf_filepath.parent / filename
 
-                if not output_ipynb_path.endswith(".ipynb"):
-                    output_ipynb_path += ".ipynb"
+                if output_ipynb_path.suffix != ".ipynb":
+                    output_ipynb_path = output_ipynb_path.with_suffix(".ipynb")
             else:
-                output_ipynb_path = os.path.splitext(buf_filepath)[0]
-                output_ipynb_path = os.path.splitext(output_ipynb_path)[0]
-                output_ipynb_path += ".ipynb"
+                # change suffix .ju.py -> .ipynb
+                output_ipynb_path = os.path.splitext(buf_filepath)[0]  # noqa: PTH122
+                output_ipynb_path = Path(output_ipynb_path).with_suffix(".ipynb")
 
             try:
                 download_ipynb(driver, nvim_info, bufnr, output_ipynb_path)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import time
+from os import PathLike
 
 import pynvim
 from pkg_resources import resource_stream
@@ -9,7 +10,8 @@ from pkg_resources import resource_stream
 logger = logging.getLogger(__name__)
 
 
-def attach_and_init(nvim_listen_addr: str):
+def attach_and_init(nvim_listen_addr: str | PathLike):
+    nvim_listen_addr = str(nvim_listen_addr)
     logger.info("nvim addr: %s", nvim_listen_addr)
     for _ in range(30):
         try:

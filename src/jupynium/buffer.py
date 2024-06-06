@@ -20,11 +20,12 @@ class JupyniumBuffer:
     Deal with the Nvim buffer and its cell information.
 
     This does have a functionality to sync with the Notebook.
+    It can also be part of the buffer, and anything above the first cell will be `header_cell_type`.
     """
 
     def __init__(
         self,
-        buf: list[str] = [""],
+        buf: list[str] | None = None,
         header_cell_type: str = "header",
     ):
         """
@@ -33,14 +34,15 @@ class JupyniumBuffer:
         Args:
             header_cell_type: Use only when partial update.
         """
-        self.buf = buf
-        if self.buf == [""]:
+        if buf is None:
             # each cell's row length. 0-th cell is not a cell, but it's the header.
             # You can put anything above and it won't be synced to Jupyter Notebook.
+            self.buf = [""]
             self.num_rows_per_cell: list[int] = [1]
 
             self.cell_types = ["header"]  # 0-th cell is not a cell.
         else:
+            self.buf = buf
             self.full_analyse_buf(header_cell_type)
 
     def full_analyse_buf(self, header_cell_type: str = "header"):
@@ -68,7 +70,7 @@ class JupyniumBuffer:
         num_rows_this_cell = 0
         num_rows_per_cell = []
         cell_types = [header_cell_type]
-        for row, line in enumerate(self.buf):
+        for _row, line in enumerate(self.buf):
             if line.startswith(("# %% [md]", "# %% [markdown]")):
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
@@ -178,7 +180,9 @@ class JupyniumBuffer:
                 driver, modified_cell_idx_start, modified_cell_idx_end, strip=strip
             )
 
-    def _on_lines_update_buf(self, lines, start_row, old_end_row, new_end_row):
+    def _on_lines_update_buf(
+        self, lines: list[str], start_row: int, old_end_row: int, new_end_row: int
+    ):
         """Replace start_row:old_end_row to lines from self.buf."""
         # Analyse how many cells are removed
         notebook_cell_delete_operations = []
@@ -369,7 +373,7 @@ class JupyniumBuffer:
         assert all(x in ("code", "markdown") for x in self.cell_types[1:])
 
     def _partial_sync_to_notebook(
-        self, driver, start_cell_idx, end_cell_idx, strip=True
+        self, driver: WebDriver, start_cell_idx: int, end_cell_idx: int, strip=True
     ):
         """
         Given the range of cells to update, sync the JupyniumBuffer with the notebook.
@@ -437,7 +441,7 @@ class JupyniumBuffer:
                 *texts_per_cell,
             )
 
-    def full_sync_to_notebook(self, driver, strip=True):
+    def full_sync_to_notebook(self, driver: WebDriver, strip: bool = True):
         # Full sync with notebook.
         # WARNING: syncing may result in data loss.
         num_cells = self.num_cells_in_notebook
@@ -473,7 +477,8 @@ class JupyniumBuffer:
     def num_rows(self):
         return len(self.buf)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        assert isinstance(other, JupyniumBuffer)
         return (
             self.buf == other.buf
             and self.num_rows_per_cell == other.num_rows_per_cell

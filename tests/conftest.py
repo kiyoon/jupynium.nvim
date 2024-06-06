@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import os
 import subprocess
 import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -18,7 +18,7 @@ def jupbuf1():
 @pytest.fixture(scope="session")
 def nvim_1():
     with tempfile.TemporaryDirectory() as tmp:
-        path = os.path.join(tmp, "nvim")
+        path = str(Path(tmp) / "nvim")
         nvim_proc = subprocess.Popen(
             ["nvim", "--clean", "--headless", "--listen", path]
         )

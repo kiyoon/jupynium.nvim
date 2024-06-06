@@ -413,7 +413,7 @@ def fallback_open_notebook_server(
         # e.g. --jupyter_command conda run ' --no-capture-output' ' -n' env_name jupyter
 
         jupyter_command = [command.strip() for command in jupyter_command]
-        jupyter_command[0] = os.path.expanduser(jupyter_command[0])
+        jupyter_command[0] = str(Path(jupyter_command[0]).expanduser())
 
         jupyter_stdout = tempfile.NamedTemporaryFile()
         logger.info(f"Writing Jupyter Notebook server log to: {jupyter_stdout.name}")
