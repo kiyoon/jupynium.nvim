@@ -51,7 +51,7 @@ Don't forget to upgrade your notebook and install nbclassic (`pip install --upgr
 
 ### Install Python
 
-Don't have system Python 3.7? You can use [Conda](https://docs.conda.io/en/latest/miniconda.html):
+Don't have system Python 3.8? You can use [Conda](https://docs.conda.io/en/latest/miniconda.html):
 
 ```bash
 conda create -n jupynium python=3
