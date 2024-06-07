@@ -184,6 +184,7 @@ def process_events(nvim_info: NvimInfo, driver: WebDriver):
     if nvim_info.home_window not in driver.window_handles:
         nvim_info.nvim.lua.Jupynium_notify.error(
             ["Do not close the main page. Detaching the nvim from Jupynium.."],
+            "error_close_main_page",
             async_=True,
         )
         return False, None
@@ -237,7 +238,7 @@ def start_sync_with_filename(
     buf_filetype: str,
     conda_or_venv_path: str | None,
     nvim_info: NvimInfo,
-    driver,
+    driver: WebDriver,
 ):
     """
     Start sync using a filename (not tab index).
@@ -715,6 +716,7 @@ def process_notification_event(
             except OSError as e:
                 nvim_info.nvim.lua.Jupynium_notify.error(
                     ["Failed to download ipynb file to", output_ipynb_path],
+                    "error_download_ipynb",
                     async_=True,
                 )
                 logger.error(
@@ -946,6 +948,7 @@ def download_ipynb(
         )
         nvim_info.nvim.lua.Jupynium_notify.info(
             ["Downloaded ipynb file to", output_ipynb_path],
+            "download_ipynb",
             async_=True,
         )
         logger.info(f"Downloaded ipynb to {output_ipynb_path}")

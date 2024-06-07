@@ -40,3 +40,7 @@ end
 if vim.g.jupynium_channel_id == nil then
   vim.g.jupynium_channel_id = -1
 end
+
+if vim.g.jupynium_notify_ignore_codes == nil then
+  vim.g.jupynium_notify_ignore_codes = {} --- @type table<string, boolean>
+end

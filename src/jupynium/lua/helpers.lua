@@ -76,7 +76,12 @@ function Jupynium_rpcnotify(event, buf, ensure_syncing, ...)
   rpc(vim.rpcnotify, event, buf, ...)
 end
 
--- block until jupynium responds to the message
+---block until jupynium responds to the message
+---@param event string
+---@param buf integer?
+---@param ensure_syncing boolean
+---@param ... any
+---@return any
 function Jupynium_rpcrequest(event, buf, ensure_syncing, ...)
   if ensure_syncing then
     if Jupynium_syncing_bufs[buf] == nil then
@@ -93,7 +98,7 @@ end
 --- API: Execute javascript in the browser. It will switch to the correct tab before executing.
 ---@param bufnr integer | nil If given, before executing the code it will switch to the tab of this buffer. Requires syncing in advance.
 ---@param code string Javascript code
----@return boolean, object: Success, response
+---@return boolean, any?: Success, response
 function Jupynium_execute_javascript(bufnr, code)
   local ensure_syncing = true
   if bufnr == nil then
@@ -183,7 +188,7 @@ end
 ---Start synchronising the buffer with the ipynb file
 ---@param bufnr integer buffer number
 ---@param ipynb_filename string name of the ipynb file
----@param ask boolean whether to ask for confirmation
+---@param ask boolean? whether to ask for confirmation
 function Jupynium_start_sync(bufnr, ipynb_filename, ask)
   if bufnr == nil or bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()
@@ -203,7 +208,7 @@ function Jupynium_start_sync(bufnr, ipynb_filename, ask)
   local content = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
   -- Used for choosing the correct kernel
-  local buf_filetype = vim.api.nvim_buf_get_option(bufnr, "filetype")
+  local buf_filetype = vim.bo[bufnr].filetype
   local conda_or_venv_path = vim.env.CONDA_PREFIX or vim.env.VIRTUAL_ENV
 
   local response =
@@ -572,7 +577,7 @@ end
 ---@param bufnr integer
 ---@param code_line string
 ---@param col integer 0-indexed
----@return table | nil
+---@return table?
 function Jupynium_kernel_inspect(bufnr, code_line, col)
   if bufnr == nil or bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()
@@ -669,7 +674,7 @@ end
 ---@param code_line string
 ---@param col integer 0-indexed
 ---@param callback function nvim-cmp complete callback.
----@return table | nil
+---@return table?
 function Jupynium_kernel_complete_async(bufnr, code_line, col, callback)
   if bufnr == nil or bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()

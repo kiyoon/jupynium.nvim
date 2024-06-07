@@ -66,6 +66,7 @@ def attach_and_init(nvim_listen_addr: str | PathLike):
             "Jupynium successfully attached and initialised.",
             "Run `:JupyniumStartSync`",
         ],
+        "attach_and_init",
         async_=True,
     )
 
