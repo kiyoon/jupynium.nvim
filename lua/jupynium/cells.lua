@@ -4,22 +4,16 @@ local M = {}
 
 --- Get the line type (cell separator, magic commands, empty, others)
 ---@param line string | number 1-indexed
----@return string "cell separator: markdown" | "cell separator: markdown (jupytext)" | "cell separator: code" | "magic commands" | "empty" | "others"
+---@return string "cell separator: markdown" | "cell separator: code" | "magic commands" | "empty" | "others"
 function M.line_type(line)
   if type(line) == "number" then
     line = vim.api.nvim_buf_get_lines(0, line - 1, line, false)[1]
   end
 
-  if utils.string_begins_with(line, "# %%%") then
+  if vim.startswith(line, "# %% [md]") or vim.startswith(line, "# %% [markdown]") then
     return "cell separator: markdown"
-  elseif utils.string_begins_with(line, '"""%%') or utils.string_begins_with(line, "'''%%") then
-    return "cell separator: markdown (string)"
-  elseif utils.string_begins_with(line, "# %% [md]") or utils.string_begins_with(line, "# %% [markdown]") then
-    return "cell separator: markdown (jupytext)"
   elseif vim.fn.trim(line) == "# %%" then
     return "cell separator: code"
-  elseif utils.string_begins_with(line, '%%"""') or utils.string_begins_with(line, "%%'''") then
-    return "cell separator: code (string)"
   elseif utils.string_begins_with(line, "# ---") then
     return "metadata"
   elseif utils.string_begins_with(line, "# %") then
@@ -57,13 +51,10 @@ function M.line_types_entire_buf(bufnr)
     local line_type = M.line_type(line)
     if line_type == "others" or line_type == "empty" then
       line_types[i] = "cell content: " .. current_cell_type
-    elseif line_type == "cell separator: markdown (jupytext)" then
-      current_cell_type = "markdown (jupytext)"
-      line_types[i] = line_type
-    elseif utils.string_begins_with(line_type, "cell separator: markdown") then
+    elseif vim.startswith(line_type, "cell separator: markdown") then
       current_cell_type = "markdown"
       line_types[i] = line_type
-    elseif utils.string_begins_with(line_type, "cell separator: code") then
+    elseif vim.startswith(line_type, "cell separator: code") then
       current_cell_type = "code"
       line_types[i] = line_type
     else

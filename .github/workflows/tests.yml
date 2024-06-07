@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
         nvim-tag: [stable]
 
     steps:
@@ -21,7 +21,7 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install libfuse2
           sudo add-apt-repository universe
-          wget https://github.com/neovim/neovim/releases/download/${NVIM_TAG}/nvim.appimage
+          wget https://github.com/neovim/neovim/releases/download/"${NVIM_TAG}"/nvim.appimage
           chmod u+x nvim.appimage && sudo mv nvim.appimage /usr/local/bin/nvim
           # mkdir -p ~/.local/share/nvim/site/pack/tests/opt
           # ln -s $(pwd) ~/.local/share/nvim/site/pack/tests/opt

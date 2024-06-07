@@ -13,8 +13,7 @@ def test_buffer_1():
 
 def test_magic_command_1():
     """
-    Everything else except magic commands should be preserved after __init__()
-    or fully_analysed_buf()
+    Everything else except magic commands should be preserved after __init__() or fully_analysed_buf().
     """
     lines = ["a", "b", "c", "# %%", "# %time", "e", "f"]
     buffer = JupyniumBuffer(lines)
@@ -23,25 +22,14 @@ def test_magic_command_1():
 
 
 def test_buffer_markdown():
-    buffer = JupyniumBuffer(["a", "b", "c", "# %%%", "d", "# %%", "f"])
-    assert buffer.num_rows_per_cell == [3, 2, 2]
-    assert buffer.cell_types == ["header", "markdown", "code"]
-
-
-def test_buffer_markdown_2(jupbuf1):
-    assert jupbuf1.num_rows_per_cell == [3, 2, 2]
-    assert jupbuf1.cell_types == ["header", "markdown", "code"]
-
-
-def test_buffer_markdown_jupytext():
     buffer = JupyniumBuffer(["a", "b", "c", "# %% [md]", "d", "# %%", "f"])
     assert buffer.num_rows_per_cell == [3, 2, 2]
-    assert buffer.cell_types == ["header", "markdown (jupytext)", "code"]
+    assert buffer.cell_types == ["header", "markdown", "code"]
     md_cell_content = buffer.get_cell_text(1)
     assert md_cell_content == "d"
 
 
-def test_buffer_markdown_jupytext_2():
+def test_buffer_markdown_2():
     buffer = JupyniumBuffer(
         [
             "a",
@@ -56,7 +44,7 @@ def test_buffer_markdown_jupytext_2():
         ]
     )
     assert buffer.num_rows_per_cell == [3, 4, 2]
-    assert buffer.cell_types == ["header", "markdown (jupytext)", "code"]
+    assert buffer.cell_types == ["header", "markdown", "code"]
 
     header_cell_content = buffer.get_cell_text(0)
     md_cell_content = buffer.get_cell_text(1)
@@ -64,7 +52,7 @@ def test_buffer_markdown_jupytext_2():
     assert md_cell_content == "# header\ncontent\nnoescape"
 
 
-def test_buffer_markdown_jupytext_3():
+def test_buffer_markdown_3():
     buffer = JupyniumBuffer(
         [
             "a",
@@ -81,7 +69,7 @@ def test_buffer_markdown_jupytext_3():
         ]
     )
     assert buffer.num_rows_per_cell == [3, 6, 2]
-    assert buffer.cell_types == ["header", "markdown (jupytext)", "code"]
+    assert buffer.cell_types == ["header", "markdown", "code"]
 
     header_cell_content = buffer.get_cell_text(0)
     md_cell_content = buffer.get_cell_text(1, strip=True)
@@ -89,31 +77,7 @@ def test_buffer_markdown_jupytext_3():
     assert md_cell_content == "# # header\n# content\nnoescape"
 
 
-def test_buffer_markdown_jupytext_inject():
-    buffer = JupyniumBuffer(
-        [
-            "a",
-            "# b",
-            "# # c",
-            "# %% [markdown]",
-            "# # header",
-            "# content",
-            "noescape",
-            "# %%",
-            "f",
-        ],
-        "markdown (jupytext)",
-    )
-    assert buffer.num_rows_per_cell == [3, 4, 2]
-    assert buffer.cell_types == ["markdown (jupytext)", "markdown (jupytext)", "code"]
-
-    header_cell_content = buffer.get_cell_text(0)
-    md_cell_content = buffer.get_cell_text(1)
-    assert header_cell_content == "a\nb\n# c"
-    assert md_cell_content == "# header\ncontent\nnoescape"
-
-
-def test_buffer_markdown_jupytext_inject_2():
+def test_buffer_markdown_inject():
     buffer = JupyniumBuffer(
         [
             "a",
@@ -129,15 +93,15 @@ def test_buffer_markdown_jupytext_inject_2():
         "markdown",
     )
     assert buffer.num_rows_per_cell == [3, 4, 2]
-    assert buffer.cell_types == ["markdown", "markdown (jupytext)", "code"]
+    assert buffer.cell_types == ["markdown", "markdown", "code"]
 
     header_cell_content = buffer.get_cell_text(0)
     md_cell_content = buffer.get_cell_text(1)
-    assert header_cell_content == "a\n# b\n# # c"
+    assert header_cell_content == "a\nb\n# c"
     assert md_cell_content == "# header\ncontent\nnoescape"
 
 
-def test_buffer_markdown_jupytext_inject_3():
+def test_buffer_markdown_inject_2():
     buffer = JupyniumBuffer(
         [
             "a",
@@ -153,7 +117,7 @@ def test_buffer_markdown_jupytext_inject_3():
         "code",
     )
     assert buffer.num_rows_per_cell == [3, 4, 2]
-    assert buffer.cell_types == ["code", "markdown (jupytext)", "code"]
+    assert buffer.cell_types == ["code", "markdown", "code"]
 
     header_cell_content = buffer.get_cell_text(0)
     md_cell_content = buffer.get_cell_text(1)
@@ -183,7 +147,7 @@ def test_check_validity(jupbuf1):
 
 @pytest.mark.xfail(raises=Exception)
 def test_check_invalid():
-    buffer = JupyniumBuffer(["a", "b", "c", "'''%%%", "d", "%%'''", "f"])
+    buffer = JupyniumBuffer(["a", "b", "c", "# %% [markdown]", "d", "# %%", "f"])
     # manually modify the buffer
     buffer.buf.append("g")
     buffer._check_validity()
@@ -203,8 +167,8 @@ def test_num_cells_2():
 @pytest.mark.parametrize(
     "content,lines,start_row,old_end_row,new_end_row",
     [
-        (["a", "b", "c", "# %%", "d", "e", "f"], ["# %%%", "g"], 3, 4, 5),
-        (["b", "c", "# %%", "d", "e", "f"], ["# %%%", "g"], 3, 4, 5),
+        (["a", "b", "c", "# %%", "d", "e", "f"], ["# %% [md]", "g"], 3, 4, 5),
+        (["b", "c", "# %%", "d", "e", "f"], ["# %% [markdown]", "g"], 3, 4, 5),
         (["b", "# %%", "d", "f", "f", "f", "f"], ["# %%"], 3, 4, 4),
         (["b", "# %%", "d", "f", "f", "f", "f"], ["# %%"], 3, 3, 4),
         (["b", "# %%", "d", "# %%", "f", "f", "f"], [""], 1, 4, 2),
@@ -227,19 +191,19 @@ def test_on_lines_cellinfo(content, lines, start_row, old_end_row, new_end_row):
     [
         (
             ["a", "b", "c", "# %%", "d", "e", "f"],
-            ["# %%%", "g"],
+            ["# %% [md]", "g"],
             3,
             4,
             5,
-            ["a", "b", "c", "# %%%", "g", "d", "e", "f"],
+            ["a", "b", "c", "# %% [md]", "g", "d", "e", "f"],
         ),
         (
             ["b", "c", "# %%", "d", "e", "f"],
-            ["# %%%", "g"],
+            ["# %% [markdown]", "g"],
             3,
             4,
             5,
-            ["b", "c", "# %%", "# %%%", "g", "e", "f"],
+            ["b", "c", "# %%", "# %% [markdown]", "g", "e", "f"],
         ),
         (
             ["b", "# %%", "d", "f", "f", "f", "f"],

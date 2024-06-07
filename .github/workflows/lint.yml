@@ -14,14 +14,20 @@ jobs:
           python-version-file: pyproject.toml
       - name: Install ruff and requirements
         run: |
-          pip3 install -r <(cat requirements_dev.txt | grep '^ruff==')
-      - name: Run ruff
+          pip3 install -r <(grep '^ruff==' deps/x86_64-unknown-linux-gnu/requirements_dev.txt)
+      - name: Run ruff (code annotation)
+        run: |
+          set +e  # Do not exit shell on ruff failure
+
+          ruff check --output-format=github
+          exit 0
+      - name: Run ruff (summary)
         run: |
           set +e  # Do not exit shell on ruff failure
 
           nonzero_exit=0
           files=$(find . -type f -name "*.py" | sort)
-          while read file; do
+          while read -r file; do
             out=$(ruff check --force-exclude "$file" 2> ruff_stderr.txt)
             exit_code=$?
             err=$(<ruff_stderr.txt)
@@ -34,15 +40,11 @@ jobs:
               # Display the raw output in the step
               echo "${out}"
               # Display the Markdown output in the job summary
-              echo "\`\`\`python" >> $GITHUB_STEP_SUMMARY
-              echo "${out}" >> $GITHUB_STEP_SUMMARY
-              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              { echo "\`\`\`python"; echo "${out}"; echo "\`\`\`"; } >> "$GITHUB_STEP_SUMMARY"
             fi
             if [[ -n "$err" ]]; then
               echo "${err}"
-              echo "\`\`\`python" >> $GITHUB_STEP_SUMMARY
-              echo "${err}" >> $GITHUB_STEP_SUMMARY
-              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              { echo "\`\`\`python"; echo "${err}"; echo "\`\`\`"; } >> "$GITHUB_STEP_SUMMARY"
             fi
 
             out=$(ruff check --diff --force-exclude "$file" 2> ruff_stderr.txt)
@@ -52,15 +54,11 @@ jobs:
               # Display the raw output in the step
               echo "${out}"
               # Display the Markdown output in the job summary
-              echo "\`\`\`diff" >> $GITHUB_STEP_SUMMARY
-              echo "${out}" >> $GITHUB_STEP_SUMMARY
-              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              { echo "\`\`\`python"; echo "${out}"; echo "\`\`\`"; } >> "$GITHUB_STEP_SUMMARY"
             fi
             if [[ -n "$err" ]]; then
               echo "${err}"
-              echo "\`\`\`python" >> $GITHUB_STEP_SUMMARY
-              echo "${err}" >> $GITHUB_STEP_SUMMARY
-              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              { echo "\`\`\`python"; echo "${err}"; echo "\`\`\`"; } >> "$GITHUB_STEP_SUMMARY"
             fi
           done <<< "$files"
 

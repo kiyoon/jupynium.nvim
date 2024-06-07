@@ -4,63 +4,38 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "jupynium"
-dynamic = ["version"]
+dynamic = ["version", "dependencies", "optional-dependencies"]
 description = "Neovim plugin that automates Jupyter Notebook editing/browsing using Selenium."
 authors = [
   { name = "Kiyoon Kim" },
 ]
 readme = "README.md"
 license = { file="LICENSE" }
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "License :: OSI Approved :: MIT License",
 ]
 keywords = ["neovim", "vim", "jupyter", "selenium", "jupyter-notebook", "nvim", "neovim-plugin", "nvim-plugin"]
-dependencies = [
-  "pynvim >= 0.4.3",
-  "coloredlogs >= 15.0.0",
-  "verboselogs >= 1.7",
-  "selenium >= 4.7.2",
-  "psutil >= 5.9.4",
-  "persist-queue >= 0.8.0",
-  "packaging >= 22.0",
-  "setuptools >= 45.0",       # for pkg_resources. Otherwise get LegacyVersion error
-  "gitpython >= 3.1.24",
-  "platformdirs >= 4.0.0",
-]
 
-[project.optional-dependencies]
-extra = [
-  "notebook >= 6.4.5",
-]
-dev = [
-  "ruff >= 0.4.2",
-  "pre-commit >= 2.21.0",
-]
-test = [
-  "pytest >= 6.0",
-  "pytest-cov >= 2.0",
-  "importlib-metadata < 5.0.0; python_version < '3.8'", # flake8 dependency
-  "tox >= 3.24",
-]
+[tool.setuptools.dynamic]
+dependencies = {file = ["deps/requirements.in"]}
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [project.urls]
 "Homepage" = "https://github.com/kiyoon/jupynium.nvim"
 
 [project.scripts]
 jupynium = "jupynium.cmds.jupynium:main"
-ipynb2jupy = "jupynium.cmds.ipynb2jupy:main"
 ipynb2jupytext = "jupynium.cmds.ipynb2jupytext:main"
-
-[tool.setuptools.packages.find]
-where = ["src"]
 
 [tool.setuptools_scm]
 write_to = "src/jupynium/_version.py"
@@ -71,15 +46,122 @@ testpaths = [
   "tests",
 ]
 
+[tool.coverage.report]
+omit = [
+  "src/jupynium/_version.py", # CHANGE
+  # OPTIONALLY ADD MORE LATER
+]
+
+[tool.tox]
+legacy_tox_ini = """
+    [tox]
+    minversion = 3.24.0
+    envlist = python3.8, python3.9, python3.10, python3.11, python3.12
+    isolated_build = true
+
+    [gh-actions]
+    python =
+        3.8: python3.8
+        3.9: python3.9
+        3.10: python3.10
+        3.11: python3.11
+        3.11: python3.12
+
+    [testenv]
+    setenv =
+        PYTHONPATH = {toxinidir}
+    deps =
+        -r{toxinidir}/deps/x86_64-unknown-linux-gnu/requirements_dev.txt
+    commands =
+        pytest --basetemp={envtmpdir}
+"""
+
 [tool.ruff]
-target-version = "py37"
+target-version = "py38"
 src = ["src"]  # for ruff isort
 extend-exclude = [
   "src/jupynium/_version.py",  # CHANGE
 ]
 
+[tool.ruff.lint]
+# OPTIONALLY ADD MORE LATER
+select = [
+  # flake8
+  "E",
+  "F",
+  "W",
+  "B",    # Bugbear
+  "D",    # Docstring
+  "D213", # Multi-line docstring summary should start at the second line (replace D212)
+  "N",    # Naming
+  "C4",   # flake8-comprehensions
+  "UP",   # pyupgrade
+  "SIM",  # simplify
+  "RUF",  # ruff-specific
+  "RET501",  # return
+  "RET502",  # return
+  "RET503",  # return
+  "PTH",  # path
+  "NPY",  # numpy
+  "PYI",  # type stubs for pyright/pylance
+  "PT",   # pytest
+  "PIE",  #
+  "LOG",  # logging
+  "COM818",  # comma misplaced
+  "COM819",  # comma
+  "DTZ",  # datetime
+  "YTT",
+  "ASYNC",
+
+  # Not important
+  "T10",  # debug statements
+  "T20",  # print statements
+]
+
+ignore = [
+  "E402",    # Module level import not at top of file
+  "W293",    # Blank line contains whitespace
+  "W291",    # Trailing whitespace
+  "D10",     # Missing docstring in public module / function / etc.
+  "D200",    # One-line docstring should fit on one line with quotes
+  "D212",    # Multi-line docstring summary should start at the first line
+  "D417",    # require documentation for every function parameter.
+  "D401",    # require an imperative mood for all docstrings.
+  "PTH123",  # Path.open should be used instead of built-in open
+  "PT006",   # Pytest parameterize style
+  "N812",    # Lowercase `functional` imported as non-lowercase `F` (import torch.nn.functional as F)
+  "NPY002",  # legacy numpy random
+  "UP017",   # datetime.timezone.utc -> datetime.UTC
+  "SIM108",  # use ternary operator instead of if-else
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.pycodestyle]
+# Black or ruff will enforce line length to be 88, except for docstrings and comments.
+# We set it to 120 so we have more space for docstrings and comments.
+max-line-length = 120
+
 [tool.ruff.lint.isort]
-## Uncomment this if you want to use Python < 3.10
 required-imports = [
   "from __future__ import annotations",
 ]
+
+[tool.pyright]
+include = ["src"]
+
+typeCheckingMode = "standard"
+autoSearchPaths = true
+useLibraryCodeForTypes = true
+autoImportCompletions = true
+diagnosticsMode = "openFilesOnly"
+
+reportUnusedImports = false
+reportUnusedVariable = false
+# reportUnusedClass = "warning"
+# reportUnusedFunction = "warning"
+reportUndefinedVariable = false  # ruff handles this with F821
+
+pythonVersion = "3.8"
+# pythonPlatform = "Linux"

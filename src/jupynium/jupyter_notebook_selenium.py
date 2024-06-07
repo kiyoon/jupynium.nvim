@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import logging
 
+from selenium.webdriver.remote.webdriver import WebDriver
+
 logger = logging.getLogger(__name__)
 
 
-def insert_cell_at(driver, cell_type, cell_idx):
+def insert_cell_at(driver: WebDriver, cell_type: str, cell_idx: int):
     """
-    Instead of insert_cell_below or insert_cell_above,
-    it will select based on the given index.
+    Instead of insert_cell_below or insert_cell_above, it will select based on the given index.
+
     If cell_idx == 0, insert above, otherwise insert below.
     """
     assert cell_type in ["code", "markdown"]

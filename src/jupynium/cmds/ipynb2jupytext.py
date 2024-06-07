@@ -1,8 +1,9 @@
 #!/use/bin/env python3
+# ruff: noqa: T201
 from __future__ import annotations
 
 import argparse
-import os
+from pathlib import Path
 
 from ..ipynb import ipynb2jupytext, load_ipynb
 
@@ -49,14 +50,15 @@ def main():
         for line in jupy:
             print(line)
     else:
-        output_jupy_path = args.output_jupy_path
-        if output_jupy_path is None:
-            output_jupy_path = os.path.splitext(args.ipynb_path)[0] + ".ju.py"
+        if args.output_jupy_path is None:
+            output_jupy_path = Path(args.ipynb_path).with_suffix(".ju.py")
+        else:
+            output_jupy_path = Path(args.output_jupy_path)
 
-        os.makedirs(os.path.dirname(os.path.realpath(output_jupy_path)), exist_ok=True)
+        output_jupy_path.parent.mkdir(parents=True, exist_ok=True)
 
-        if os.path.isfile(output_jupy_path) and not args.yes:
-            print("Do you want to overwrite {}?".format(output_jupy_path))
+        if output_jupy_path.is_file() and not args.yes:
+            print(f"Do you want to overwrite {output_jupy_path}?")
             answer = input("y/n: ")
             if answer != "y":
                 print("Aborted")
@@ -67,7 +69,7 @@ def main():
                 f.write(line)
                 f.write("\n")
 
-        print('Converted "{}" to "{}"'.format(args.ipynb_path, output_jupy_path))
+        print(f'Converted "{args.ipynb_path}" to "{output_jupy_path}"')
 
 
 if __name__ == "__main__":

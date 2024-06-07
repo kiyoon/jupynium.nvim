@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import os
 import subprocess
 import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -12,13 +12,13 @@ from jupynium.buffer import JupyniumBuffer
 
 @pytest.fixture(scope="session")
 def jupbuf1():
-    return JupyniumBuffer(["a", "b", "c", "'''%%%", "d", "%%'''", "f"])
+    return JupyniumBuffer(["a", "b", "c", "# %% [markdown]", "# d", "# %%", "f"])
 
 
 @pytest.fixture(scope="session")
 def nvim_1():
     with tempfile.TemporaryDirectory() as tmp:
-        path = os.path.join(tmp, "nvim")
+        path = str(Path(tmp) / "nvim")
         nvim_proc = subprocess.Popen(
             ["nvim", "--clean", "--headless", "--listen", path]
         )

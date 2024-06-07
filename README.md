@@ -33,7 +33,7 @@ The Jupynium server will receive events from Neovim, keep the copy of the buffer
   - Other browsers are not supported due to their limitation with Selenium (see [#49](https://github.com/kiyoon/jupynium.nvim/issues/49#issuecomment-1443304753))
 - 🦎 Mozilla geckodriver
   - May already be installed with Firefox. Check `geckodriver -V`
-- 🐍 Python >= 3.7
+- 🐍 Python >= 3.8
   - Supported Python installation methods include system-level and [Conda](https://docs.conda.io/en/latest/miniconda.html)
 - 📔 Jupyter Notebook >= 6.2
   - Jupyter Lab is not supported
