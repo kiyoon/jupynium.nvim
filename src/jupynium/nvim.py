@@ -51,6 +51,7 @@ class NvimInfo:
                         "Notebook closed.",
                         f"Detaching the buffer {buf_id} from Jupynium..",
                     ],
+                    "notebook_closed",
                     async_=True,
                 )
                 self.nvim.lua.Jupynium_stop_sync(buf_id)

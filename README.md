@@ -218,6 +218,16 @@ require("jupynium").setup({
       border = "none",
     },
   },
+
+  notify = {
+    ignore = {
+      -- "download_ipynb",
+      -- "error_download_ipynb",
+      -- "attach_and_init",
+      -- "error_close_main_page",
+      -- "notebook_closed",
+    },
+  },
 })
 
 -- You can link highlighting groups.

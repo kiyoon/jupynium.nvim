@@ -136,6 +136,11 @@ function M.setup(opts)
 
   highlighter.setup(options.opts)
 
+  vim.g.jupynium_notify_ignore_codes = {}
+  for _, code in ipairs(options.opts.notify.ignore) do
+    vim.g.jupynium_notify_ignore_codes[code] = true
+  end
+
   vim.g.__jupynium_setup_completed = true
 end
 
