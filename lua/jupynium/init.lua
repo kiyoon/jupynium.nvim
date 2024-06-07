@@ -136,10 +136,13 @@ function M.setup(opts)
 
   highlighter.setup(options.opts)
 
-  vim.g.jupynium_notify_ignore_codes = {}
+  -- NOTE: if you don't define a local variable, the vim.g. variable won't have any value. Weird.
+  -- So we define a local variable and then assign it to the global variable.
+  local notify_ignore_codes = {}
   for _, code in ipairs(options.opts.notify.ignore) do
-    vim.g.jupynium_notify_ignore_codes[code] = true
+    notify_ignore_codes[code] = true
   end
+  vim.g.jupynium_notify_ignore_codes = notify_ignore_codes
 
   vim.g.__jupynium_setup_completed = true
 end

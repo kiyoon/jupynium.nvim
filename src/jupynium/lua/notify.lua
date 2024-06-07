@@ -8,14 +8,13 @@ Jupynium_notify = {}
 ---@param code string?
 Jupynium_notify.notify = function(msg, level, code)
   level = level or vim.log.levels.INFO
-  code = code or ""
 
-  if code ~= "" and not vim.g.jupynium_notify_ignore_codes[code] then
+  if code ~= nil and vim.g.jupynium_notify_ignore_codes[code] then
     return
   end
 
   local title
-  if code ~= "" then
+  if code ~= nil then
     title = ("Jupynium [%s]"):format(code)
   else
     title = "Jupynium"
