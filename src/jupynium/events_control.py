@@ -275,9 +275,8 @@ def start_sync_with_filename(
                 sele.wait_until_new_window(driver, list(prev_windows))
                 break
 
-    assert prev_windows is not None
-
     if file_found:
+        assert prev_windows is not None
         new_window = set(driver.window_handles) - set(prev_windows)
         assert len(new_window) == 1
         new_window = new_window.pop()
