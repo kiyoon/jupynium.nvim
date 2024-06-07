@@ -18,7 +18,7 @@ function M.get_folds()
   local line_types = cells.line_types_entire_buf()
 
   for i, line_type in ipairs(line_types) do
-    if utils.string_begins_with(line_type, "metadata") then
+    if vim.startswith(line_type, "metadata") then
       -- make sure metadata is before cells
       if vim.tbl_isempty(fold) then
         if vim.tbl_isempty(metadata) then
@@ -29,7 +29,7 @@ function M.get_folds()
         end
       end
     end
-    if utils.string_begins_with(line_type, "cell separator") then
+    if vim.startswith(line_type, "cell separator") then
       if vim.tbl_isempty(fold) then
         fold.startLine = i - 1
         -- close metadata

@@ -40,7 +40,7 @@ local function get_system_cmd(cmd, args)
   if vim.fn.has "win32" == 1 then
     -- powershell.exe for powershell <= 5
     -- pwsh.exe for powershell >= 6
-    if utils.string_begins_with(vim.o.shell, "powershell") or utils.string_begins_with(vim.o.shell, "pwsh") then
+    if vim.startswith(vim.o.shell, "powershell") or vim.startswith(vim.o.shell, "pwsh") then
       cmd_str = [[& ']] .. vim.fn.expand(cmd) .. [[']]
       for _, v in ipairs(args) do
         cmd_str = cmd_str .. [[ ']] .. v .. [[']]

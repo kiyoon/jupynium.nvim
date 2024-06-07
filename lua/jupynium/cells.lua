@@ -1,5 +1,3 @@
-local utils = require "jupynium.utils"
-
 local M = {}
 
 --- Get the line type (cell separator, magic commands, empty, others)
@@ -14,9 +12,9 @@ function M.line_type(line)
     return "cell separator: markdown"
   elseif vim.fn.trim(line) == "# %%" then
     return "cell separator: code"
-  elseif utils.string_begins_with(line, "# ---") then
+  elseif vim.startswith(line, "# ---") then
     return "metadata"
-  elseif utils.string_begins_with(line, "# %") then
+  elseif vim.startswith(line, "# %") then
     return "magic command"
   elseif vim.fn.trim(line) == "" then
     return "empty"
@@ -72,7 +70,7 @@ end
 ---@return boolean
 function M.is_line_separator(line)
   local line_type = M.line_type(line)
-  if utils.string_begins_with(line_type, "cell separator:") then
+  if vim.startswith(line_type, "cell separator:") then
     return true
   end
 

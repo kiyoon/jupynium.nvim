@@ -22,44 +22,18 @@ local function set_hlgroup_if_not_exists(hlgroup, hlgroup_default)
 end
 
 function M.setup(opts)
-  if opts.syntax_highlight.highlight_groups then
-    -- deprecated, use vim.cmd [[hi! link Jupynium... ...]]
-    vim.notify_once(
-      "Jupynium: Setting highlight groups via opts is deprecated. Set directly using e.g. vim.cmd[[hi! link JupyniumCodeCellSeparator Folded]]",
-      vim.log.levels.WARN
-    )
-    if opts.syntax_highlight.highlight_groups.code_cell_separator then
-      vim.cmd("hi! link JupyniumCodeCellSeparator " .. opts.syntax_highlight.highlight_groups.code_cell_separator)
-    end
-    if opts.syntax_highlight.highlight_groups.markdown_cell_separator then
-      vim.cmd(
-        "hi! link JupyniumMarkdownCellSeparator " .. opts.syntax_highlight.highlight_groups.markdown_cell_separator
-      )
-    end
-    if opts.syntax_highlight.highlight_groups.code_cell_content then
-      vim.cmd("hi! link JupyniumCodeCellContent " .. opts.syntax_highlight.highlight_groups.code_cell_content)
-    end
-    if opts.syntax_highlight.highlight_groups.markdown_cell_content then
-      vim.cmd("hi! link JupyniumMarkdownCellContent " .. opts.syntax_highlight.highlight_groups.markdown_cell_content)
-    end
-    if opts.syntax_highlight.highlight_groups.magic_command then
-      vim.cmd("hi! link JupyniumMagicCommand " .. opts.syntax_highlight.highlight_groups.magic_command)
-    end
-  end
-
   -- If the colourscheme doesn't support Jupynium yet, link to some default highlight groups
   -- Here we can define some default settings per colourscheme.
   local colorscheme = vim.g.colors_name
   if colorscheme == nil then
     colorscheme = ""
   end
-  if utils.string_begins_with(colorscheme, "tokyonight") then
+  if vim.startswith(colorscheme, "tokyonight") then
     colorscheme = "tokyonight"
   end
   local hlgroup
   if colorscheme == "tokyonight" then
     hlgroup = "Pmenu"
-    set_hlgroup_if_not_exists("JupyniumCodeCellSeparatorString", hlgroup)
     set_hlgroup_if_not_exists("JupyniumCodeCellSeparator", "Folded")
     set_hlgroup_if_not_exists("JupyniumMarkdownCellSeparator", hlgroup)
     set_hlgroup_if_not_exists("JupyniumMarkdownCellContent", hlgroup)
@@ -108,8 +82,10 @@ local ns_shortsighted = vim.api.nvim_create_namespace "jupynium-shortsighted"
 
 --- Set highlight group for a line
 ---@param buffer number
+---@param namespace number
 ---@param line_number number 0-indexed
 ---@param hl_group string
+---@param priority? number
 function M.set_line_hlgroup(buffer, namespace, line_number, hl_group, priority)
   priority = priority or 99 -- Treesitter uses 100
   pcall(vim.api.nvim_buf_set_extmark, buffer, namespace, line_number, 0, {
@@ -121,6 +97,7 @@ function M.set_line_hlgroup(buffer, namespace, line_number, hl_group, priority)
   })
 end
 
+---@param namespace number
 function M.clear_namespace(namespace)
   vim.api.nvim_buf_clear_namespace(0, namespace, 0, -1)
 end
@@ -192,23 +169,13 @@ function M.update()
     for i, line_type in ipairs(line_types) do
       -- priority 9000: above treesitter, below shortsighted
       -- priority 99: below treesitter (default)
-      if utils.string_begins_with(line_type, "cell separator: code") then
+      if line_type == "cell separator: code" then
         M.set_line_hlgroup(0, ns_highlight, i - 1, "JupyniumCodeCellSeparator", 9000)
-        if line_type == "cell separator: code (string)" then
-          -- For closing markdown cell
-          -- %%""" or %%'''
-          M.set_line_hlgroup(0, ns_shortsighted, i - 1, "JupyniumCodeCellSeparatorString", 9001)
-        end
-      elseif utils.string_begins_with(line_type, "cell separator: markdown") then
+      elseif line_type == "cell separator: markdown" then
         M.set_line_hlgroup(0, ns_highlight, i - 1, "JupyniumMarkdownCellSeparator", 9000)
-        if line_type == "cell separator: markdown (string)" then
-          -- For opening markdown cell with string
-          -- """%% or '''%%
-          M.set_line_hlgroup(0, ns_shortsighted, i - 1, "JupyniumMarkdownCellSeparatorString", 9001)
-        end
-      elseif utils.string_begins_with(line_type, "cell content: code") then
+      elseif line_type == "cell content: code" then
         M.set_line_hlgroup(0, ns_highlight, i - 1, "JupyniumCodeCellContent")
-      elseif utils.string_begins_with(line_type, "cell content: markdown") then
+      elseif line_type == "cell content: markdown" then
         M.set_line_hlgroup(0, ns_highlight, i - 1, "JupyniumMarkdownCellContent")
       elseif line_type == "magic command" then
         M.set_line_hlgroup(0, ns_highlight, i - 1, "JupyniumMagicCommand", 9000)

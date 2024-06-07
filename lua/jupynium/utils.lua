@@ -1,25 +1,11 @@
 local M = {}
 
-function M.string_begins_with(str, start)
-  if str == nil then
-    return false
-  end
-  return start == "" or str:sub(1, #start) == start
-end
-
-function M.string_ends_with(str, ending)
-  if str == nil then
-    return false
-  end
-  return ending == "" or str:sub(-#ending) == ending
-end
-
 function M.wildcard_to_regex(pattern)
   local reg = pattern:gsub("([^%w])", "%%%1"):gsub("%%%*", ".*")
-  if not M.string_begins_with(reg, ".*") then
+  if not vim.startswith(reg, ".*") then
     reg = "^" .. reg
   end
-  if not M.string_ends_with(reg, ".*") then
+  if not vim.endswith(reg, ".*") then
     reg = reg .. "$"
   end
   return reg
