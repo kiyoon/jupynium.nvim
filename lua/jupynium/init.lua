@@ -143,7 +143,6 @@ function M.setup(opts)
     notify_ignore_codes[code] = true
   end
   vim.g.jupynium_notify_ignore_codes = notify_ignore_codes
-  vim.print(vim.g.jupynium_notify_ignore_codes)
 
   vim.g.__jupynium_setup_completed = true
 end
