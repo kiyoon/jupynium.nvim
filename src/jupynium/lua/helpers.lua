@@ -78,7 +78,7 @@ end
 
 ---block until jupynium responds to the message
 ---@param event string
----@param buf integer
+---@param buf integer?
 ---@param ensure_syncing boolean
 ---@param ... any
 ---@return any
@@ -114,8 +114,6 @@ function Jupynium_execute_javascript(bufnr, code)
     }
     return false, nil
   end
-
-  assert(bufnr ~= nil, "bufnr should not be nil")
 
   -- set ensure_syncing to false, because we checked that already.
   return true, Jupynium_rpcrequest("execute_javascript", bufnr, false, code)
