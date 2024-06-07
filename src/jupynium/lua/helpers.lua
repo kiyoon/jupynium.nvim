@@ -487,11 +487,6 @@ function Jupynium_kernel_change(bufnr, kernel_name)
   Jupynium_rpcnotify("kernel_change", bufnr, true, kernel_name)
 end
 
-function Jupynium_restart_kernel(bufnr)
-  Jupynium_notify.warn { [[Sorry! Command name changed.]], [[Please use :JupyniumKernelRestart]] }
-  return Jupynium_kernel_restart(bufnr)
-end
-
 function Jupynium_kernel_restart(bufnr)
   -- note that the kernel name is different from the display name in the kernel list in Jupyter Notebook.
   if bufnr == nil or bufnr == 0 then
@@ -517,11 +512,6 @@ function Jupynium_kernel_interrupt(bufnr)
   end
 
   Jupynium_rpcnotify("kernel_interrupt", bufnr, true)
-end
-
-function Jupynium_select_kernel(bufnr)
-  Jupynium_notify.warn { [[Sorry! Command name changed.]], [[Please use :JupyniumKernelSelect]] }
-  return Jupynium_kernel_select(bufnr)
 end
 
 function Jupynium_kernel_select(bufnr)
