@@ -15,7 +15,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: mkdocs
+    environment: deploy
 
     steps:
       - uses: actions/checkout@v4
