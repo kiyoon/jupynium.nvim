@@ -18,4 +18,4 @@ fi
 source "$path_to_venv/bin/activate"
 uv pip install .
 mkdir -p "$HOME/.local/bin"
-ln -sf "$path_to_venv/bin/python-import" "$HOME/.local/bin"
+# ln -sf "$path_to_venv/bin/jupynium" "$HOME/.local/bin"
