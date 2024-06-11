@@ -409,8 +409,8 @@ function Jupynium_download_ipynb_cmd(args)
 end
 
 function Jupynium_auto_download_ipynb_toggle()
-  vim.g.jupynium_autodownload_ipynb = 1 - vim.g.jupynium_auto_download_ipynb
-  Jupynium_notify.info { "Auto download ipynb is now ", vim.g.jupynium_auto_download_ipynb == 1 and "on" or "off" }
+  vim.g.jupynium_auto_download_ipynb = not vim.g.jupynium_auto_download_ipynb
+  Jupynium_notify.info { "Auto download ipynb is now ", vim.g.jupynium_auto_download_ipynb and "on" or "off" }
 end
 
 function Jupynium_scroll_up(bufnr)
@@ -440,8 +440,8 @@ function Jupynium_scroll_down(bufnr)
 end
 
 function Jupynium_autoscroll_toggle()
-  vim.g.jupynium_autoscroll = 1 - vim.g.jupynium_autoscroll
-  Jupynium_notify.info { "Autoscroll is now ", vim.g.jupynium_autoscroll == 1 and "on" or "off" }
+  vim.g.jupynium_autoscroll_enable = not vim.g.jupynium_autoscroll_enable
+  Jupynium_notify.info { "Autoscroll is now ", vim.g.jupynium_autoscroll and "on" or "off" }
 end
 
 function Jupynium_clear_selected_cells_outputs(bufnr)
