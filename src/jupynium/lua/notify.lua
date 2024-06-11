@@ -34,6 +34,9 @@ Jupynium_notify.notify = function(msg, level, code)
       on_open = function(win)
         local buf = vim.api.nvim_win_get_buf(win)
         vim.bo[buf].filetype = "markdown"
+        vim.api.nvim_buf_call(buf, function()
+          vim.opt_local.conceallevel = 2
+        end)
       end,
     })
   else
