@@ -77,6 +77,10 @@ CompletionItemKind = {
 }
 
 
+class StartSyncError(Exception):
+    pass
+
+
 @dataclass
 class OnLinesArgs:
     lines: list[str]
@@ -313,7 +317,16 @@ def start_sync_with_filename(
         )
         if kernel_name is None:
             kernel_name = "python3"
-        kernel_btn = driver.find_element(By.ID, f"kernel-{kernel_name}")
+
+        try:
+            kernel_btn = driver.find_element(By.ID, f"kernel-{kernel_name}")
+        except NoSuchElementException:
+            # match anything with ID starting with kernel-
+            kernel_btns = driver.find_elements(By.CSS_SELECTOR, "[id^=kernel-]")
+            if len(kernel_btns) == 0:
+                raise StartSyncError("No kernel found in the kernel list.") from None
+            kernel_btn = kernel_btns[0]
+
         driver.execute_script("arguments[0].scrollIntoView(true);", kernel_btn)
         prev_windows = set(driver.window_handles)
         try:
@@ -448,16 +461,23 @@ def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event: list[An
             if ipynb_filename != "" and not ipynb_filename.lower().endswith(".ipynb"):
                 ipynb_filename += ".ipynb"
 
-            start_sync_with_filename(
-                bufnr,
-                ipynb_filename,
-                ask,
-                content,
-                buf_filetype,
-                conda_or_venv_path,
-                nvim_info,
-                driver,
-            )
+            try:
+                start_sync_with_filename(
+                    bufnr,
+                    ipynb_filename,
+                    ask,
+                    content,
+                    buf_filetype,
+                    conda_or_venv_path,
+                    nvim_info,
+                    driver,
+                )
+            except StartSyncError as e:
+                nvim_info.nvim.lua.Jupynium_notify.error(
+                    ["Error while starting sync:", str(e)], async_=True
+                )
+                event[3].send("N")
+                return False, None
         else:
             # start sync with tab index
             tab_idx = int(ipynb_filename)
