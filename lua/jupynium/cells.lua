@@ -8,7 +8,9 @@ function M.line_type(line)
     line = vim.api.nvim_buf_get_lines(0, line - 1, line, false)[1]
   end
 
-  if vim.startswith(line, "# %% [md]") or vim.startswith(line, "# %% [markdown]") then
+  if line == nil then
+    return "empty"
+  elseif vim.startswith(line, "# %% [md]") or vim.startswith(line, "# %% [markdown]") then
     return "cell separator: markdown"
   elseif vim.fn.trim(line) == "# %%" then
     return "cell separator: code"
