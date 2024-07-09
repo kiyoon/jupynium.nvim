@@ -96,6 +96,7 @@ function M.default_keybindings(augroup)
   })
 end
 
+---@param opts Jupynium.UserConfig?
 function M.setup(opts)
   -- NOTE: This may be called twice if you lazy load the plugin
   -- The first time will be with the default opts.
