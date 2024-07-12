@@ -71,11 +71,11 @@ class JupyniumBuffer:
         num_rows_per_cell = []
         cell_types = [header_cell_type]
         for _row, line in enumerate(self.buf):
-            if line.startswith(("# %% [md]", "# %% [markdown]")):
+            if re.match(r"^# %% \[md\]", line) or re.match(r"^# %% \[markdown\]", line):
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
                 cell_types.append("markdown")
-            elif line.strip() == "# %%":
+            elif re.match(r"^# %%.*", line):
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
                 cell_types.append("code")
