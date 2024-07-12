@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 
 from pkg_resources import resource_stream
 from selenium.webdriver.remote.webdriver import WebDriver
