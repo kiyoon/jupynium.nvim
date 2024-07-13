@@ -12,7 +12,7 @@ function M.line_type(line)
     return "empty"
   elseif vim.startswith(line, "# %% [md]") or vim.startswith(line, "# %% [markdown]") then
     return "cell separator: markdown"
-  elseif vim.fn.trim(line) == "# %%" then
+  elseif vim.fn.trim(string.sub(line, 1, 5)) == "# %%" then
     return "cell separator: code"
   elseif vim.startswith(line, "# ---") then
     return "metadata"

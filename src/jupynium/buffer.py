@@ -75,7 +75,7 @@ class JupyniumBuffer:
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
                 cell_types.append("markdown")
-            elif line.startswith("# %%"):
+            elif line[:5].strip() == "# %%":
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
                 cell_types.append("code")
