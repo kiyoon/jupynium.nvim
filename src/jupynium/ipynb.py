@@ -33,33 +33,6 @@ def ipynb_language(ipynb):
     return None
 
 
-def cells_to_jupy(cell_types: list[str], texts: list[str]):
-    cell_types_previous = ["code"] + cell_types[:-1]
-
-    jupy: list[str] = []
-
-    for cell_type_previous, cell_type, text in zip(
-        cell_types_previous, cell_types, texts
-    ):
-        if cell_type == "code":
-            if cell_type_previous == "code":
-                jupy.append("# %%")
-            else:
-                jupy.append('%%"""')
-        else:
-            if cell_type_previous == "code":
-                jupy.append('"""%%')
-            else:
-                jupy.append("# %%%")
-
-        for line in text.split("\n"):
-            if line.startswith("%"):
-                line = "# " + line
-            jupy.append(line)
-
-    return jupy
-
-
 def cells_to_jupytext(
     cell_types: Sequence[str], texts: Sequence[str], python: bool = True
 ):
@@ -89,18 +62,6 @@ def cells_to_jupytext(
             jupytext.append("")
 
     return jupytext
-
-
-def ipynb2jupy(ipynb):
-    """
-    Deprecated. Use ipynb2jupytext instead.
-    """
-    cell_types, texts = read_ipynb_texts(ipynb)
-    language = ipynb_language(ipynb)
-    if language is None or language == "python":
-        return cells_to_jupy(cell_types, texts)
-    else:
-        return cells_to_jupytext(cell_types, texts)
 
 
 def ipynb2jupytext(ipynb, code_only=False):
