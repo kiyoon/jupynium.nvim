@@ -12,6 +12,9 @@ function M.line_type(line)
     return "empty"
   elseif vim.startswith(line, "# %% [md]") or vim.startswith(line, "# %% [markdown]") then
     return "cell separator: markdown"
+  -- Treat '# %% Cell Title' as a code cell
+  -- But not magic commands such as '# %%timeit'.
+  -- See: https://github.com/kiyoon/jupynium.nvim/pull/127
   elseif vim.fn.trim(string.sub(line, 1, 5)) == "# %%" then
     return "cell separator: code"
   elseif vim.startswith(line, "# ---") then

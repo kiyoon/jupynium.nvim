@@ -75,6 +75,9 @@ class JupyniumBuffer:
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
                 cell_types.append("markdown")
+            # Treat '# %% Cell Title' as a code cell
+            # But not magic commands such as '# %%timeit'.
+            # See: https://github.com/kiyoon/jupynium.nvim/pull/127
             elif line[:5].strip() == "# %%":
                 num_rows_per_cell.append(num_rows_this_cell)
                 num_rows_this_cell = 1
