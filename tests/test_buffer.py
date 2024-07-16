@@ -11,6 +11,12 @@ def test_buffer_1():
     assert buffer.cell_types == ["header", "code"]
 
 
+def test_buffer_with_cell_title_1():
+    buffer = JupyniumBuffer(["a", "b", "c", "# %% Cell Title", "d", "e", "f"])
+    assert buffer.num_rows_per_cell == [3, 4]
+    assert buffer.cell_types == ["header", "code"]
+
+
 def test_magic_command_1():
     """
     Everything else except magic commands should be preserved after __init__() or fully_analysed_buf().
@@ -19,6 +25,16 @@ def test_magic_command_1():
     buffer = JupyniumBuffer(lines)
     code_cell_content = buffer.get_cell_text(1)
     assert code_cell_content == "%time\ne\nf"
+
+
+def test_double_magic_command_1():
+    """
+    Everything else except double magic commands should be preserved after __init__() or fully_analyse_buf().
+    """
+    lines = ["a", "b", "c", "# %% Cell Title", "# %%timeit", "e", "f"]
+    buffer = JupyniumBuffer(lines)
+    code_cell_content = buffer.get_cell_text(1)
+    assert code_cell_content == "%%timeit\ne\nf"
 
 
 def test_buffer_markdown():
