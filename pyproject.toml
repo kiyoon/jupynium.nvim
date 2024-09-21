@@ -152,16 +152,8 @@ required-imports = [
 include = ["src"]
 
 typeCheckingMode = "standard"
-autoSearchPaths = true
 useLibraryCodeForTypes = true
 autoImportCompletions = true
-diagnosticsMode = "openFilesOnly"
-
-reportUnusedImports = false
-reportUnusedVariable = false
-# reportUnusedClass = "warning"
-# reportUnusedFunction = "warning"
-reportUndefinedVariable = false  # ruff handles this with F821
 
 pythonVersion = "3.8"
 # pythonPlatform = "Linux"
