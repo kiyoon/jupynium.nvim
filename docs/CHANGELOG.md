@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.5] - 2024-11-14
+### :sparkles: New Features
+- [`828052e`](https://github.com/kiyoon/jupynium.nvim/commit/828052ece86a5470f97247f6621e8a577154ee41) - code cell # %% with additional comments *(PR [#127](https://github.com/kiyoon/jupynium.nvim/pull/127) by [@ESSO0428](https://github.com/ESSO0428))*
+
+### :recycle: Refactors
+- [`1e57296`](https://github.com/kiyoon/jupynium.nvim/commit/1e572965813719c9ef123f777d79814e91d1a2cf) - add Config and UserConfig types *(commit by [@kiyoon](https://github.com/kiyoon))*
+
+
 ## [v0.2.4] - 2024-06-17
 ### :boom: BREAKING CHANGES
 - due to [`d83c56a`](https://github.com/kiyoon/jupynium.nvim/commit/d83c56a9c886ded0b1ff6fe1e5a39512d7a06901) - drop python3.7, remove deprecated markdown cell syntax, hide migration guide banner *(PR [#119](https://github.com/kiyoon/jupynium.nvim/pull/119) by [@kiyoon](https://github.com/kiyoon))*:
@@ -58,3 +66,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [v0.2.2]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.1...v0.2.2
 [v0.2.3]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.2...v0.2.3
 [v0.2.4]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.2...v0.2.4
+[v0.2.5]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.4...v0.2.5
