@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-try:
-    from ._version import __version__, __version_tuple__
-except ImportError:
-    __version__ = "0.0.0"
-    __version_tuple__ = (0, 0, 0)
+from ._version import get_version_dict
 
-all = ["__version__", "__version_tuple__"]
+__version__ = get_version_dict()["version"]
+
+
+__all__ = ["__version__"]
