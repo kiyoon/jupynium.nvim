@@ -1,6 +1,6 @@
 -r requirements.in
 version-pioneer
 ruff==0.9.6
-tox>=3.24.0
-pytest>=6.0.0
-pytest-cov>=2.0.0
+tox>=4.19.0
+pytest>=8.0.0
+pytest-cov>=5.0.0

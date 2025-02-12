@@ -99,7 +99,7 @@ python = """
 
 [tool.tox.env_run_base]
 # setenv = ["PYTHONPATH={toxinidir}"]
-deps = ["-r{toxinidir}/deps/lock/x86_64-manylinux_2_28/requirements.txt"]
+deps = ["-r{toxinidir}/deps/lock/x86_64-manylinux_2_28/requirements_dev.txt"]
 commands = [["pytest", "--basetemp={envtmpdir}"]]
 
 [tool.pyright]
