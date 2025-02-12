@@ -1,4 +1,4 @@
-#!/use/bin/env python3
+#!/usr/bin/env python
 # ruff: noqa: T201
 from __future__ import annotations
 
@@ -13,10 +13,10 @@ import sys
 import tempfile
 import time
 import traceback
-from collections.abc import Sequence
 from datetime import datetime, timezone
 from os import PathLike
 from pathlib import Path
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import coloredlogs
@@ -26,22 +26,26 @@ import psutil
 import verboselogs
 from git.exc import InvalidGitRepositoryError, NoSuchPathError
 from persistqueue.exceptions import Empty
-from pynvim import Nvim
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
-from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
-from .. import __version__
-from .. import selenium_helpers as sele
-from ..definitions import persist_queue_path
-from ..events_control import process_events
-from ..nvim import NvimInfo
-from ..process import already_running_pid
-from ..pynvim_helpers import attach_and_init
+from jupynium import __version__
+from jupynium import selenium_helpers as sele
+from jupynium.definitions import persist_queue_path
+from jupynium.events_control import process_events
+from jupynium.nvim import NvimInfo
+from jupynium.process import already_running_pid
+from jupynium.pynvim_helpers import attach_and_init
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from pynvim import Nvim
+    from selenium.webdriver.remote.webdriver import WebDriver
 
 logger = verboselogs.VerboseLogger(__name__)
 
@@ -74,10 +78,9 @@ def webdriver_firefox(
                             if config[section]["Default"] == "1":
                                 section_ = section
                                 break
-                        else:
-                            if config[section]["Name"] == profile_name:
-                                section_ = section
-                                break
+                        elif config[section]["Name"] == profile_name:
+                            section_ = section
+                            break
                     except KeyError:
                         pass
             else:
@@ -219,13 +222,12 @@ def start_if_running_else_clear(args, q: persistqueue.UniqueQ):
                 "Jupynium is already running. Attach nvim using --nvim_listen_addr"
             )
             return 1
-    else:
-        if args.attach_only:
-            logger.error(
-                "Jupynium is not running. "
-                "Remove --attach_only option to start a new instance."
-            )
-            return 1
+    elif args.attach_only:
+        logger.error(
+            "Jupynium is not running. "
+            "Remove --attach_only option to start a new instance."
+        )
+        return 1
 
     # If Jupynium is not running, clear the message queue before starting.
     while True:
@@ -291,7 +293,7 @@ def nvims_teardown(nvims):
     try:
         for nvim in nvims.values():
             nvim.nvim.lua.Jupynium_reset_channel(async_=True)
-    except Exception:
+    except Exception:  # noqa: BLE001
         # Even if you fail it's not a big problem
         pass
 
@@ -415,7 +417,7 @@ def fallback_open_notebook_server(
         jupyter_command = [command.strip() for command in jupyter_command]
         jupyter_command[0] = str(Path(jupyter_command[0]).expanduser())
 
-        jupyter_stdout = tempfile.NamedTemporaryFile()
+        jupyter_stdout = tempfile.NamedTemporaryFile()  # noqa: SIM115
         logger.info(f"Writing Jupyter Notebook server log to: {jupyter_stdout.name}")
         notebook_proc = subprocess.Popen(
             jupyter_command + notebook_args,
@@ -452,7 +454,7 @@ def fallback_open_notebook_server(
     return notebook_proc
 
 
-def main():
+def main():  # noqa: C901 PLR0912
     # Initialise with NOTSET level and null device, and add stream handler separately.
     # This way, the root logging level is NOTSET (log all),
     # and we can customise each handler's behaviour.
@@ -602,7 +604,7 @@ def main():
 
                     # Check if a new newvim instance wants to attach to this server.
                     try:
-                        new_args: argparse.Namespace = q.get(block=False)  # type: ignore
+                        new_args: argparse.Namespace = q.get(block=False)
                     except Empty:
                         pass
                     else:

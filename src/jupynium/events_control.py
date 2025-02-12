@@ -5,42 +5,43 @@ import json
 import logging
 import os
 from dataclasses import dataclass
+from importlib.resources import files as resfiles
 from os import PathLike
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pkg_resources import resource_stream
 from selenium.common.exceptions import (
     ElementNotInteractableException,
     NoSuchElementException,
 )
 from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webdriver import WebDriver
 
 from . import selenium_helpers as sele
 from .buffer import JupyniumBuffer
 from .ipynb import cells_to_jupytext
-from .nvim import NvimInfo
 from .rpc_messages import len_pending_messages, receive_message
+
+if TYPE_CHECKING:
+    from selenium.webdriver.remote.webdriver import WebDriver
+
+    from .nvim import NvimInfo
 
 logger = logging.getLogger(__name__)
 
 
 update_cell_selection_js_code = (
-    resource_stream("jupynium", "js/update_cell_selection.js").read().decode("utf-8")
-)
+    resfiles("jupynium") / "js" / "update_cell_selection.js"
+).read_text()
 
 get_cell_inputs_js_code = (
-    resource_stream("jupynium", "js/get_cell_inputs.js").read().decode("utf-8")
-)
+    resfiles("jupynium") / "js" / "get_cell_inputs.js"
+).read_text()
 
-kernel_inspect_js_code = (
-    resource_stream("jupynium", "js/kernel_inspect.js").read().decode("utf-8")
-)
+kernel_inspect_js_code = (resfiles("jupynium") / "js" / "kernel_inspect.js").read_text()
 
 kernel_complete_js_code = (
-    resource_stream("jupynium", "js/kernel_complete.js").read().decode("utf-8")
-)
+    resfiles("jupynium") / "js" / "kernel_complete.js"
+).read_text()
 
 CompletionItemKind = {
     "text": 1,
@@ -237,6 +238,7 @@ def process_events(nvim_info: NvimInfo, driver: WebDriver):
 def start_sync_with_filename(
     bufnr: int,
     ipynb_filename: str,
+    *,
     ask: bool,
     content: list[str],
     buf_filetype: str,
@@ -352,7 +354,7 @@ def start_sync_with_filename(
         nvim_info.jupbufs[bufnr].full_sync_to_notebook(driver)
 
 
-def choose_default_kernel(
+def choose_default_kernel(  # noqa: PLR0911
     driver: WebDriver, page_type: str, buf_filetype: str, conda_or_venv_path: str | None
 ):
     """Choose kernel based on buffer's filetype and conda env."""
@@ -433,7 +435,7 @@ def choose_default_kernel(
     return None
 
 
-def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event: list[Any]):
+def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event: list[Any]):  # noqa: PLR0911
     """
     Process a request event, where an event can be request or notification.
 
@@ -465,12 +467,12 @@ def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event: list[An
                 start_sync_with_filename(
                     bufnr,
                     ipynb_filename,
-                    ask,
-                    content,
-                    buf_filetype,
-                    conda_or_venv_path,
-                    nvim_info,
-                    driver,
+                    ask=ask,
+                    content=content,
+                    buf_filetype=buf_filetype,
+                    conda_or_venv_path=conda_or_venv_path,
+                    nvim_info=nvim_info,
+                    driver=driver,
                 )
             except StartSyncError as e:
                 nvim_info.nvim.lua.Jupynium_notify.error(
@@ -626,15 +628,15 @@ def process_on_lines_event(
 
     nvim_info.jupbufs[bufnr].process_on_lines(
         driver,
-        True,
-        on_lines_args.lines,
-        on_lines_args.start_row,
-        on_lines_args.old_end_row,
-        on_lines_args.new_end_row,
+        strip=True,
+        lines=on_lines_args.lines,
+        start_row=on_lines_args.start_row,
+        old_end_row=on_lines_args.old_end_row,
+        new_end_row=on_lines_args.new_end_row,
     )
 
 
-def process_notification_event(
+def process_notification_event(  # noqa: C901 PLR0912 PLR0915
     nvim_info: NvimInfo,
     driver: WebDriver,
     event,
@@ -680,7 +682,8 @@ def process_notification_event(
             driver.switch_to.window(nvim_info.window_handles[bufnr])
 
             driver.execute_script(
-                "Jupyter.notebook.scroll_manager.animation_speed = 0; Jupyter.notebook.scroll_manager.scroll_some(arguments[0]);",  # noqa: E501
+                "Jupyter.notebook.scroll_manager.animation_speed = 0;"
+                "Jupyter.notebook.scroll_manager.scroll_some(arguments[0]);",
                 scroll,
             )
         elif event[1] == "save_ipynb":
@@ -891,11 +894,11 @@ def update_cell_selection(
                 nvim_info.jupbufs[bufnr].buf.append("")
                 nvim_info.jupbufs[bufnr].process_on_lines(
                     driver,
-                    True,
-                    [""],
-                    nvim_info.jupbufs[bufnr].num_rows,
-                    nvim_info.jupbufs[bufnr].num_rows,
-                    nvim_info.jupbufs[bufnr].num_rows + 1,
+                    strip=True,
+                    lines=[""],
+                    start_row=nvim_info.jupbufs[bufnr].num_rows,
+                    old_end_row=nvim_info.jupbufs[bufnr].num_rows,
+                    new_end_row=nvim_info.jupbufs[bufnr].num_rows + 1,
                 )
                 cell_index, _, _ = nvim_info.jupbufs[bufnr].get_cell_index_from_row(
                     cursor_pos_row
@@ -933,7 +936,8 @@ def update_cell_selection(
                     do_scroll = True
                 else:
                     do_scroll = not driver.execute_script(
-                        "return Jupyter.notebook.scroll_manager.is_cell_visible(Jupyter.notebook.get_cell(arguments[0]));",  # noqa: E501
+                        "return Jupyter.notebook.scroll_manager.is_cell_visible"
+                        "(Jupyter.notebook.get_cell(arguments[0]));",
                         cell_index,
                     )
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from ..ipynb import ipynb2jupytext, load_ipynb
+from jupynium.ipynb import ipynb2jupytext, load_ipynb
 
 
 def get_parser():

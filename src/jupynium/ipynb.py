@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
-from os import PathLike
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from os import PathLike
 
 
 def load_ipynb(ipynb_path: str | PathLike):
@@ -11,7 +14,7 @@ def load_ipynb(ipynb_path: str | PathLike):
     return ipynb
 
 
-def read_ipynb_texts(ipynb, code_only: bool = False):
+def read_ipynb_texts(ipynb, *, code_only: bool = False):
     texts = []
     cell_types = []
     for cell in ipynb["cells"]:
@@ -34,7 +37,7 @@ def ipynb_language(ipynb):
 
 
 def cells_to_jupytext(
-    cell_types: Sequence[str], texts: Sequence[str], python: bool = True
+    cell_types: Sequence[str], texts: Sequence[str], *, python: bool = True
 ):
     jupytext: list[str] = []
 
@@ -64,7 +67,7 @@ def cells_to_jupytext(
     return jupytext
 
 
-def ipynb2jupytext(ipynb, code_only=False):
+def ipynb2jupytext(ipynb, *, code_only=False):
     cell_types, texts = read_ipynb_texts(ipynb, code_only=code_only)
     language = ipynb_language(ipynb)
     if language is None or language == "python":
@@ -72,4 +75,4 @@ def ipynb2jupytext(ipynb, code_only=False):
     else:
         python = False
 
-    return cells_to_jupytext(cell_types, texts, python)
+    return cells_to_jupytext(cell_types, texts, python=python)

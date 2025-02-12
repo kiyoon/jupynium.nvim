@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+
+if TYPE_CHECKING:
+    from selenium.webdriver.remote.webdriver import WebDriver
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +84,6 @@ def is_browser_disconnected(driver: WebDriver):
     """Check if the browser is disconnected."""
     try:
         _ = driver.window_handles
-        return False
-    except Exception:
+    except Exception:  # noqa: BLE001
         return True
+    return False

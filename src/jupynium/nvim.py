@@ -3,11 +3,13 @@ from __future__ import annotations
 import contextlib
 import logging
 from dataclasses import dataclass, field
-
-import pynvim
-from selenium.webdriver.remote.webdriver import WebDriver
+from typing import TYPE_CHECKING
 
 from .buffer import JupyniumBuffer
+
+if TYPE_CHECKING:
+    import pynvim
+    from selenium.webdriver.remote.webdriver import WebDriver
 
 logger = logging.getLogger(__name__)
 

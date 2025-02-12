@@ -43,11 +43,10 @@ authors = [
 ]
 readme = "README.md"
 license = { file="LICENSE" }
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -84,12 +83,11 @@ omit = [
 
 [tool.tox]
 requires = ["tox>=4.19"]
-env_list = ["python3.8", "python3.9", "python3.10", "python3.11", "python3.12", "python3.13"]
+env_list = ["python3.9", "python3.10", "python3.11", "python3.12", "python3.13"]
 isolated_build = true
 
 [tool.tox.gh-actions]
 python = """
-  3.8: python3.8
   3.9: python3.9
   3.10: python3.10
   3.11: python3.11
@@ -109,7 +107,7 @@ typeCheckingMode = "standard"
 useLibraryCodeForTypes = true
 autoImportCompletions = true
 
-pythonVersion = "3.8"
+pythonVersion = "3.9"
 # pythonPlatform = "Linux"
 
 reportDuplicateImport = true
@@ -161,6 +159,7 @@ ignore = [
   "TD",      # TODO
   "FIX",     # TODO
   "ARG",     # unused argument
+  "PERF",
 ]
 
 [tool.ruff.lint.per-file-ignores]

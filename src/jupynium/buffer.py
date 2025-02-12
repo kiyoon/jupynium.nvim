@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 import logging
-
-from pkg_resources import resource_stream
-from selenium.webdriver.remote.webdriver import WebDriver
+from importlib.resources import files as resfiles
+from typing import TYPE_CHECKING
 
 from .jupyter_notebook_selenium import insert_cell_at
+
+if TYPE_CHECKING:
+    from selenium.webdriver.remote.webdriver import WebDriver
 
 logger = logging.getLogger(__name__)
 
 
-set_cell_text_js_code = (
-    resource_stream("jupynium", "js/set_cell_text.js").read().decode("utf-8")
-)
+set_cell_text_js_code = (resfiles("jupynium") / "js" / "set_cell_text.js").read_text()
 
 
 class JupyniumBuffer:
@@ -64,7 +64,7 @@ class JupyniumBuffer:
         content processing.)
 
         Args:
-            header_cell_type (str, optional): Used to be used only when partial update.
+            header_cell_type: Used to be used only when partial update.
                                               Now deprecated.
         """
         num_rows_this_cell = 0
@@ -101,15 +101,13 @@ class JupyniumBuffer:
             if len(lines) > 0 and lines[0] == '"""':
                 return "\n".join(line for line in lines if not line.startswith('"""'))
             else:
-                return "\n".join(
-                    line[2:] if line.startswith("# ") else line for line in lines
-                )
+                return "\n".join(line.removeprefix("# ") for line in lines)
         else:
             # header
             return "\n".join(lines)
 
     def get_cells_text(
-        self, start_cell_idx: int, end_cell_idx: int, strip: bool = True
+        self, start_cell_idx: int, end_cell_idx: int, *, strip: bool = True
     ) -> list[str]:
         """
         Get processed cell text.
@@ -152,12 +150,13 @@ class JupyniumBuffer:
 
         return texts_per_cell
 
-    def get_cell_text(self, cell_idx: int, strip: bool = True) -> str:
+    def get_cell_text(self, cell_idx: int, *, strip: bool = True) -> str:
         return self.get_cells_text(cell_idx, cell_idx, strip=strip)[0]
 
     def process_on_lines(
         self,
         driver: WebDriver,
+        *,
         strip: bool,
         lines: list[str],
         start_row: int,
@@ -338,15 +337,16 @@ class JupyniumBuffer:
         self,
         row: int,
         num_rows_per_cell: list[int] | None = None,
+        *,
         raise_out_of_bound: bool = True,
     ) -> tuple[int, int, int]:
         """
         Returns the cell index for the given row.
 
         Args:
-            row (int): row index
-            num_rows_per_cell (list): number of rows per cell. If None, use self.num_rows_per_cell
-            raise_out_of_bound (bool): whether to raise an IndexError if the row is out of bound
+            row: row index
+            num_rows_per_cell: number of rows per cell. If None, use self.num_rows_per_cell
+            raise_out_of_bound: whether to raise an IndexError if the row is out of bound
 
         Returns:
             int: cell index
@@ -376,7 +376,7 @@ class JupyniumBuffer:
         assert all(x in ("code", "markdown") for x in self.cell_types[1:])
 
     def _partial_sync_to_notebook(
-        self, driver: WebDriver, start_cell_idx: int, end_cell_idx: int, strip=True
+        self, driver: WebDriver, start_cell_idx: int, end_cell_idx: int, *, strip=True
     ):
         """
         Given the range of cells to update, sync the JupyniumBuffer with the notebook.
@@ -405,7 +405,9 @@ class JupyniumBuffer:
             if start_cell_idx == 0:
                 start_cell_idx = 1
 
-            texts_per_cell = self.get_cells_text(start_cell_idx, end_cell_idx, strip)
+            texts_per_cell = self.get_cells_text(
+                start_cell_idx, end_cell_idx, strip=strip
+            )
 
             code_cell_indices = [
                 start_cell_idx + i
@@ -444,7 +446,7 @@ class JupyniumBuffer:
                 *texts_per_cell,
             )
 
-    def full_sync_to_notebook(self, driver: WebDriver, strip: bool = True):
+    def full_sync_to_notebook(self, driver: WebDriver, *, strip: bool = True):
         # Full sync with notebook.
         # WARNING: syncing may result in data loss.
         num_cells = self.num_cells_in_notebook

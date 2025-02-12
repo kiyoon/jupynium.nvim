@@ -18,12 +18,11 @@ def already_running_pid(
         with open(pid_path) as f:
             pid = f.read()
             pid = int(pid) if pid.isnumeric() else None
-        if pid is not None and pid_exists(pid):
-            if name in "".join(Process(my_pid).cmdline()) and name in "".join(  # noqa: SIM114
-                Process(pid).cmdline()
-            ):
-                return pid
-            elif Process(pid).cmdline() == Process(my_pid).cmdline():
+        if pid is not None and pid_exists(pid):  # noqa: SIM102
+            if (
+                name in "".join(Process(my_pid).cmdline())
+                and name in "".join(Process(pid).cmdline())
+            ) or Process(pid).cmdline() == Process(my_pid).cmdline():
                 return pid
     with open(pid_path, "w") as f:
         f.write(str(my_pid))

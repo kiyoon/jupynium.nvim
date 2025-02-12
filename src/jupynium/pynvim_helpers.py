@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import logging
 import time
-from os import PathLike
+from importlib.resources import files as resfiles
+from typing import TYPE_CHECKING
 
 import pynvim
-from pkg_resources import resource_stream
+
+if TYPE_CHECKING:
+    from os import PathLike
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +27,7 @@ def attach_and_init(nvim_listen_addr: str | PathLike):
                 )
             else:
                 nvim = pynvim.attach("socket", path=nvim_listen_addr)
-        except Exception:
+        except Exception:  # noqa: BLE001
             time.sleep(0.1)
         else:
             break
@@ -41,24 +44,22 @@ def attach_and_init(nvim_listen_addr: str | PathLike):
     nvim.vars["jupynium_num_pending_msgs"] = 0
     # Define helper functions
     # Must come at the beginning
-    lua_code = resource_stream("jupynium", "lua/defaults.lua").read().decode("utf-8")
+    lua_code = (resfiles("jupynium") / "lua" / "defaults.lua").read_text()
     nvim.exec_lua(lua_code)
 
-    lua_code = resource_stream("jupynium", "lua/helpers.lua").read().decode("utf-8")
+    lua_code = (resfiles("jupynium") / "lua" / "helpers.lua").read_text()
     nvim.exec_lua(lua_code)
 
-    lua_code = resource_stream("jupynium", "lua/notify.lua").read().decode("utf-8")
+    lua_code = (resfiles("jupynium") / "lua" / "notify.lua").read_text()
     nvim.exec_lua(lua_code)
 
-    lua_code = resource_stream("jupynium", "lua/commands.lua").read().decode("utf-8")
+    lua_code = (resfiles("jupynium") / "lua" / "commands.lua").read_text()
     nvim.exec_lua(lua_code)
 
-    lua_code = (
-        resource_stream("jupynium", "lua/autocmd_vimleave.lua").read().decode("utf-8")
-    )
+    lua_code = (resfiles("jupynium") / "lua" / "autocmd_vimleave.lua").read_text()
     nvim.exec_lua(lua_code)
 
-    lua_code = resource_stream("jupynium", "lua/cmp.lua").read().decode("utf-8")
+    lua_code = (resfiles("jupynium") / "lua" / "cmp.lua").read_text()
     nvim.exec_lua(lua_code)
 
     nvim.lua.Jupynium_notify.info(
