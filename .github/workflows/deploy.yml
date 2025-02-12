@@ -3,94 +3,41 @@ name: Deploy a new version
 on:
   workflow_dispatch:
     inputs:
-      version_tag:
-        description: 'Version tag'
+      version-tag:
+        description: Version tag
         required: true
-        default: v0.2.3
-      dry_run:
+        default: v0.2.6
+      dry-run:
+        description: Dry run
         type: boolean
-        description: 'Dry run'
         default: false
+      exclude-types:
+        description: Commit types to exclude from the changelog
+        required: false
+        default: build,docs,style,other
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    environment: deploy
+  commit-changelog-and-release:
+    uses: deargen/workflows/.github/workflows/commit-changelog-and-release.yml@master
+    with:
+      version-tag: ${{ github.event.inputs.version-tag }}
+      dry-run: ${{ github.event.inputs.dry-run == 'true' }}
+      changelog-path: docs/CHANGELOG.md
+      exclude-types: ${{ github.event.inputs.exclude-types }}
 
+  publish-to-pypi:
+    if: ${{ github.event.inputs.dry-run == 'false' }}
+    needs: commit-changelog-and-release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
-      - name: Push new version tag temporarily for changelog generation
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email github-actions[bot]@users.noreply.github.com
-          git tag -a ${{ github.event.inputs.version_tag }} -m ${{ github.event.inputs.version_tag }}
-          git push --tags
-
-      - name: (dry-run) Get CHANGELOG
-        if: ${{ github.event.inputs.dry_run == 'true' }}
-        id: changelog-dry-run
-        uses: requarks/changelog-action@v1.10.2
         with:
-          includeInvalidCommits: true
-          excludeTypes: build,docs,style,other
-          token: ${{ github.token }}
-          tag: ${{ github.event.inputs.version_tag }}
-
-      - name: (dry-run) Display CHANGELOG
-        if: ${{ github.event.inputs.dry_run == 'true' }}
-        run: |
-          echo '${{ steps.changelog-dry-run.outputs.changes }}'
-          echo '${{ steps.changelog-dry-run.outputs.changes }}' > "$GITHUB_STEP_SUMMARY"
-
-      - name: (dry-run) Remove temporary version tag
-        if: ${{ github.event.inputs.dry_run == 'true' }}
-        run: |
-          git tag -d ${{ github.event.inputs.version_tag }}
-          git push origin --delete ${{ github.event.inputs.version_tag }}
-
-      - name: Update CHANGELOG
-        if: ${{ github.event.inputs.dry_run == 'false' }}
-        id: changelog
-        uses: requarks/changelog-action@v1.10.2
-        with:
-          includeInvalidCommits: true
-          excludeTypes: build,docs,style,other
-          token: ${{ github.token }}
-          tag: ${{ github.event.inputs.version_tag }}
-          changelogFilePath: docs/CHANGELOG.md
-
-      - name: Commit docs/CHANGELOG.md and update tag
-        if: ${{ github.event.inputs.dry_run == 'false' }}
-        run: |
-          git tag -d ${{ github.event.inputs.version_tag }}
-          git push origin --delete ${{ github.event.inputs.version_tag }}
-          git add docs/CHANGELOG.md
-          git commit -m "docs: update docs/CHANGELOG.md for ${{ github.event.inputs.version_tag }} [skip ci]"
-          git tag -a ${{ github.event.inputs.version_tag }} -m ${{ github.event.inputs.version_tag }}
-          git push
-          git push --tags
-
-      - name: Create Release
-        if: ${{ github.event.inputs.dry_run == 'false' }}
-        uses: ncipollo/release-action@v1.14.0
-        with:
-          allowUpdates: true
-          draft: false
-          makeLatest: true
-          name: ${{ github.event.inputs.version_tag }}
-          tag: ${{ github.event.inputs.version_tag }}
-          body: ${{ steps.changelog.outputs.changes }}
-
-      - name: Set up Python 3.11
-        if: ${{ github.event.inputs.dry_run == 'false' }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
-
+          ref: ${{ github.event.inputs.version-tag }}
+      - uses: deargen/workflows/actions/setup-python-and-uv@master
       - name: Build and upload to PyPI
-        if: ${{ github.event.inputs.dry_run == 'false' }}
         run: |
-          python -m pip install --upgrade pip
-          pip3 install build twine
-          python -m build . --sdist
-          python3 -m twine upload dist/* -u __token__ -p ${{ secrets.PYPI_TOKEN }} --non-interactive
+          uv build
+          uv publish

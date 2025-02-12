@@ -1,0 +1,19 @@
+name: Apply ruff format, isort, and fixes
+
+on:
+  workflow_dispatch:
+    inputs:
+      ruff-select:
+        description: 'ruff select'
+        default: I,D20,D21,UP00,UP032,UP034
+      ruff-ignore:
+        description: 'ruff ignore'
+        default: D212
+
+jobs:
+  ruff-format:
+    uses: deargen/workflows/.github/workflows/apply-ruff.yml@master
+    with:
+      ruff-select: ${{ github.event.inputs.ruff-select }}
+      ruff-ignore: ${{ github.event.inputs.ruff-ignore }}
+      # ruff-version-file: deps/lock/x86_64-manylinux_2_28/requirements_dev.txt

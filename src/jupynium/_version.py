@@ -23,5 +23,4 @@ def get_version_dict():
 if __name__ == "__main__":
     import json
 
-    print(json.dumps(get_version_dict()))
-
+    print(json.dumps(get_version_dict()))  # noqa: T201

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import time
-
-from pynvim import Nvim
+from typing import TYPE_CHECKING
 
 from jupynium.rpc_messages import receive_all_pending_messages, receive_message
+
+if TYPE_CHECKING:
+    from pynvim import Nvim
 
 
 def test_event_default_variables(nvim_1: Nvim):
@@ -13,9 +15,13 @@ def test_event_default_variables(nvim_1: Nvim):
 
 
 def test_event_before_start_sync(nvim_1: Nvim):
-    nvim_1.feedkeys(nvim_1.replace_termcodes("<esc>", True, True, True))
+    nvim_1.feedkeys(
+        nvim_1.replace_termcodes("<esc>", from_part=True, do_lt=True, special=True)
+    )
     nvim_1.feedkeys("i# %%\nabc")
-    nvim_1.feedkeys(nvim_1.replace_termcodes("<esc>", True, True, True))
+    nvim_1.feedkeys(
+        nvim_1.replace_termcodes("<esc>", from_part=True, do_lt=True, special=True)
+    )
     assert nvim_1.vars["jupynium_num_pending_msgs"] == 0
 
 
@@ -28,9 +34,13 @@ def test_event_start_sync_cancel(nvim_1: Nvim):
     assert event[1] == "start_sync"
 
     event[3].send("N")  # Not OK is cancel
-    nvim_1.feedkeys(nvim_1.replace_termcodes("<esc>", True, True, True))
+    nvim_1.feedkeys(
+        nvim_1.replace_termcodes("<esc>", from_part=True, do_lt=True, special=True)
+    )
     nvim_1.feedkeys("i# %%\nabc")
-    nvim_1.feedkeys(nvim_1.replace_termcodes("<esc>", True, True, True))
+    nvim_1.feedkeys(
+        nvim_1.replace_termcodes("<esc>", from_part=True, do_lt=True, special=True)
+    )
     assert nvim_1.vars["jupynium_num_pending_msgs"] == 0
 
 
@@ -43,9 +53,13 @@ def test_event_start_sync(nvim_1: Nvim):
     assert event[1] == "start_sync"
 
     event[3].send("OK")  # Not OK is cancel
-    nvim_1.feedkeys(nvim_1.replace_termcodes("<esc>", True, True, True))
+    nvim_1.feedkeys(
+        nvim_1.replace_termcodes("<esc>", from_part=True, do_lt=True, special=True)
+    )
     nvim_1.feedkeys("i# %%\nabc")
-    nvim_1.feedkeys(nvim_1.replace_termcodes("<esc>", True, True, True))
+    nvim_1.feedkeys(
+        nvim_1.replace_termcodes("<esc>", from_part=True, do_lt=True, special=True)
+    )
 
     assert nvim_1.vars["jupynium_num_pending_msgs"] > 0
 
@@ -70,8 +84,12 @@ def test_event_stop_sync(nvim_1: Nvim):
     assert event[0] == "notification"
     assert event[1] == "stop_sync"
 
-    nvim_1.feedkeys(nvim_1.replace_termcodes("<esc>", True, True, True))
+    nvim_1.feedkeys(
+        nvim_1.replace_termcodes("<esc>", from_part=True, do_lt=True, special=True)
+    )
     nvim_1.feedkeys("i# %%\nabc")
-    nvim_1.feedkeys(nvim_1.replace_termcodes("<esc>", True, True, True))
+    nvim_1.feedkeys(
+        nvim_1.replace_termcodes("<esc>", from_part=True, do_lt=True, special=True)
+    )
 
     assert nvim_1.vars["jupynium_num_pending_msgs"] == 0

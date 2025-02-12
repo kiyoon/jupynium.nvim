@@ -1,74 +1,24 @@
 name: Style checking
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+concurrency:
+  group: ${{github.workflow}}-${{github.ref}}
+  cancel-in-progress: true
 
 jobs:
   ruff-format:
-    name: ruff-format
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: pyproject.toml
-      - name: Install ruff
-        run: |
-          pip3 install -r <(grep '^ruff==' deps/x86_64-unknown-linux-gnu/requirements_dev.txt)
-      - name: Run ruff format
-        run: |
-          set +e  # Do not exit shell on black failure
-          out=$(ruff format --check --diff . 2> app_stderr.txt)
-          exit_code=$?
-          err=$(<app_stderr.txt)
-
-          # Display the raw output in the step
-          echo "${out}"
-          echo "${err}"
-
-          # Display the Markdown output in the job summary
-          { echo "\`\`\`diff"; echo "${out}"; echo "${err}"; echo "\`\`\`"; } >> "$GITHUB_STEP_SUMMARY"
-
-          # Exit with the exit-code returned by ruff
-          exit ${exit_code}
-
+    uses: deargen/workflows/.github/workflows/check-ruff.yml@master
+    with:
+      check-type: format
+      # ruff-version-file: deps/lock/x86_64-manylinux_2_28/requirements_dev.txt
   ruff-isort:
-    name: ruff-isort
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: pyproject.toml
-      - name: Install ruff
-        run: |
-          pip3 install -r <(grep '^ruff==' deps/x86_64-unknown-linux-gnu/requirements_dev.txt)
-      - name: Run ruff isort
-        run: |
-          set +e  # Do not exit shell on app failure
-          out=$(ruff --select I --diff . 2> app_stderr.txt)
-          exit_code=$?
-          err=$(<app_stderr.txt)
-
-          # Display the raw output in the step
-          echo "${out}"
-          echo "${err}"
-
-          # Display the Markdown output in the job summary
-          { echo "\`\`\`diff"; echo "${out}"; echo "${err}"; echo "\`\`\`"; } >> "$GITHUB_STEP_SUMMARY"
-
-          # Exit with the exit-code returned by ruff
-          exit ${exit_code}
-
-  stylua:
-    name: StyLua
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Lint with stylua
-        uses: JohnnyMorganz/stylua-action@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          version: latest
-          args: --check .
+    uses: deargen/workflows/.github/workflows/check-ruff.yml@master
+    with:
+      check-type: isort
+      # ruff-version-file: deps/lock/x86_64-manylinux_2_28/requirements_dev.txt
