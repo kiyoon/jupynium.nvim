@@ -22,3 +22,15 @@ jobs:
     with:
       check-type: isort
       # ruff-version-file: deps/lock/x86_64-manylinux_2_28/requirements_dev.txt
+
+  stylua:
+    name: StyLua
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint with stylua
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
+          args: --check .

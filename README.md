@@ -2,9 +2,9 @@
 
 |  |  |
 |--|--|
-|[![Ruff](https://img.shields.io/badge/Ruff-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://github.com/astral-sh/ruff) |[![Actions status](https://github.com/kiyoon/jupynium.nvim/workflows/Style%20checking/badge.svg)](https://github.com/kiyoon/jupynium.nvim/actions)|
+|[![Ruff](https://img.shields.io/badge/Ruff-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://github.com/astral-sh/ruff) [![StyLua](https://img.shields.io/badge/stylua-%232C2D72.svg?style=for-the-badge&logo=lua&logoColor=white)](https://github.com/JohnnyMorganz/StyLua) |[![Actions status](https://github.com/kiyoon/jupynium.nvim/workflows/Style%20checking/badge.svg)](https://github.com/kiyoon/jupynium.nvim/actions)|
 | [![Ruff](https://img.shields.io/badge/Ruff-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://github.com/astral-sh/ruff) | [![Actions status](https://github.com/kiyoon/jupynium.nvim/workflows/Linting/badge.svg)](https://github.com/kiyoon/jupynium.nvim/actions) |
-| [![pytest](https://img.shields.io/badge/pytest-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://github.com/pytest-dev/pytest) [![doctest](https://img.shields.io/badge/doctest-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://docs.python.org/3/library/doctest.html) | [![Actions status](https://github.com/kiyoon/jupynium.nvim/workflows/Tests/badge.svg)](https://github.com/kiyoon/jupynium.nvim/actions) |
+| [![pytest](https://img.shields.io/badge/pytest-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://github.com/pytest-dev/pytest) | [![Actions status](https://github.com/kiyoon/jupynium.nvim/workflows/Tests/badge.svg)](https://github.com/kiyoon/jupynium.nvim/actions) |
 | [![uv](https://img.shields.io/badge/uv-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://github.com/astral-sh/uv) | [![Actions status](https://github.com/kiyoon/jupynium.nvim/workflows/Check%20pip%20compile%20sync/badge.svg)](https://github.com/kiyoon/jupynium.nvim/actions) |
 
 **It's just like a markdown live preview, but it's Jupyter Notebook live preview!**
