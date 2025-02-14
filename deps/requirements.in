@@ -1,4 +1,4 @@
-pynvim>=0.4.3
+pynvim>=0.5.0
 coloredlogs>=15.0.0
 verboselogs>=1.7
 selenium>=4.7.2

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from importlib.resources import files as resfiles
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from selenium.common.exceptions import (
     ElementNotInteractableException,
@@ -22,6 +22,7 @@ from .ipynb import cells_to_jupytext
 from .rpc_messages import len_pending_messages, receive_message
 
 if TYPE_CHECKING:
+    from pynvim.msgpack_rpc.session import Notification, Request
     from selenium.webdriver.remote.webdriver import WebDriver
 
     from .nvim import NvimInfo
@@ -207,17 +208,17 @@ def process_events(nvim_info: NvimInfo, driver: WebDriver):
         len_pending_messages(nvim_info.nvim) > 0
         or nvim_info.nvim.vars["jupynium_num_pending_msgs"] > 0
     ):
-        event = receive_message(nvim_info.nvim)
+        event: Request | Notification | None = receive_message(nvim_info.nvim)
         logger.info(f"Event from nvim: {event}")
 
         if event is None:
             logger.error("Received event=None")
             return False, None
 
-        assert event[1] is not None
-        assert event[2] is not None
+        assert event.name is not None
+        assert event.args is not None
 
-        if event[0] == "request":
+        if event.type == "request":
             status, request_event = process_request_event(nvim_info, driver, event)
             if not status:
                 return False, request_event
@@ -435,7 +436,7 @@ def choose_default_kernel(  # noqa: PLR0911
     return None
 
 
-def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event: list[Any]):  # noqa: PLR0911
+def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event: Request):  # noqa: PLR0911
     """
     Process a request event, where an event can be request or notification.
 
@@ -444,17 +445,17 @@ def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event: list[An
 
     Returns:
         status (bool)
-        request_event (rpcrequest event): to notify nvim after cleared up.
-                                          None if no need to notify
+        request_event (Request): to notify nvim after cleared up.
+            None if no need to notify
     """
-    assert event[0] == "request"
+    assert event.type == "request"
     # Request from nvim
     # send back response
 
-    bufnr = event[2][0]
-    event_args = event[2][1:]
+    bufnr = event.args[0]
+    event_args = event.args[1:]
 
-    if event[1] == "start_sync":
+    if event.name == "start_sync":
         ipynb_filename, ask, content, buf_filetype, conda_or_venv_path = event_args
         ipynb_filename: str
         ipynb_filename = ipynb_filename.strip()
@@ -478,7 +479,7 @@ def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event: list[An
                 nvim_info.nvim.lua.Jupynium_notify.error(
                     ["Error while starting sync:", str(e)], async_=True
                 )
-                event[3].send("N")
+                event.response.send("N")
                 return False, None
         else:
             # start sync with tab index
@@ -505,16 +506,16 @@ def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event: list[An
                 #         "Jupyter.kernelselector.set_kernel(arguments[0])", kernel_name
                 #     )
             else:
-                event[3].send("N")
-                event[3] = None
-    elif event[1] == "load_from_ipynb_tab":
+                event.response.send("N")
+                return True, None
+    elif event.name == "load_from_ipynb_tab":
         (tab_idx,) = event_args
         if tab_idx > len(driver.window_handles) or tab_idx < 1:
             nvim_info.nvim.lua.Jupynium_notify.error(
                 [f"Tab {tab_idx} doesn't exist."],
                 async_=True,
             )
-            event[3].send("N")
+            event.response.send("N")
             return False, None
         driver.switch_to.window(driver.window_handles[tab_idx - 1])
 
@@ -533,30 +534,30 @@ def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event: list[An
         nvim_info.nvim.buffers[bufnr][:] = jupy
         logger.info("Loaded ipynb to the nvim buffer.")
 
-    elif event[1] == "VimLeavePre":
+    elif event.name == "VimLeavePre":
         # For non-Windows, use rpcrequest
         logger.info("Nvim closed. Clearing nvim")
-        return False, event[3]
+        return False, event.response
 
-    elif event[1] == "kernel_get_spec":
+    elif event.name == "kernel_get_spec":
         driver.switch_to.window(nvim_info.window_handles[bufnr])
         kernel_specs = driver.execute_script(
             "return [Jupyter.notebook.kernel.name, Jupyter.kernelselector.kernelspecs];"
         )
         logger.info(f"Current kernel name: {kernel_specs[0]}")
         logger.info(f"Kernel specs: {kernel_specs[1]}")
-        event[3].send(kernel_specs)
+        event.response.send(kernel_specs)
         return True, None
 
-    elif event[1] == "kernel_inspect":
+    elif event.name == "kernel_inspect":
         (line, col) = event_args
         driver.switch_to.window(nvim_info.window_handles[bufnr])
         inspect_result = driver.execute_async_script(kernel_inspect_js_code, line, col)
         logger.info(f"Kernel inspect: {inspect_result}")
-        event[3].send(inspect_result)
+        event.response.send(inspect_result)
         return True, None
 
-    elif event[1] == "execute_javascript":
+    elif event.name == "execute_javascript":
         (code,) = event_args
         if bufnr is not None:
             driver.switch_to.window(nvim_info.window_handles[bufnr])
@@ -564,17 +565,17 @@ def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event: list[An
 
         logger.info(f"Executing javascript code in bufnr {bufnr}, code {code}")
         ret_obj = driver.execute_script(code)
-        event[3].send(ret_obj)
+        event.response.send(ret_obj)
         return True, None
 
-    elif event[1] == "kernel_connect_info":
+    elif event.name == "kernel_connect_info":
         driver.switch_to.window(nvim_info.window_handles[bufnr])
         kernel_id = driver.execute_script("return Jupyter.notebook.kernel.id")
-        event[3].send(kernel_id)
+        event.response.send(kernel_id)
         return True, None
 
-    if event[3] is not None:
-        event[3].send("OK")
+    if event.response is not None:
+        event.response.send("OK")
 
     return True, None
 
@@ -639,17 +640,17 @@ def process_on_lines_event(
 def process_notification_event(  # noqa: C901 PLR0912 PLR0915
     nvim_info: NvimInfo,
     driver: WebDriver,
-    event,
+    event: Notification,
     prev_lazy_args_per_buf: PrevLazyArgsPerBuf | None = None,
 ):
-    assert event[0] == "notification"
+    assert event.type == "notification"
 
     if skip_bloated(nvim_info):
         return True
 
-    bufnr = event[2][0]
-    event_args = event[2][1:]
-    if event[1] == "on_lines":
+    bufnr = event.args[0]
+    event_args = event.args[1:]
+    if event.name == "on_lines":
         current_on_lines = OnLinesArgs(*event_args)
 
         if prev_lazy_args_per_buf is None:
@@ -658,7 +659,7 @@ def process_notification_event(  # noqa: C901 PLR0912 PLR0915
             prev_lazy_args_per_buf.lazy_on_lines_event(
                 nvim_info, driver, bufnr, current_on_lines
             )
-    elif event[1] in [
+    elif event.name in [
         "CursorMoved",
         "CursorMovedI",
         "visual_enter",
@@ -677,7 +678,7 @@ def process_notification_event(  # noqa: C901 PLR0912 PLR0915
         if prev_lazy_args_per_buf is not None:
             prev_lazy_args_per_buf.process(bufnr, nvim_info, driver)
 
-        if event[1] == "scroll_ipynb":
+        if event.name == "scroll_ipynb":
             (scroll,) = event_args
             driver.switch_to.window(nvim_info.window_handles[bufnr])
 
@@ -686,12 +687,12 @@ def process_notification_event(  # noqa: C901 PLR0912 PLR0915
                 "Jupyter.notebook.scroll_manager.scroll_some(arguments[0]);",
                 scroll,
             )
-        elif event[1] == "save_ipynb":
+        elif event.name == "save_ipynb":
             driver.switch_to.window(nvim_info.window_handles[bufnr])
 
             driver.execute_script("Jupyter.notebook.save_notebook();")
             driver.execute_script("Jupyter.notebook.save_checkpoint();")
-        elif event[1] == "BufWritePre":
+        elif event.name == "BufWritePre":
             (buf_filepath,) = event_args
             driver.switch_to.window(nvim_info.window_handles[bufnr])
 
@@ -714,7 +715,7 @@ def process_notification_event(  # noqa: C901 PLR0912 PLR0915
                         "Maybe a remote nvim is used and the path "
                         f"{output_ipynb_path} is not accessible on the local machine."
                     )
-        elif event[1] == "download_ipynb":
+        elif event.name == "download_ipynb":
             (buf_filepath, filename) = event_args
             assert buf_filepath != ""
 
@@ -748,33 +749,33 @@ def process_notification_event(  # noqa: C901 PLR0912 PLR0915
                     "on the local machine."
                 )
 
-        elif event[1] == "toggle_selected_cells_outputs_scroll":
+        elif event.name == "toggle_selected_cells_outputs_scroll":
             driver.switch_to.window(nvim_info.window_handles[bufnr])
             driver.execute_script(
                 "Jupyter.notebook.toggle_cells_outputs_scroll(Jupyter.notebook.get_selected_cells_indices())"
             )
-        elif event[1] == "execute_selected_cells":
+        elif event.name == "execute_selected_cells":
             driver.switch_to.window(nvim_info.window_handles[bufnr])
             driver.execute_script("Jupyter.notebook.execute_selected_cells();")
-        elif event[1] == "clear_selected_cells_outputs":
+        elif event.name == "clear_selected_cells_outputs":
             driver.switch_to.window(nvim_info.window_handles[bufnr])
             driver.execute_script(
                 "Jupyter.notebook.clear_cells_outputs(Jupyter.notebook.get_selected_cells_indices())"
             )
             # driver.execute_script("Jupyter.notebook.clear_output();")
-        elif event[1] == "kernel_restart":
+        elif event.name == "kernel_restart":
             driver.switch_to.window(nvim_info.window_handles[bufnr])
             driver.execute_script("Jupyter.notebook.kernel.restart()")
-        elif event[1] == "kernel_interrupt":
+        elif event.name == "kernel_interrupt":
             driver.switch_to.window(nvim_info.window_handles[bufnr])
             driver.execute_script("Jupyter.notebook.kernel.interrupt()")
-        elif event[1] == "kernel_change":
+        elif event.name == "kernel_change":
             (kernel_name,) = event_args
             driver.switch_to.window(nvim_info.window_handles[bufnr])
             driver.execute_script(
                 "Jupyter.kernelselector.set_kernel(arguments[0])", kernel_name
             )
-        elif event[1] == "kernel_complete_async":
+        elif event.name == "kernel_complete_async":
             (line, col, callback_id) = event_args
             if (
                 nvim_info.nvim.vars["jupynium_kernel_complete_async_callback_id"]
@@ -837,11 +838,11 @@ def process_notification_event(  # noqa: C901 PLR0912 PLR0915
 
             nvim_info.nvim.lua.Jupynium_kernel_complete_async_callback(matches)
 
-        elif event[1] == "scroll_to_cell":
+        elif event.name == "scroll_to_cell":
             (cursor_pos_row,) = event_args
             scroll_to_cell(driver, nvim_info, bufnr, cursor_pos_row)
 
-        elif event[1] == "grab_entire_buf":
+        elif event.name == "grab_entire_buf":
             # Refresh entire buffer from nvim
             # But do not necessarily sync to Jupyter Notebook
             # because it happens when you spam events and it slows down.
@@ -851,15 +852,15 @@ def process_notification_event(  # noqa: C901 PLR0912 PLR0915
             if driver.current_window_handle == nvim_info.window_handles[bufnr]:
                 nvim_info.jupbufs[bufnr].full_sync_to_notebook(driver)
 
-        elif event[1] == "BufUnload":
+        elif event.name == "BufUnload":
             logger.info("Buffer unloaded on nvim. Closing on Jupyter Notebook")
             nvim_info.detach_buffer(bufnr, driver)
 
-        elif event[1] == "stop_sync":
+        elif event.name == "stop_sync":
             logger.info(f"Received stop_sync request: bufnr = {bufnr}")
             nvim_info.detach_buffer(bufnr, driver)
 
-        elif event[1] == "VimLeavePre":
+        elif event.name == "VimLeavePre":
             # Only for Windows, use rpcnotify
             logger.info("Nvim closed. Clearing nvim")
             return False
