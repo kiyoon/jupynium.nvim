@@ -565,6 +565,20 @@ The program is in the alpha stage. If it crashes it's likely that the whole brow
 
 ## 🤔 FAQ
 
+> Firefox doesn't run.
+
+Make sure your setup with selenium has no problem. Run the following python code to see if selenium is even working.
+
+```python
+# Run with the same environment Jupynium is installed.
+from selenium import webdriver
+driver = webdriver.Firefox()
+driver.get("https://www.selenium.dev/selenium/web/web-form.html")
+```
+
+If you're using Ubuntu 22.04 or higher, you need to either install firefox with apt (not snap) or put snap geckodriver in `$PATH`.
+See <https://stackoverflow.com/questions/72405117/selenium-geckodriver-profile-missing-your-firefox-profile-cannot-be-loaded>
+
 > 🌽 How do I use different languages / kernels?
 
 Instead of `*.ju.py` if you make files named `*.ju.*` (e.g. `*.ju.r`) you will see all the keybindings and commands.  
