@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.6] - 2025-02-18
+### :boom: BREAKING CHANGES
+- due to [`af57c1b`](https://github.com/kiyoon/jupynium.nvim/commit/af57c1bb314e024aba7806653cf728e8558f0d4d) - drop python 3.8, simplify dep, fix ruff *(commit by [@kiyoon](https://github.com/kiyoon))*:
+
+  drop python 3.8, simplify dep, fix ruff
+
+
+### :bug: Bug Fixes
+- [`b0b7157`](https://github.com/kiyoon/jupynium.nvim/commit/b0b71577c6e4a613b6a4180068dd0b2de0659e52) - **treesitter**: markdown injection *(commit by [@kiyoon](https://github.com/kiyoon))*
+- [`22fdc6c`](https://github.com/kiyoon/jupynium.nvim/commit/22fdc6c1161abe4e46de083aa0702f90970258a9) - JupyniumLoadFromIpynbTabAndSync *(commit by [@kiyoon](https://github.com/kiyoon))*
+
+
 ## [v0.2.5] - 2024-11-14
 ### :sparkles: New Features
 - [`828052e`](https://github.com/kiyoon/jupynium.nvim/commit/828052ece86a5470f97247f6621e8a577154ee41) - code cell # %% with additional comments *(PR [#127](https://github.com/kiyoon/jupynium.nvim/pull/127) by [@ESSO0428](https://github.com/ESSO0428))*
@@ -67,3 +79,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [v0.2.3]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.2...v0.2.3
 [v0.2.4]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.2...v0.2.4
 [v0.2.5]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.4...v0.2.5
+[v0.2.6]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.5...v0.2.6
