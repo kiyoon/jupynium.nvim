@@ -37,7 +37,6 @@ The Jupynium server will receive events from Neovim, keep the copy of the buffer
 - 🦎 Mozilla geckodriver
   - May already be installed with Firefox. Check `geckodriver -V`
 - 🐍 Python >= 3.9
-  - Supported Python installation methods include system-level and [Conda](https://docs.conda.io/en/latest/miniconda.html)
 - 📔 Jupyter Notebook >= 6.2
   - Jupyter Lab is not supported
   - 
@@ -54,14 +53,20 @@ Don't forget to upgrade your notebook and install nbclassic (`pip install --upgr
 
 ### Install Python
 
-Don't have system Python 3.9? You can use [Conda](https://docs.conda.io/en/latest/miniconda.html):
+Don't have system Python 3.9? You can use [uv](https://github.com/astral-sh/uv) which downloads python and creates a virtual environment.
+
+```bash
+# This downloads python 3.13 if it doesn't exist.
+uv venv ~/.virtualenvs/jupynium --python=3.13
+```
+
+Or with [Conda](https://docs.conda.io/en/latest/miniconda.html):
 
 ```bash
 conda create -n jupynium python=3
-conda activate jupynium
 ```
 
-Upgrade pip. This solves many problems:
+If you want to use system python, (not conda or uv), upgrade pip. This solves many problems:
 
 ```bash
 # pip >= 23.0 recommended
@@ -79,6 +84,7 @@ With vim-plug:
 
 ```vim
 Plug 'kiyoon/jupynium.nvim', { 'do': 'pip3 install --user .' }
+" Plug 'kiyoon/jupynium.nvim', { 'do': 'uv pip install . --python=$HOME/.virtualenvs/jupynium/bin/python' }
 " Plug 'kiyoon/jupynium.nvim', { 'do': 'conda run --no-capture-output -n jupynium pip install .' }
 Plug 'rcarriga/nvim-notify'   " optional
 Plug 'stevearc/dressing.nvim' " optional, UI for :JupyniumKernelSelect
@@ -88,6 +94,7 @@ With packer.nvim:
 
 ```lua
 use { "kiyoon/jupynium.nvim", run = "pip3 install --user ." }
+-- use { "kiyoon/jupynium.nvim", run = "uv pip install . --python=$HOME/.virtualenvs/jupynium/bin/python" }
 -- use { "kiyoon/jupynium.nvim", run = "conda run --no-capture-output -n jupynium pip install ." }
 use { "rcarriga/nvim-notify" }   -- optional
 use { "stevearc/dressing.nvim" } -- optional, UI for :JupyniumKernelSelect
@@ -100,6 +107,7 @@ With 💤lazy.nvim:
   {
     "kiyoon/jupynium.nvim",
     build = "pip3 install --user .",
+    -- build = "uv pip install . --python=$HOME/.virtualenvs/jupynium/bin/python"
     -- build = "conda run --no-capture-output -n jupynium pip install .",
     -- enabled = vim.fn.isdirectory(vim.fn.expand "~/miniconda3/envs/jupynium"),
   },
