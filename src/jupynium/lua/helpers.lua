@@ -653,8 +653,35 @@ function Jupynium_kernel_hover(bufnr)
     end
   end
 
+  --- Removes empty lines from the beginning and end.
+  --- deprecated and will be removed in nvim 0.12, so we have a copy here.
+  --- but it also depends on vim.list_slice, which is not available in nvim 0.8
+  ---@param lines table list of lines to trim
+  ---@return table trimmed list of lines
+  local function trim_empty_lines(lines)
+    local start = 1
+    for i = 1, #lines do
+      if lines[i] ~= nil and #lines[i] > 0 then
+        start = i
+        break
+      end
+    end
+    local finish = 1
+    for i = #lines, 1, -1 do
+      if lines[i] ~= nil and #lines[i] > 0 then
+        finish = i
+        break
+      end
+    end
+    return vim.list_slice(lines, start, finish)
+  end
+
   local markdown_lines = vim.lsp.util.convert_input_to_markdown_lines(out)
-  markdown_lines = vim.lsp.util.trim_empty_lines(markdown_lines)
+  if vim.fn.has "nvim-0.12" == 1 then
+    markdown_lines = trim_empty_lines(markdown_lines)
+  else
+    markdown_lines = vim.lsp.util.trim_empty_lines(markdown_lines)
+  end
 
   local opts = { max_width = 84 }
   local ok, options = pcall(require, "jupynium.options")
@@ -673,9 +700,12 @@ end
 ---@param bufnr integer
 ---@param code_line string
 ---@param col integer 0-indexed
----@param callback function nvim-cmp complete callback.
+---@param callback function nvim-cmp / blink.cmp complete callback.
+---@param completion_plugin "nvim-cmp" | "blink"
 ---@return table?
-function Jupynium_kernel_complete_async(bufnr, code_line, col, callback)
+function Jupynium_kernel_complete_async(bufnr, code_line, col, callback, completion_plugin)
+  completion_plugin = completion_plugin or "nvim-cmp"
+
   if bufnr == nil or bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()
   end
@@ -695,7 +725,7 @@ function Jupynium_kernel_complete_async(bufnr, code_line, col, callback)
   Jupynium_kernel_complete_async_callback = callback
   vim.g.jupynium_kernel_complete_async_callback_id = callback_id
 
-  Jupynium_rpcnotify("kernel_complete_async", bufnr, true, code_line, col, callback_id)
+  Jupynium_rpcnotify("kernel_complete_async", bufnr, true, code_line, col, callback_id, completion_plugin)
 end
 
 function Jupynium_get_kernel_connect_shcmd(bufnr, hostname)

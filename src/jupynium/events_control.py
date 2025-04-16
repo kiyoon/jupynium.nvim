@@ -776,7 +776,7 @@ def process_notification_event(  # noqa: C901 PLR0912 PLR0915
                 "Jupyter.kernelselector.set_kernel(arguments[0])", kernel_name
             )
         elif event.name == "kernel_complete_async":
-            (line, col, callback_id) = event_args
+            (line, col, callback_id, completion_plugin) = event_args
             if (
                 nvim_info.nvim.vars["jupynium_kernel_complete_async_callback_id"]
                 != callback_id
@@ -796,11 +796,12 @@ def process_notification_event(  # noqa: C901 PLR0912 PLR0915
                 "metadata" in reply
                 and "_jupyter_types_experimental" in reply["metadata"]
             )
+
             if has_experimental_types:
                 replies = reply["metadata"]["_jupyter_types_experimental"]
                 matches = []
                 for match in replies:
-                    if "signature" in match:
+                    if "signature" in match and match["signature"] != "":
                         matches.append(
                             {
                                 "label": match.get("text", ""),
@@ -828,6 +829,18 @@ def process_notification_event(  # noqa: C901 PLR0912 PLR0915
                         )
             else:
                 matches = [{"label": m} for m in reply["matches"]]
+
+            if completion_plugin == "nvim-cmp":
+                pass
+            elif completion_plugin == "blink":
+                matches = {
+                    "is_incomplete_forward": False,
+                    "is_incomplete_backward": False,
+                    "items": matches,
+                    # context = context,
+                }
+            else:
+                raise ValueError(f"Unknown completion plugin: {completion_plugin}")
 
             if (
                 nvim_info.nvim.vars["jupynium_kernel_complete_async_callback_id"]

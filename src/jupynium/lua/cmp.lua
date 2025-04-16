@@ -23,13 +23,13 @@ end
 
 function source:get_trigger_characters()
   if vim.bo.filetype == "julia" then
-    return { ".", "[", "'", '"', "%" }
+    return { ".", "[", "'", '"', "%", "/" }
   elseif vim.bo.filetype == "python" then
-    return { ".", "[", "'", '"', "%" }
+    return { ".", "[", "'", '"', "%", "/" }
   elseif vim.bo.filetype == "r" then
-    return { ".", "[", "'", '"', "%" }
+    return { ".", "[", "'", '"', "%", "/" }
   else
-    return { ".", "[", "'", '"', "%" }
+    return { ".", "[", "'", '"', "%", "/" }
   end
 end
 
@@ -42,7 +42,7 @@ function source:complete(params, callback)
   -- 0-indexed
   local code_line = vim.api.nvim_buf_get_lines(0, row - 1, row, false)[1]
 
-  Jupynium_kernel_complete_async(0, code_line, col, callback)
+  Jupynium_kernel_complete_async(0, code_line, col, callback, "nvim-cmp")
 end
 
 ---Resolve completion item (optional). This is called right before the completion is about to be displayed.

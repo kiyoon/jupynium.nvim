@@ -256,7 +256,9 @@ hi! link JupyniumMagicCommand Keyword
 
 </details>
 
-#### Optionally, configure `nvim-cmp` to show Jupyter kernel completion
+#### Optionally, configure `nvim-cmp` / `blink.cmp` to show Jupyter kernel completion
+
+**nvim-cmp**:
 
 ```lua
 local cmp = require "cmp"
@@ -279,6 +281,29 @@ cmp.setup {
   },
 }
 ```
+
+**blink.cmp**:
+
+```lua
+require("blink.cmp").setup {
+  sources = {
+    default = {
+      "jupynium",
+      -- ...
+    },
+    providers = {
+      jupynium = {
+        name = "Jupynium",
+        module = "jupynium.blink_cmp",
+        -- Consider higher priority than LSP
+        score_offset = 100,
+      },
+      -- ...
+    },
+  },
+}
+```
+
 
 #### Optionally, configure `nvim-ufo` to fold cells
 
