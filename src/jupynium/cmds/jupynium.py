@@ -103,7 +103,8 @@ def webdriver_firefox(
     logger.info(f"Using firefox profile: {profile_path}")
 
     options = Options()
-    options.profile = webdriver.FirefoxProfile(profile_path)
+    options.add_argument("-profile")
+    options.add_argument(str(profile_path))
     options.set_preference("browser.link.open_newwindow", 3)
     options.set_preference("browser.link.open_newwindow.restriction", 0)
     # profile.setAlwaysLoadNoFocusLib(True);
