@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "hatch-requirements-txt", "version-pioneer"]
+requires = ["hatchling", "hatch-requirements-txt"]
 build-backend = "hatchling.build"
 
 [tool.hatch.metadata.hooks.requirements_txt]
@@ -38,11 +38,9 @@ sources = ["src"]
 name = "jupynium"
 dynamic = ["version", "dependencies", "optional-dependencies"]
 description = "Neovim plugin that automates Jupyter Notebook editing/browsing using Selenium."
-authors = [
-  { name = "Kiyoon Kim" },
-]
+authors = [{ name = "Kiyoon Kim" }]
 readme = "README.md"
-license = { file="LICENSE" }
+license = { file = "LICENSE" }
 requires-python = ">=3.9"
 classifiers = [
   "Programming Language :: Python",
@@ -54,7 +52,16 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "License :: OSI Approved :: MIT License",
 ]
-keywords = ["neovim", "vim", "jupyter", "selenium", "jupyter-notebook", "nvim", "neovim-plugin", "nvim-plugin"]
+keywords = [
+  "neovim",
+  "vim",
+  "jupyter",
+  "selenium",
+  "jupyter-notebook",
+  "nvim",
+  "neovim-plugin",
+  "nvim-plugin",
+]
 
 [project.urls]
 "Homepage" = "https://github.com/kiyoon/jupynium.nvim"
@@ -67,13 +74,15 @@ ipynb2jupytext = "jupynium.cmds.ipynb2jupytext:main"
 # https://github.com/deargen/workflows/blob/master/python-projector
 requirements-in-dir = "deps"
 requirements-out-dir = "deps/lock"
-python-platforms = ["x86_64-manylinux_2_28", "aarch64-apple-darwin", "x86_64-apple-darwin"]
+python-platforms = [
+  "x86_64-manylinux_2_28",
+  "aarch64-apple-darwin",
+  "x86_64-apple-darwin",
+]
 
 [tool.pytest.ini_options]
 addopts = "--cov=jupynium"
-testpaths = [
-  "tests",
-]
+testpaths = ["tests"]
 
 [tool.coverage.report]
 omit = [
@@ -119,9 +128,7 @@ namespace-packages = ["scripts"]
 
 [tool.ruff.lint]
 # OPTIONALLY ADD MORE LATER
-select = [
-  "ALL",
-]
+select = ["ALL"]
 
 ignore = [
   "E402",    # Module level import not at top of file
@@ -143,7 +150,7 @@ ignore = [
   "TRY003",  # long message in except
   "TRY400",  # logger.exception instead of logger.error
   "PLR2004", # magic value comparison
-  "PLW2901",  # loop variable overwritten by assignment target
+  "PLW2901", # loop variable overwritten by assignment target
   "COM812",  # missing trailing comma
   "RET504",  # return with unnecessary assignment
   "RET505",
@@ -164,7 +171,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [
-    "F401", # Ignore seemingly unused imports (they're meant for re-export)
+  "F401", # Ignore seemingly unused imports (they're meant for re-export)
 ]
 # Directories that do not contain s, r, and c
 "[!s][!r][!c]*/**" = ["INP001"] # Implicit namespace package (no __init__.py)
