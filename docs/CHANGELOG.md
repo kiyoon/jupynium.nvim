@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.7] - 2025-11-14
+### :sparkles: New Features
+- [`144ab6e`](https://github.com/kiyoon/jupynium.nvim/commit/144ab6e46d2b42264c16a4f3c780d88feb0a89e8) - blink.cmp completion source *(commit by [@kiyoon](https://github.com/kiyoon))*
+- [`53200cb`](https://github.com/kiyoon/jupynium.nvim/commit/53200cbd2c277251c47ef4ffc1ead5051a3c1a85) - repeatable move compatibility for nvim-treesitter-textobjects main branch *(commit by [@kiyoon](https://github.com/kiyoon))*
+
+### :bug: Bug Fixes
+- [`bd875f9`](https://github.com/kiyoon/jupynium.nvim/commit/bd875f94131c95bf98c0e3673a118d14fd180ace) - custom firefox profile *(PR [#140](https://github.com/kiyoon/jupynium.nvim/pull/140) by [@nexus-chebykin](https://github.com/nexus-chebykin))*
+- [`da252c3`](https://github.com/kiyoon/jupynium.nvim/commit/da252c31b5011f984c2dd54e55f25034d5b40014) - crash when no profile is set *(PR [#143](https://github.com/kiyoon/jupynium.nvim/pull/143) by [@kiyoon](https://github.com/kiyoon))*
+
+
 ## [v0.2.6] - 2025-02-18
 ### :boom: BREAKING CHANGES
 - due to [`af57c1b`](https://github.com/kiyoon/jupynium.nvim/commit/af57c1bb314e024aba7806653cf728e8558f0d4d) - drop python 3.8, simplify dep, fix ruff *(commit by [@kiyoon](https://github.com/kiyoon))*:
@@ -80,3 +90,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [v0.2.4]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.2...v0.2.4
 [v0.2.5]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.4...v0.2.5
 [v0.2.6]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.5...v0.2.6
+[v0.2.7]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.6...v0.2.7
