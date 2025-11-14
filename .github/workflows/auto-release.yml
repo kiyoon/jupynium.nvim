@@ -1,0 +1,67 @@
+name: Auto-release following a release commit
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'docs/CHANGELOG.md'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      RELEASE_VERSION: ${{ steps.parse_commit.outputs.RELEASE_VERSION }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Parse commit message to get version
+        id: parse_commit
+        run: |
+          # Commit message must be in the format of
+          # "chore: release vX.X"
+          VERSION=$(echo "$COMMIT_MESSAGE" | grep -oP '^chore:\ release\ v[a-zA-Z0-9.\-\+]+' | head -n 1 | cut -d' ' -f3)
+          if [[ -z "$VERSION" ]]; then
+            echo "Commit message does not match the expected format. Please use 'chore: release vX.X.X' format in your commit message."
+            echo "Commit message: $COMMIT_MESSAGE"
+            exit 1
+          fi
+          echo "RELEASE_VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+
+        env:
+          # Avoid script injection by using an environment variable
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+
+      - name: Parse CHANGELOG.md to get release notes
+        id: parse_changelog
+        uses: kiyoon/parse-changelog-action@v1
+        with:
+          changelog-file-path: docs/CHANGELOG.md
+          version: ${{ steps.parse_commit.outputs.RELEASE_VERSION }}
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.parse_commit.outputs.RELEASE_VERSION }}
+          name: ${{ steps.parse_commit.outputs.RELEASE_VERSION }}
+          body: ${{ steps.parse_changelog.outputs.body }}
+
+  publish-to-pypi:
+    if: ${{ github.event.inputs.dry-run == 'false' }}
+    needs: release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.inputs.version-tag }}
+      - uses: deargen/workflows/actions/setup-python-and-uv@master
+      - name: Build and upload to PyPI
+        run: |
+          uv build
+          uv publish
