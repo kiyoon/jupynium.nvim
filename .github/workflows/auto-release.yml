@@ -58,7 +58,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.inputs.version-tag }}
+          ref: ${{ needs.release.outputs.RELEASE_VERSION }}
+          fetch-depth: 0 # full history
+          fetch-tags: true
       - uses: deargen/workflows/actions/setup-python-and-uv@master
       - name: Build and upload to PyPI
         run: |
