@@ -18,6 +18,7 @@
 ---@class (exact) Jupynium.Config.Autoscroll
 ---@field enable boolean
 ---@field mode string
+---@field focus string
 ---@field cell Jupynium.Config.Scroll.Cell
 
 ---@class (exact) Jupynium.Config.Scroll.Page
@@ -198,11 +199,13 @@ M.default_opts = {
   -- Automatically close tab that is in sync when you close buffer in vim.
   auto_close_tab = true,
 
-  -- Always scroll to the current cell.
+  -- Always scroll to the current cell (output).
   -- Related command :JupyniumScrollToCell
+  -- Related command :JupyniumScrollToOutput
   autoscroll = {
     enable = true,
     mode = "always", -- "always" or "invisible"
+    focus = "input", -- "input" or "output"
     cell = {
       top_margin_percent = 20,
     },

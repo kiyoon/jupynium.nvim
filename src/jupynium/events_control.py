@@ -436,7 +436,9 @@ def choose_default_kernel(  # noqa: PLR0911
     return None
 
 
-def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event: Request):  # noqa: PLR0911
+def process_request_event(
+    nvim_info: NvimInfo, driver: WebDriver, event: Request
+):  # noqa: PLR0911
     """
     Process a request event, where an event can be request or notification.
 
@@ -550,7 +552,7 @@ def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event: Request
         return True, None
 
     elif event.name == "kernel_inspect":
-        (line, col) = event_args
+        line, col = event_args
         driver.switch_to.window(nvim_info.window_handles[bufnr])
         inspect_result = driver.execute_async_script(kernel_inspect_js_code, line, col)
         logger.info(f"Kernel inspect: {inspect_result}")
@@ -716,7 +718,7 @@ def process_notification_event(  # noqa: C901 PLR0912 PLR0915
                         f"{output_ipynb_path} is not accessible on the local machine."
                     )
         elif event.name == "download_ipynb":
-            (buf_filepath, filename) = event_args
+            buf_filepath, filename = event_args
             assert buf_filepath != ""
 
             buf_filepath = Path(buf_filepath)
@@ -776,7 +778,7 @@ def process_notification_event(  # noqa: C901 PLR0912 PLR0915
                 "Jupyter.kernelselector.set_kernel(arguments[0])", kernel_name
             )
         elif event.name == "kernel_complete_async":
-            (line, col, callback_id, completion_plugin) = event_args
+            line, col, callback_id, completion_plugin = event_args
             if (
                 nvim_info.nvim.vars["jupynium_kernel_complete_async_callback_id"]
                 != callback_id
@@ -854,6 +856,10 @@ def process_notification_event(  # noqa: C901 PLR0912 PLR0915
         elif event.name == "scroll_to_cell":
             (cursor_pos_row,) = event_args
             scroll_to_cell(driver, nvim_info, bufnr, cursor_pos_row)
+
+        elif event.name == "scroll_to_output":
+            (cursor_pos_row,) = event_args
+            scroll_to_output(driver, nvim_info, bufnr, cursor_pos_row)
 
         elif event.name == "grab_entire_buf":
             # Refresh entire buffer from nvim
@@ -937,34 +943,24 @@ def update_cell_selection(
             update_cell_selection_js_code, cell_index, cell_index_visual
         )
 
-        if selection_updated:
-            autoscroll_enable = nvim_info.nvim.vars.get(
-                "jupynium_autoscroll_enable", True
-            )
-            if autoscroll_enable:
-                autoscroll_mode = nvim_info.nvim.vars.get(
-                    "jupynium_autoscroll_mode", "always"
+        autoscroll_enable = nvim_info.nvim.vars.get("jupynium_autoscroll_enable", True)
+        autoscroll_mode = nvim_info.nvim.vars.get("jupynium_autoscroll_mode", "always")
+        autoscroll_focus = nvim_info.nvim.vars.get("jupynium_autoscroll_focus", "input")
+        if selection_updated and autoscroll_enable:
+            if autoscroll_mode == "always":
+                do_scroll = True
+            else:
+                do_scroll = not driver.execute_script(
+                    "return Jupyter.notebook.scroll_manager.is_cell_visible"
+                    "(Jupyter.notebook.get_cell(arguments[0]));",
+                    cell_index,
                 )
 
-                if autoscroll_mode == "always":
-                    do_scroll = True
-                else:
-                    do_scroll = not driver.execute_script(
-                        "return Jupyter.notebook.scroll_manager.is_cell_visible"
-                        "(Jupyter.notebook.get_cell(arguments[0]));",
-                        cell_index,
-                    )
-
-                if do_scroll:
-                    # scroll to cell
-                    top_margin_percent = nvim_info.nvim.vars.get(
-                        "jupynium_autoscroll_cell_top_margin_percent", 0
-                    )
-                    driver.execute_script(
-                        "Jupyter.notebook.scroll_cell_percent(arguments[0], arguments[1], 0);",
-                        cell_index,
-                        top_margin_percent,
-                    )
+            if do_scroll:
+                if autoscroll_focus == "input":
+                    scroll_to_cell(driver, nvim_info, bufnr, cursor_pos_row)
+                elif autoscroll_focus == "output":
+                    scroll_to_output(driver, nvim_info, bufnr, cursor_pos_row)
 
 
 def download_ipynb(
@@ -1007,4 +1003,20 @@ def scroll_to_cell(driver: WebDriver, nvim_info: NvimInfo, bufnr: int, cursor_po
         "Jupyter.notebook.scroll_cell_percent(arguments[0], arguments[1], 0);",
         cell_index,
         top_margin_percent,
+    )
+
+
+def scroll_to_output(
+    driver: WebDriver, nvim_info: NvimInfo, bufnr: int, cursor_pos_row
+):
+    # Which cell?
+    cell_index, _, _ = nvim_info.jupbufs[bufnr].get_cell_index_from_row(cursor_pos_row)
+
+    cell_index = max(cell_index - 1, 0)
+
+    driver.switch_to.window(nvim_info.window_handles[bufnr])
+
+    driver.execute_script(
+        "Jupyter.notebook.get_cell_element(arguments[0])[0].children[1].scrollIntoView({block: 'center'});",
+        cell_index,
     )

@@ -372,6 +372,20 @@ function Jupynium_scroll_to_cell(bufnr)
   Jupynium_rpcnotify("scroll_to_cell", bufnr, true, cursor_pos[1] - 1)
 end
 
+function Jupynium_scroll_to_output(bufnr)
+  if bufnr == nil or bufnr == 0 then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
+  if Jupynium_syncing_bufs[bufnr] == nil then
+    Jupynium_notify.error { [[Cannot scroll to output without synchronising.]], [[Run `:JupyniumStartSync`]] }
+    return
+  end
+
+  local winid = vim.call("bufwinid", bufnr)
+  local cursor_pos = vim.api.nvim_win_get_cursor(winid)
+  Jupynium_rpcnotify("scroll_to_output", bufnr, true, cursor_pos[1] - 1)
+end
+
 function Jupynium_save_ipynb(bufnr)
   if bufnr == nil or bufnr == 0 then
     bufnr = vim.api.nvim_get_current_buf()
