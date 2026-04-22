@@ -436,9 +436,7 @@ def choose_default_kernel(  # noqa: PLR0911
     return None
 
 
-def process_request_event(
-    nvim_info: NvimInfo, driver: WebDriver, event: Request
-):  # noqa: PLR0911
+def process_request_event(nvim_info: NvimInfo, driver: WebDriver, event: Request):  # noqa: PLR0911
     """
     Process a request event, where an event can be request or notification.
 
