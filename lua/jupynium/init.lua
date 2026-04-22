@@ -78,6 +78,12 @@ function M.set_default_keymaps(buf_id)
   )
   vim.keymap.set(
     { "n", "x" },
+    "<space>os",
+    "<cmd>JupyniumScrollToOutput<cr>",
+    { buffer = buf_id, desc = "Jupynium scroll to output" }
+  )
+  vim.keymap.set(
+    { "n", "x" },
     "<space>jo",
     "<cmd>JupyniumToggleSelectedCellsOutputsScroll<cr>",
     { buffer = buf_id, desc = "Jupynium toggle selected cell output scroll" }
@@ -128,6 +134,7 @@ function M.setup(opts)
   vim.g.jupynium_scroll_cell_top_margin_percent = options.opts.scroll.cell.top_margin_percent
   vim.g.jupynium_autoscroll_enable = options.opts.autoscroll.enable
   vim.g.jupynium_autoscroll_mode = options.opts.autoscroll.mode
+  vim.g.jupynium_autoscroll_focus = options.opts.autoscroll.focus
   vim.g.jupynium_autoscroll_cell_top_margin_percent = options.opts.autoscroll.cell.top_margin_percent
 
   if options.opts.textobjects.use_default_keybindings then

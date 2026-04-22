@@ -187,9 +187,11 @@ require("jupynium").setup({
 
   -- Always scroll to the current cell.
   -- Related command :JupyniumScrollToCell
+  -- Related command :JupyniumScrollToOutput
   autoscroll = {
     enable = true,
     mode = "always", -- "always" or "invisible"
+    focus = "input", -- "input" or "output"
     cell = {
       top_margin_percent = 20,
     },
@@ -462,6 +464,7 @@ In other languages like R, you'll need to comment every line.
 - `<space>c`: Clear selected cells
 - `<PageUp>`, `<PageDown>`: Scroll notebook
 - `<space>js`: Scroll to cell (if autoscroll is disabled)
+- `<space>os`: Scroll to output (if autoscroll is disabled)
 - `<space>K`: Hover (inspect a variable)
 - `<space>jo`: Toggle output scroll (when output is long)
 
@@ -499,6 +502,7 @@ If you want custom keymaps, add `textobjects = { use_default_keybindings = false
 :JupyniumAutoDownloadIpynbToggle
 
 :JupyniumScrollToCell
+:JupyniumScrollToOutput
 :JupyniumScrollUp
 :JupyniumScrollDown
 :JupyniumAutoscrollToggle

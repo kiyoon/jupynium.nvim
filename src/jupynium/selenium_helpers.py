@@ -27,8 +27,9 @@ def wait_until_notebook_loaded(driver: WebDriver, timeout: int = 30):
     try:
         WebDriverWait(driver, timeout).until(
             # Sometimes if kernel is null, it will hang, so we check that.
-            lambda d: d.execute_script("return Jupyter.notebook.kernel == null")
-            is False
+            lambda d: (
+                d.execute_script("return Jupyter.notebook.kernel == null") is False
+            )
         )
     except TimeoutException:
         logger.exception("Timed out waiting for kernel to load (null)")
@@ -37,8 +38,10 @@ def wait_until_notebook_loaded(driver: WebDriver, timeout: int = 30):
     try:
         WebDriverWait(driver, timeout).until(
             # Sometimes if kernel is null, it will hang, so we check that.
-            lambda d: d.execute_script("return Jupyter.notebook.kernel.is_connected()")
-            is True
+            lambda d: (
+                d.execute_script("return Jupyter.notebook.kernel.is_connected()")
+                is True
+            )
         )
     except TimeoutException:
         logger.exception("Timed out waiting for kernel to load")

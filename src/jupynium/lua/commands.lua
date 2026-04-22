@@ -14,6 +14,7 @@ vim.api.nvim_create_user_command(
   {}
 )
 vim.api.nvim_create_user_command("JupyniumScrollToCell", "lua Jupynium_scroll_to_cell()", {})
+vim.api.nvim_create_user_command("JupyniumScrollToOutput", "lua Jupynium_scroll_to_output()", {})
 vim.api.nvim_create_user_command("JupyniumSaveIpynb", "lua Jupynium_save_ipynb()", {})
 vim.api.nvim_create_user_command("JupyniumDownloadIpynb", Jupynium_download_ipynb_cmd, { nargs = "?" })
 vim.api.nvim_create_user_command("JupyniumAutoDownloadIpynbToggle", "lua Jupynium_auto_download_ipynb_toggle()", {})
