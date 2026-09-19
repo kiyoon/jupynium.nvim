@@ -436,7 +436,7 @@ def fallback_open_notebook_server(
     for _ in range(20):
         try:
             driver.get(
-                f"localhost:{notebook_port}{notebook_url_path}/tree/{rel_dir}?token={notebook_token}"
+                f"http://localhost:{notebook_port}{notebook_url_path}/tree/{rel_dir}?token={notebook_token}"
             )
             break
         except WebDriverException:
