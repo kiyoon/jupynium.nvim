@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.8] - 2026-09-20
+### :sparkles: New Features
+- [`dbd632b`](https://github.com/kiyoon/jupynium.nvim/commit/dbd632bfa7883244c36152fc97fd6da54c443eed) - scroll to output *(PR [#147](https://github.com/kiyoon/jupynium.nvim/pull/147) by [@HuntFeng](https://github.com/HuntFeng))*
+
+### :bug: Bug Fixes
+- [`0d11774`](https://github.com/kiyoon/jupynium.nvim/commit/0d117742d2f9f8f1f18adacc791d418f437b6776) - prepend http:// to notebook URL for Selenium navigation *(PR [#152](https://github.com/kiyoon/jupynium.nvim/pull/152) by [@zalt50](https://github.com/zalt50))*
+  - :arrow_lower_right: *fixes issue [#150](https://github.com/kiyoon/jupynium.nvim/issues/150) opened by [@nexus-chebykin](https://github.com/nexus-chebykin)*
+
+
 ## [v0.2.7] - 2025-11-14
 ### :sparkles: New Features
 - [`144ab6e`](https://github.com/kiyoon/jupynium.nvim/commit/144ab6e46d2b42264c16a4f3c780d88feb0a89e8) - blink.cmp completion source *(commit by [@kiyoon](https://github.com/kiyoon))*
@@ -91,3 +100,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [v0.2.5]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.4...v0.2.5
 [v0.2.6]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.5...v0.2.6
 [v0.2.7]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.6...v0.2.7
+[v0.2.8]: https://github.com/kiyoon/jupynium.nvim/compare/v0.2.7...v0.2.8
